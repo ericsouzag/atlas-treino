@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0A1420">
+<title>Atlas de Treino</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Atlas Treino">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A1420; --panel:#0F2038; --panel-2:#142A47; --line:#22385C;
+    --text:#F2F5FA; --muted:#92A2C2; --yellow:#FFD60A;
+    --primary-tag:#FF6B3D; --secondary-tag:#2DD4BF; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: radial-gradient(1200px 700px at 15% -10%, #142B4E 0%, var(--bg) 55%);
+    color:var(--text); font-family:'DM Sans',sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  h1,h2,h3,.display{ font-family:'Syne',sans-serif; font-weight:800; letter-spacing:-0.01em; }
+  a{color:inherit;}
+
+  .fig-body{ stroke:#C7D2E8; stroke-width:8; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+  .fig-head{ fill:#C7D2E8; }
+  .fig-equip{ stroke:var(--yellow); stroke-width:4.5; stroke-linecap:round; fill:none; }
+  .fig-equipfill{ fill:var(--yellow); }
+  .fig-equipdash{ stroke:var(--yellow); stroke-width:2.2; stroke-dasharray:3 3; }
+  .fig-legaction{ stroke:var(--primary-tag); stroke-width:8; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+  .fig-hl{ stroke:var(--primary-tag); stroke-width:9.5; stroke-linecap:round; stroke-linejoin:round; fill:none; filter:drop-shadow(0 0 3px rgba(255,107,61,0.5)); }
+  .fig-bench{ fill:#1B3050; stroke:#3A5680; stroke-width:1; }
+  .fig-ground{ stroke:var(--line); stroke-width:2; }
+  .pose-svg{ width:100%; display:block; }
+  .illus-wrap{
+    background: linear-gradient(180deg,#0D1B30,#0A1526);
+    border:1px solid var(--line); border-radius:10px; padding:6px 4px 2px;
+    margin-bottom:10px;
+  }
+  .illus-wrap.illus-photo{ padding:0; overflow:hidden; }
+  .illus-wrap.illus-photo img{ width:100%; height:auto; max-height:320px; display:block; border-radius:10px; object-fit:contain; background:#060B14; }
+
+  header.hero{ padding:44px 20px 26px; max-width:1180px; margin:0 auto; border-bottom:1px solid var(--line); }
+  .eyebrow{ display:inline-flex; align-items:center; gap:8px; font-size:12px; text-transform:uppercase; letter-spacing:0.14em; color:var(--yellow); font-weight:700; margin-bottom:12px; }
+  .eyebrow::before{ content:""; width:20px; height:2px; background:var(--yellow); display:inline-block; }
+  h1.display{ font-size:clamp(28px,5vw,42px); line-height:1.05; margin:0 0 12px; }
+  h1.display em{ font-style:normal; color:var(--yellow); }
+  .hero-sub{ color:var(--muted); max-width:600px; font-size:15px; margin:0; }
+
+  nav.tabs{
+    position:sticky; top:0; z-index:30; background:rgba(10,20,32,0.95); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line); display:flex; gap:4px; padding:10px 16px; overflow-x:auto;
+  }
+  nav.tabs button{
+    background:none; border:1px solid var(--line); color:var(--muted); padding:8px 16px;
+    border-radius:999px; font-family:'DM Sans',sans-serif; font-weight:700; font-size:13.5px;
+    cursor:pointer; white-space:nowrap; flex-shrink:0;
+  }
+  nav.tabs button.active{ background:var(--yellow); border-color:var(--yellow); color:#14202E; }
+
+  main{ max-width:1180px; margin:0 auto; padding:20px 16px 80px; }
+  .view{ display:none; }
+  .view.active{ display:block; }
+
+  /* ---- ficha view ---- */
+  .day-select{ display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:18px; }
+  .day-chip{
+    background:var(--panel); border:1px solid var(--line); color:var(--muted);
+    padding:9px 16px; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer; flex-shrink:0;
+  }
+  .day-chip .g{ display:block; font-weight:500; font-size:10.5px; opacity:0.8; margin-top:2px; }
+  .day-chip.active{ background:var(--panel-2); border-color:var(--yellow); color:var(--text); }
+
+  .ex-card{
+    background:linear-gradient(180deg,var(--panel-2),var(--panel)); border:1px solid var(--line);
+    border-radius:var(--radius); padding:14px; margin-bottom:12px;
+  }
+  .ex-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .ex-name{ font-family:'Syne',sans-serif; font-weight:700; font-size:16px; }
+  .ex-equip{ font-size:12px; color:var(--muted); margin-top:2px; }
+  .swap-btn{
+    background:var(--panel); border:1px solid var(--line); color:var(--yellow);
+    border-radius:8px; padding:7px 12px; font-size:12px; font-weight:700; cursor:pointer; flex-shrink:0;
+    display:flex; align-items:center; gap:5px;
+  }
+  .swap-btn:hover{ border-color:var(--yellow); }
+  .tag-row{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .tag{ font-size:11px; font-weight:700; padding:4px 9px; border-radius:6px; }
+  .tag.primary{ background:rgba(255,107,61,0.14); color:var(--primary-tag); border:1px solid rgba(255,107,61,0.35); }
+  .tag.secondary{ background:rgba(45,212,191,0.1); color:var(--secondary-tag); border:1px solid rgba(45,212,191,0.28); }
+
+  .day-actions{ display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .action-btn{
+    background:var(--panel); border:1px solid var(--line); color:var(--text);
+    border-radius:10px; padding:10px 16px; font-size:13px; font-weight:700; cursor:pointer;
+    display:flex; align-items:center; gap:6px;
+  }
+  .action-btn.primary{ background:var(--yellow); color:#14202E; border-color:var(--yellow); }
+  .action-btn:hover{ border-color:var(--yellow); }
+
+  /* ---- swap modal ---- */
+  .modal-backdrop{
+    display:none; position:fixed; inset:0; background:rgba(6,12,22,0.75); z-index:100;
+    align-items:flex-end; justify-content:center;
+  }
+  .modal-backdrop.open{ display:flex; }
+  .modal{
+    background:var(--bg); border:1px solid var(--line); border-radius:18px 18px 0 0;
+    max-width:600px; width:100%; max-height:82vh; overflow-y:auto; padding:20px;
+  }
+  .modal h3{ font-size:18px; margin:0 0 4px; }
+  .modal .sub{ color:var(--muted); font-size:13px; margin-bottom:16px; }
+  .modal .close{ float:right; background:var(--panel); border:1px solid var(--line); color:var(--muted); width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:16px; }
+  .option-card{
+    display:flex; gap:12px; align-items:center; background:var(--panel); border:1px solid var(--line);
+    border-radius:12px; padding:10px; margin-bottom:10px; cursor:pointer;
+  }
+  .option-card:hover{ border-color:var(--yellow); }
+  .option-card .thumb{ width:64px; flex-shrink:0; }
+  .option-card .info{ flex:1; }
+  .option-card .name{ font-weight:700; font-size:14px; }
+  .option-card .match{ font-size:11px; color:var(--secondary-tag); margin-top:2px; font-weight:600; }
+
+  /* ---- atlas view (search) ---- */
+  .controls{ margin-bottom:16px; }
+  .search-row{ display:flex; gap:10px; margin-bottom:12px; }
+  .search-box{ flex:1; display:flex; align-items:center; gap:10px; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:11px 14px; }
+  .search-box input{ background:none; border:none; outline:none; color:var(--text); font-family:'DM Sans',sans-serif; font-size:15px; width:100%; }
+  .chips{ display:flex; gap:8px; flex-wrap:wrap; }
+  .chip{ border:1px solid var(--line); background:var(--panel); color:var(--muted); padding:6px 13px; border-radius:999px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; }
+  .chip.active{ background:var(--yellow); border-color:var(--yellow); color:#14202E; }
+  .card-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; margin-top:14px; }
+  .group-head{ display:flex; align-items:baseline; gap:12px; margin:28px 0 4px; border-bottom:1px solid var(--line); padding-bottom:10px; }
+  .group-head h2{ font-size:19px; margin:0; }
+
+  /* ---- builder view ---- */
+  .builder-day{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:12px; }
+  .builder-day-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .builder-day-head input[type=text]{ background:var(--panel-2); border:1px solid var(--line); color:var(--text); border-radius:8px; padding:7px 10px; font-size:14px; font-weight:700; width:120px; }
+  .group-row{ display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+  .group-row select{ background:var(--panel-2); border:1px solid var(--line); color:var(--text); border-radius:8px; padding:6px 8px; font-size:13px; flex:1; min-width:140px; }
+  .group-row input[type=number]{ width:52px; background:var(--panel-2); border:1px solid var(--line); color:var(--text); border-radius:8px; padding:6px; text-align:center; }
+  .remove-row{ background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; padding:4px; }
+  .add-group-btn{ background:none; border:1px dashed var(--line); color:var(--muted); border-radius:8px; padding:7px 12px; font-size:12.5px; cursor:pointer; width:100%; margin-top:4px; }
+  .remove-day{ background:none; border:none; color:var(--muted); cursor:pointer; font-size:12px; }
+
+  ::selection{ background:var(--yellow); color:#14202E; }
+  @media (max-width:640px){
+    header.hero{ padding:32px 16px 20px; }
+    main{ padding:16px 12px 70px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow">Atlas de treino</div>
+  <h1 class="display">Sua <em>ficha</em>, sempre à mão</h1>
+  <p class="hero-sub">Ficha atual com ilustração de execução de cada exercício, substituição por movimentos equivalentes e montador de treino.</p>
+</header>
+
+<nav class="tabs">
+  <button data-view="ficha" class="active">Minha ficha</button>
+  <button data-view="builder">Montar treino</button>
+  <button data-view="atlas">Atlas completo</button>
+</nav>
+
+<main>
+  <!-- ===================== VIEW: FICHA ===================== -->
+  <section class="view active" id="view-ficha">
+    <div class="day-select" id="daySelect"></div>
+    <div class="day-actions">
+      <button class="action-btn" id="regenBtn">🔄 Gerar nova ficha (mesma estrutura)</button>
+      <button class="action-btn" id="resetBtn">↺ Restaurar ficha original</button>
+    </div>
+    <div id="dayContent"></div>
+  </section>
+
+  <!-- ===================== VIEW: BUILDER ===================== -->
+  <section class="view" id="view-builder">
+    <p class="hero-sub" style="margin-bottom:16px;">Defina os dias, os grupos musculares de cada um e quantos exercícios por grupo. O site monta a melhor composição cobrindo as porções do músculo automaticamente.</p>
+    <div id="builderDays"></div>
+    <button class="action-btn" id="addDayBtn" style="margin-bottom:16px;">+ Adicionar dia</button>
+    <br>
+    <button class="action-btn primary" id="generateBtn">Gerar ficha</button>
+  </section>
+
+  <!-- ===================== VIEW: ATLAS ===================== -->
+  <section class="view" id="view-atlas">
+    <div class="controls">
+      <div class="search-row">
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="atlasSearch" type="text" placeholder="Buscar exercício, músculo, equipamento…">
+        </div>
+      </div>
+      <div class="chips" id="atlasChips"></div>
+    </div>
+    <div id="atlasContent"></div>
+  </section>
+</main>
+
+<div class="modal-backdrop" id="swapModal">
+  <div class="modal">
+    <button class="close" id="closeModal">✕</button>
+    <h3 id="modalTitle">Substituir exercício</h3>
+    <p class="sub" id="modalSub"></p>
+    <div id="modalOptions"></div>
+  </div>
+</div>
+
+<script src="pose-engine.js"></script>
+<script src="data.js"></script>
+<script src="photos.js"></script>
+<script src="app.js"></script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>

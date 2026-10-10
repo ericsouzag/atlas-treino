@@ -5,12 +5,12 @@
 // Estes valores NÃO são segredos: a segurança vem das regras do Firestore (firestore.rules) e dos
 // domínios autorizados no Firebase Authentication.
 export const firebaseConfig = {
-  apiKey: 'COLE_AQUI_apiKey',
-  authDomain: 'COLE_AQUI_projeto.firebaseapp.com',
-  projectId: 'COLE_AQUI_projectId',
-  storageBucket: 'COLE_AQUI_projeto.appspot.com',
-  messagingSenderId: 'COLE_AQUI_messagingSenderId',
-  appId: 'COLE_AQUI_appId',
+  apiKey: "AIzaSyAkysFqpeR6gutGVqHQamSuU7GLA5d6A1M",
+  authDomain: "atlas-fitness-5bd51.firebaseapp.com",
+  projectId: "atlas-fitness-5bd51",
+  storageBucket: "atlas-fitness-5bd51.firebasestorage.app",
+  messagingSenderId: "626801152961",
+  appId: "1:626801152961:web:6feeded84bbb69f067d540"
 };
 
 // Versão do SDK carregada sob demanda (CDN gstatic). Altere só se precisar atualizar.

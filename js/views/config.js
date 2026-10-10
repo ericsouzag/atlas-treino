@@ -8,6 +8,7 @@ import { nuvemConfigurada } from '../../firebase-config.js';
 import * as nuvem from '../firebase.js';
 import { exportarFotos, importarFotos, apagarTodasFotos } from '../images.js';
 import { dataISO } from '../datas.js';
+import { gravarEscolha } from '../entrada.js';
 
 export function renderizar(raiz, ctx) {
   ctx.faixa('Ajustes');
@@ -51,7 +52,7 @@ export function renderizar(raiz, ctx) {
       caixaConta.append(h('p', null, 'Conectado como ', h('strong', null, u.email || u.nome || 'usuário')),
         caixaAviso(est.status === 'erro' ? 'alto' : 'info', est.status === 'ok' ? 'Sincronizado' : est.status === 'sincronizando' ? 'Sincronizando…' : 'Atenção', est.mensagem || ''),
         h('p', { class: 'ajuda' }, 'Fotos não são enviadas à nuvem (ficam só neste aparelho).'),
-        h('div', { class: 'linha-botoes' }, h('button', { class: 'btn', type: 'button', onclick: async () => { await nuvem.sair(); aviso('Você saiu da conta. Os dados continuam neste aparelho.'); desenharConta(); } }, 'Sair'),
+        h('div', { class: 'linha-botoes' }, h('button', { class: 'btn', type: 'button', onclick: async () => { await nuvem.sair(); gravarEscolha('local'); aviso('Você saiu da conta. Os dados continuam neste aparelho.'); desenharConta(); } }, 'Sair'),
           h('button', { class: 'btn btn-perigo', type: 'button', onclick: apagarNuvem }, 'Apagar dados da nuvem')));
     } else {
       const em = h('input', { type: 'email', autocomplete: 'email', placeholder: 'voce@email.com' }), se = h('input', { type: 'password', autocomplete: 'current-password', placeholder: 'mínimo 6 caracteres' });

@@ -1,8 +1,10 @@
 // Casca do app: roteamento por hash, navegação, tema e registro do service worker.
 import { store } from './store.js';
-import { h, limpar, icone, aviso } from './ui.js';
+import { h, limpar, icone, aviso, confirmar } from './ui.js';
 import { onboardingFeito, config, perfil } from './dados.js';
-import { iniciarNuvem } from './firebase.js';
+import { iniciarNuvem, usuarioAtual, aguardarUsuario, definirDecisorEnvio } from './firebase.js';
+import { nuvemConfigurada } from '../firebase-config.js';
+import { deveMostrarEntrada, lerEscolha } from './entrada.js';
 
 const ROTAS = {
   alimentacao: { rotulo: 'Alimentação', icone: 'talher', carregar: () => import('./views/alimentacao.js') },
@@ -10,6 +12,7 @@ const ROTAS = {
   corpo: { rotulo: 'Corpo', icone: 'fita', carregar: () => import('./views/corpo.js') },
   relatorios: { rotulo: 'Relatórios', icone: 'grafico', carregar: () => import('./views/relatorios.js') },
   config: { rotulo: 'Ajustes', icone: 'engrenagem', carregar: () => import('./views/config.js') },
+  entrada: { rotulo: 'Bem-vindo', icone: 'pessoa', carregar: () => import('./views/entrada.js'), oculta: true },
   onboarding: { rotulo: 'Começar', icone: 'alvo', carregar: () => import('./views/onboarding.js'), oculta: true },
 };
 
@@ -51,10 +54,14 @@ const ctx = {
 
 async function renderizar(manter = false) {
   let rota = rotaDoHash();
-  if (!onboardingFeito() && !perfil().onbPulado && rota !== 'onboarding') { rota = 'onboarding'; history.replaceState(null, '', '#/onboarding'); }
+  const precisaEntrada = deveMostrarEntrada({ nuvem: nuvemConfigurada(), usuario: usuarioAtual(), escolha: lerEscolha() });
+  if (precisaEntrada && rota !== 'entrada') { rota = 'entrada'; history.replaceState(null, '', '#/entrada'); }
+  else if (!precisaEntrada && rota === 'entrada' && !usuarioAtual()) { rota = onboardingFeito() || perfil().onbPulado ? 'alimentacao' : 'onboarding'; history.replaceState(null, '', `#/${rota}`); }
+  else if (!precisaEntrada && !onboardingFeito() && !perfil().onbPulado && rota !== 'onboarding') { rota = 'onboarding'; history.replaceState(null, '', '#/onboarding'); }
   const minha = ++seqRender;
   const sy = manter ? window.scrollY : 0;
   if (limpeza) { try { limpeza(); } catch (e) { console.error(e); } limpeza = null; }
+  document.body.classList.toggle('sem-abas', rota === 'entrada');
   desenharAbas(rota);
   let mod;
   try { mod = await ROTAS[rota].carregar(); }
@@ -68,7 +75,7 @@ async function renderizar(manter = false) {
   rotaAtual = rota;
 }
 
-function iniciar() {
+async function iniciar() {
   store.iniciar();
   window.__atlas = { store };   // útil para depuração no console
   el.faixa = document.getElementById('faixa'); el.abas = document.getElementById('abas'); el.main = document.getElementById('principal');
@@ -84,8 +91,12 @@ function iniciar() {
       if (!document.querySelector('dialog[open]') && !(a && /INPUT|TEXTAREA|SELECT/.test(a.tagName))) renderizar(true);
     }
   });
+  if (nuvemConfigurada()) {
+    definirDecisorEnvio(() => confirmar('Enviar seus dados para a conta?', 'Esta conta é nova e neste aparelho já existem dados (perfil, refeições, treinos). Quer enviá-los para a nuvem?', { sim: 'Enviar para a nuvem', nao: 'Não enviar' }));
+    iniciarNuvem();
+    if (lerEscolha() !== 'local') { await aguardarUsuario(3500); }   // quem já está logado vai direto ao app
+  }
   renderizar(false);
-  iniciarNuvem();
   // Em localhost o service worker só liga com ?sw (evita cache velho durante o desenvolvimento)
   const local = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
   if ('serviceWorker' in navigator && ((location.protocol === 'https:' && !local) || (local && location.search.includes('sw')))) {

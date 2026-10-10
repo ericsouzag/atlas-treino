@@ -7,6 +7,7 @@ PWA de **alimentação + treino + corpo + relatórios**, em português do Brasil
 - **Registrar treino do dia** (na aba Alimentação): marca o treino programado como feito (completo ou parcial) com 1 toque, ou registra outra atividade (corrida, caminhada, bike, natação, HIIT, esportes...) com ritmo/pace, distância (km ou milhas), duração e kcal ao vivo. Entra no balanço do dia, nos relatórios e no gasto da previsão.
 - **Corpo**: peso, % de gordura (manual, fórmula da Marinha, dobras de Jackson-Pollock 3/7 ou IMC), 14 medidas, fotos de progresso e histórico.
 - **Relatórios**: gráficos em SVG, previsão de composição em 4/8/12 semanas (modelo p-ratio + Forbes, com faixa de incerteza), detecção de platô e guias.
+- **Boas-vindas** (primeira abertura, só com Firebase configurado): entrar com e-mail/senha, criar conta (com aceite de privacidade), Google, esqueci a senha, ou **Continuar sem login**. A escolha é lembrada; quem está logado vai direto ao app; conta existente puxa os dados e pula o onboarding; conta nova com dados locais pergunta se quer enviá-los. Sem Firebase configurado a tela não aparece.
 - **Dados**: sempre salvos no aparelho; opcionalmente sincronizados com Firebase (login com e-mail/senha ou Google). Exportar/importar JSON e apagar tudo (LGPD) em Ajustes.
 
 > Tudo é estimativa. O app não substitui médico, nutricionista ou educador físico.

@@ -7,6 +7,8 @@ import { graficoLinhas, graficoBarras, graficoResponsivo, legenda, tabelaDados }
 import { dataISO, somarDias, segundaDaSemana, dataCurta, diasEntre } from '../datas.js';
 import { GUIAS, dicasContextuais, guiaPorId } from '../tips.js';
 import { intervalos, alertasAlimentares } from '../nutrition.js';
+import { nuvemConfigurada } from '../../firebase-config.js';
+import { usuarioAtual as nuvemUsuario } from '../firebase.js';
 
 const MEDIDAS = [['cintura', 'Cintura'], ['abdomen', 'Abdômen'], ['quadril', 'Quadril'], ['peito', 'Peito'], ['ombros', 'Ombros'], ['pescoco', 'Pescoço'], ['braco_d', 'Braço direito'], ['braco_e', 'Braço esquerdo'], ['coxa_d', 'Coxa direita'], ['coxa_e', 'Coxa esquerda'], ['panturrilha_d', 'Panturrilha direita'], ['panturrilha_e', 'Panturrilha esquerda']];
 const ddmm = iso => `${+iso.slice(8)}/${+iso.slice(5, 7)}`;
@@ -163,5 +165,6 @@ export function renderizar(raiz, ctx) {
   secoes.push(cartao('Dicas para você agora', ...dicas.slice(0, 5).map(d => { const g = guiaPorId(d.id); return h('div', { class: 'dica' }, h('strong', null, g.titulo), h('small', null, d.motivo)); })));
   secoes.push(cartao('Guias', h('div', null, GUIAS.map(g => h('details', { class: 'guia', id: 'guia-' + g.id }, h('summary', null, g.titulo, icone('baixo', 20)), h('div', { class: 'corpo-guia' }, g.corpo.map(t => h('p', null, t))))))));
 
+  if (nuvemConfigurada() && !nuvemUsuario()) secoes.push(h('p', { class: 'mudo peq', style: { textAlign: 'center' } }, 'Seus dados estão só neste aparelho. ', h('a', { href: '#/config' }, 'Entre em Ajustes'), ' para guardá-los na nuvem.'));
   raiz.append(h('div', { class: 'pilha-g' }, secoes));
 }

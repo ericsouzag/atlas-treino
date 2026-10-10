@@ -372,3 +372,11 @@ table.tab-proj { width: 100%; border-collapse: collapse; font-size: 15px; }
 .balanco { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
 .balanco .v { font: 700 26px/1 'Barlow Condensed', sans-serif; }
 .balanco .r { font: 600 12.5px/1.1 'Barlow Condensed', sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--tinta2); }
+/* Boas-vindas (primeira abertura) */
+.btn-grande { min-height: 60px; font-size: 18px; width: 100%; }
+.ou { display: flex; align-items: center; gap: 12px; color: var(--tinta3); font: 600 13px 'Barlow Condensed', sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+.ou::before, .ou::after { content: ''; flex: 1; border-top: 1px solid var(--linha-forte); }
+.sem-abas .abas { display: none; }
+.sem-abas .app { grid-template-columns: minmax(0, 1fr); grid-template-areas: "faixa" "main"; padding-bottom: 0; }
+.entrada-tela > * { min-width: 0; }
+.entrada-tela h2 { font-size: 40px; }

@@ -82,4 +82,6 @@ Todo exercício (ficha, troca e execução) mostra fotos do **free-exercise-db**
 
 ## Atividades e MET
 
+O catálogo tem 19 atividades, incluindo **Pilates** (solo/mat, reformer, cadillac), **CrossFit** (WOD for time, AMRAP, EMOM, força/ginástica, técnica/aquecimento) e **Yoga** separados, todos com MET por intensidade (fontes e justificativas nos comentários de `js/atividades.js`) e atalhos de duração de 30/45/60 min. CrossFit e pilates também contam como um pouco de estímulo de força na previsão (séries equivalentes, com teto de 30 em 14 dias); cardio e yoga não.
+
 O gasto de atividades é **líquido** e estimado: (MET - 1) x peso x horas, com MET do Compêndio de Atividades Físicas (corrida, caminhada e bike usam a velocidade; as demais, a intensidade). Cardio e esportes contam como gasto de energia na previsão, não como estímulo de hipertrofia.

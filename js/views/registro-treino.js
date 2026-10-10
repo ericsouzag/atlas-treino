@@ -84,7 +84,7 @@ export async function abrirRegistroTreino({ data = dataISO(), editar = null } = 
       const cat = AT.ATIVIDADES[id];
       const base = editar && editar.atividade === id ? editar : {};
       const e = (memoE && memoE.atividade === id) ? memoE : { atividade: id, intensidade: base.intensidade || 'moderada', unidade: base.unidade || 'km', distKm: base.distKm ?? null, metros: base.metros ?? null, durMin: base.durMin ?? null, paceMinKm: base.paceMinKm ?? null, pace100: base.pace100 ?? null,
-        estilo: base.estilo || 'crawl', indoor: !!base.indoor, subida: !!base.subida, nomeLivre: base.nomeLivre || '', data: base.ts ? base.ts.slice(0, 10) : data, hora: base.ts ? base.ts.slice(11, 16) : horaHM(), obs: base.obs || '' };
+        estilo: base.estilo || 'crawl', variacao: base.variacao || cat.variacao || null, indoor: !!base.indoor, subida: !!base.subida, nomeLivre: base.nomeLivre || '', data: base.ts ? base.ts.slice(0, 10) : data, hora: base.ts ? base.ts.slice(11, 16) : horaHM(), obs: base.obs || '' };
       memoE = e;
       if (base.paceMinKm == null && e.distKm && e.durMin) e.paceMinKm = e.durMin / e.distKm;
       let ult = [];
@@ -95,7 +95,7 @@ export async function abrirRegistroTreino({ data = dataISO(), editar = null } = 
       const inputs = {};
       const kcalBox = h('div', { class: 'totais-conf', 'aria-live': 'polite' });
       function velKmh() { return e.paceMinKm ? AT.paceParaVel(e.paceMinKm) : null; }
-      function metAtual() { return AT.metDaAtividade({ atividade: id, intensidade: e.intensidade, velKmh: velKmh(), indoor: e.indoor, estilo: e.estilo, terrenoSubida: e.subida }); }
+      function metAtual() { return AT.metDaAtividade({ atividade: id, intensidade: e.intensidade, velKmh: velKmh(), indoor: e.indoor, estilo: e.estilo, variacao: e.variacao, terrenoSubida: e.subida }); }
       function recalcKcal() {
         const met = metAtual(); const k = AT.kcalAtividade(met, peso(), e.durMin);
         limpar(kcalBox).append(h('span', null, h('b', null, e.durMin ? n0(k) : '–'), ' kcal gastas'), h('span', { class: 'mudo' }, `MET ${n1(met)} · ${n0(peso())} kg`), h('span', { class: 'estimativa' }, 'estimativa'));
@@ -133,6 +133,7 @@ export async function abrirRegistroTreino({ data = dataISO(), editar = null } = 
       const partes = [];
       partes.push(h('button', { class: 'btn btn-fantasma', type: 'button', onclick: () => (editar ? fechar(undefined) : arvore(null)) }, icone('esq', 18), editar ? 'Cancelar' : 'Outra atividade'), h('h3', null, cat.nome));
       if (cat.pedeNome) partes.push(campo('Qual atividade?', h('input', { type: 'text', value: e.nomeLivre, placeholder: 'Ex.: surfe, patinação', oninput: ev => { e.nomeLivre = ev.target.value; } })));
+      if (cat.variacoes) partes.push(h('fieldset', null, h('legend', null, cat.campoVariacao), chips(Object.entries(cat.variacoes).map(([k, v]) => [k, v[0]]), e.variacao, v => { e.variacao = v; recalcKcal(); }, { rotuloGrupo: cat.campoVariacao })));
       if (cat.tipo === 'natacao') partes.push(campo('Estilo', selecao(Object.entries(cat.estilos).map(([k, v]) => [k, v[0]]), e.estilo, { onchange: ev => { e.estilo = ev.target.value; recalcKcal(); } })));
       if (cat.tipo === 'bike') partes.push(h('fieldset', null, h('legend', null, 'Onde'), chips([['out', 'Rua / estrada'], ['in', 'Bicicleta ergométrica']], e.indoor ? 'in' : 'out', v => { e.indoor = v === 'in'; formularioRender(); }, { rotuloGrupo: 'Local' })));
       if (cat.terreno) partes.push(h('fieldset', null, h('legend', null, 'Terreno'), chips([['plano', 'Plano'], ['subida', 'Subida / trilha']], e.subida ? 'subida' : 'plano', v => { e.subida = v === 'subida'; recalcKcal(); }, { rotuloGrupo: 'Terreno' })));
@@ -154,7 +155,8 @@ export async function abrirRegistroTreino({ data = dataISO(), editar = null } = 
         partes.push(h('div', { class: 'grade-2' }, numCampo('metros', 'Distância (m)', null, lerNumero, fmtNum(e.metros, 0)), numCampo('dur', 'Duração (min ou h:mm)', null, lerDuracao, fmtNum(e.durMin, 1)), numCampo('pace100', 'Ritmo (min/100 m)', 'Ex.: 2:00', AT.lerPace, e.pace100 ? AT.formatarPace(e.pace100) : '')),
           h('p', { class: 'ajuda' }, 'Preencha dois entre metros, duração e ritmo: o terceiro é calculado.'));
       } else {
-        partes.push(numCampo('dur', 'Duração (min ou h:mm)', null, lerDuracao, fmtNum(e.durMin, 1)));
+        partes.push(numCampo('dur', 'Duração (min ou h:mm)', null, lerDuracao, fmtNum(e.durMin, 1)),
+          h('div', { class: 'chips', role: 'group', 'aria-label': 'Atalhos de duração' }, [30, 45, 60].map(m => h('button', { class: 'chip', type: 'button', onclick: () => { inputs.dur.value = String(m); editou('dur', m); } }, m + ' min'))));
         if (cat.tipo === 'bike' && e.indoor) { /* só intensidade e duração */ }
       }
       const inpData = h('input', { type: 'date', value: e.data, max: dataISO(), onchange: ev => { e.data = ev.target.value; } });
@@ -166,7 +168,7 @@ export async function abrirRegistroTreino({ data = dataISO(), editar = null } = 
       function salvar() {
         if (!e.durMin) { aviso('Informe a duração (ou dois entre distância, duração e ritmo).'); return; }
         const { met, k } = recalcKcal();
-        const reg = { ...(editar ? { id: editar.id } : {}), ts: tsLocal(e.data || data, e.hora || horaHM()), atividade: id, intensidade: e.intensidade, unidade: e.unidade, distKm: e.distKm, metros: e.metros, durMin: e.durMin, paceMinKm: e.paceMinKm, pace100: e.pace100, velKmh: velKmh(), estilo: cat.tipo === 'natacao' ? e.estilo : undefined, indoor: cat.tipo === 'bike' ? e.indoor : undefined, subida: cat.terreno ? e.subida : undefined, nomeLivre: e.nomeLivre || undefined, mets: met, kcal: Math.round(k), obs: e.obs || undefined };
+        const reg = { ...(editar ? { id: editar.id } : {}), ts: tsLocal(e.data || data, e.hora || horaHM()), atividade: id, intensidade: e.intensidade, unidade: e.unidade, distKm: e.distKm, metros: e.metros, durMin: e.durMin, paceMinKm: e.paceMinKm, pace100: e.pace100, velKmh: velKmh(), estilo: cat.tipo === 'natacao' ? e.estilo : undefined, indoor: cat.tipo === 'bike' ? e.indoor : undefined, subida: cat.terreno ? e.subida : undefined, nomeLivre: e.nomeLivre || undefined, mets: met, kcal: Math.round(k), variacao: cat.variacoes ? e.variacao : undefined, forcaEq: AT.seriesEquivalentes(id, e.durMin) || undefined, obs: e.obs || undefined };
         const r = store.salvar('atividades', reg);
         aviso(`Atividade registrada: ~${n0(r.kcal)} kcal (estimativa).`, { acao: editar ? null : 'Desfazer', aoAcao: () => { store.remover('atividades', r.id); document.dispatchEvent(new CustomEvent('atlas:atualizar')); } });
         fechar({ salvo: true, data: e.data });

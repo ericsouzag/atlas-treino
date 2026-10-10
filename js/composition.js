@@ -217,11 +217,13 @@ export function analisarComposicao({ perfil, corpo, totaisPorDia, treinos, ativi
 
   const idade = idadeEm(perfil.nascimento, new Date(hoje + 'T12:00:00')) ?? 30;
   const ini = somarDias(hoje, -14);
+  const eqForca = Math.min(30, atividades.filter(a => a.ts && a.ts.slice(0, 10) >= ini && a.ts.slice(0, 10) <= hoje).reduce((s, a) => s + (a.forcaEq || 0), 0));
   const rt = resumoTreinos(treinos, ini, hoje);
-  const sessoesSemana = rt.sessoes / 2, seriesSemana = rt.series / 2;
+  const sessoesSemana = rt.sessoes / 2, seriesSemana = (rt.series + eqForca) / 2;
   // Cardio e esportes entram só como GASTO de energia; o estímulo de treino (sessões/séries) vem só da musculação.
   const kcalAtiv = atividades.filter(a => a.ts && a.ts.slice(0, 10) >= ini && a.ts.slice(0, 10) <= hoje).reduce((s, a) => s + (a.kcal || 0), 0);
   const treinoKcalDia = (rt.kcal + kcalAtiv) / 14;
+  // CrossFit e pilates contam um pouco como estímulo de força (séries equivalentes), com teto para não inflar a previsão.
   const peso = ultimoPeso?.peso;
   // Se não houver %G, usar o último conhecido (ou estimativa por IMC no perfil)
   const gordura = ultimoG?.gordura ?? perfil.gorduraInicial ?? null;
@@ -284,5 +286,5 @@ export function analisarComposicao({ perfil, corpo, totaisPorDia, treinos, ativi
     if (Math.abs(implicito.diferenca) > 350) avisos.push('O que a balança mostra não bate com o que você registrou: pode haver refeições sem registro, porções subestimadas ou retenção de água.');
   }
 
-  return { calibrado, faltando, atual: peso ? { peso, gordura, fonteG, ...(gordura != null ? composicao(peso, gordura) : {}) } : null, ingestao: ing, treino: { ...rt, sessoesSemana, seriesSemana, treinoKcalDia, kcalAtividades: kcalAtiv }, balanco, p, projecao, observado, tendencia: tend, plato, implicito, avisos };
+  return { calibrado, faltando, atual: peso ? { peso, gordura, fonteG, ...(gordura != null ? composicao(peso, gordura) : {}) } : null, ingestao: ing, treino: { ...rt, sessoesSemana, seriesSemana, treinoKcalDia, kcalAtividades: kcalAtiv, seriesEquivalentes: eqForca }, balanco, p, projecao, observado, tendencia: tend, plato, implicito, avisos };
 }

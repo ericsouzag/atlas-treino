@@ -92,7 +92,18 @@ export const ATIVIDADES = {
   tenis: { nome: 'Tênis', tipo: 'simples', grupo: 'Esportes', met: [5.0, 7.3, 8.0], intensidades: INTENSIDADES },
   luta: { nome: 'Luta / artes marciais', tipo: 'simples', grupo: 'Esportes', met: [5.0, 10.3, 12.8], intensidades: INTENSIDADES },
   danca: { nome: 'Dança', tipo: 'simples', grupo: 'Esportes', met: [4.5, 6.5, 8.0], intensidades: INTENSIDADES },
-  yoga: { nome: 'Yoga / pilates', tipo: 'simples', grupo: 'Esportes', met: [2.5, 3.0, 4.0], intensidades: INTENSIDADES },
+  // Yoga: Compêndio 2011 código 02150 (hatha 2,5) e 02160 (power yoga 4,0).
+  yoga: { nome: 'Yoga', tipo: 'simples', grupo: 'Esportes', met: [2.5, 3.0, 4.0], intensidades: INTENSIDADES },
+  // Pilates: Compêndio 2011 código 02024 (pilates em geral = 3,0). Mat (solo) sobe até ~4,0 nas séries avançadas;
+  // aparelhos (reformer, cadillac/torre) ficam entre 3,0 e 3,8 (valores médios de estudos com calorimetria, não do Compêndio).
+  // Estímulo de força: pequeno (forca 0,15 = ~3 séries equivalentes por hora).
+  pilates: { nome: 'Pilates', tipo: 'simples', grupo: 'Esportes', campoVariacao: 'Modalidade', variacao: 'mat', forca: 0.15,
+    variacoes: { mat: ['Solo (mat)', 3.0, 3.5, 4.0], reformer: ['Aparelhos: reformer', 3.0, 3.4, 3.8], cadillac: ['Aparelhos: cadillac / torre', 3.0, 3.3, 3.6] }, intensidades: INTENSIDADES },
+  // CrossFit: o Compêndio 2011 traz circuit training vigoroso = 8,0 (código 02040) e exercício calistênico vigoroso = 8,0 (02030);
+  // WODs de alta intensidade medidos em estudos ficam em ~10 a 12 METs. Leve = 6,0; técnica/aquecimento fica abaixo (4,5 a 6,5).
+  // Estímulo de força: moderado (forca 0,4 = ~8 séries equivalentes por hora, com teto no modelo).
+  crossfit: { nome: 'CrossFit', tipo: 'simples', grupo: 'Esportes', campoVariacao: 'Formato', variacao: 'wod', forca: 0.4,
+    variacoes: { wod: ['WOD for time', 8.0, 10.0, 12.0], amrap: ['AMRAP', 7.5, 9.5, 12.0], emom: ['EMOM', 6.0, 8.0, 10.0], forca: ['Força / ginástica', 6.0, 7.5, 9.0], tecnica: ['Técnica / aquecimento', 4.5, 5.5, 6.5] }, intensidades: INTENSIDADES },
   remo: { nome: 'Remo (ergômetro)', tipo: 'simples', grupo: 'Esportes', met: [4.8, 7.0, 8.5], intensidades: INTENSIDADES },
   eliptico: { nome: 'Elíptico', tipo: 'simples', grupo: 'Esportes', met: [4.6, 6.5, 8.0], intensidades: INTENSIDADES },
   escada: { nome: 'Escada (stair)', tipo: 'simples', grupo: 'Esportes', met: [6.0, 9.0, 11.0], intensidades: INTENSIDADES },
@@ -127,7 +138,7 @@ export function metDaAtividade(dados) {
       return metBike(dados.velKmh || VEL_PADRAO.ciclismo[dados.intensidade] || 20);
     }
     case 'natacao': { const e = a.estilos[dados.estilo] || a.estilos.crawl; return e[1 + ii]; }
-    default: return a.met[ii];
+    default: { if (a.variacoes) { const v = a.variacoes[dados.variacao] || a.variacoes[a.variacao]; return v[1 + ii]; } return a.met[ii]; }
   }
 }
 
@@ -137,6 +148,18 @@ export function kcalAtividade(met, pesoKg, durMin) {
   return Math.max(0, (met - 1) * pesoKg * (durMin / 60));
 }
 
+/** Séries de musculação equivalentes (estímulo de força) de uma atividade. Pequeno de propósito: nunca infla a previsão. */
+export function seriesEquivalentes(atividade, durMin) {
+  const f = ATIVIDADES[atividade]?.forca || 0;
+  return f && durMin ? +(f * 20 * (durMin / 60)).toFixed(1) : 0;
+}
+
+/** Cálculo único usado pela tela e pelos testes: MET, kcal líquidos e estímulo de força de um registro. */
+export function calcularAtividade(d, pesoKg) {
+  const met = metDaAtividade(d);
+  return { met, kcal: kcalAtividade(met, pesoKg, d.durMin), forcaEq: seriesEquivalentes(d.atividade, d.durMin) };
+}
+
 /** Resumo textual curto de uma atividade registrada */
 export function descricaoAtividade(a) {
   const base = (ATIVIDADES[a.atividade] || { nome: a.nome || 'Atividade' }).nome;
@@ -144,6 +167,7 @@ export function descricaoAtividade(a) {
   const p = [];
   if (a.distKm) p.push(a.unidade === 'mi' ? `${(a.distKm / KM_POR_MI).toFixed(2).replace('.', ',')} mi` : `${a.distKm.toFixed(2).replace('.', ',')} km`);
   if (a.metros) p.push(`${Math.round(a.metros)} m`);
+  if (a.variacao && ATIVIDADES[a.atividade]?.variacoes?.[a.variacao]) p.push(ATIVIDADES[a.atividade].variacoes[a.variacao][0]);
   if (a.durMin) p.push(`${Math.round(a.durMin)} min`);
   if (a.intensidade) p.push(a.intensidade === 'intervalada' ? 'intervalada' : a.intensidade);
   return { nome, detalhe: p.join(' · ') };

@@ -1,5 +1,5 @@
 // Service worker do Atlas Fitness: funciona offline. Atualize VERSAO a cada publicação para renovar o cache.
-const VERSAO = 'atlas-v1.4.1';
+const VERSAO = 'atlas-v1.4.2';
 const ARQUIVOS = [
   './',
   './css/app.css',
@@ -10,6 +10,7 @@ const ARQUIVOS = [
   './icons/apple-touch-icon.png',
   './icons/favicon-32.png',
   './icons/icon-192.png',
+  './icons/icon-48-teste.png',
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',
   './index.html',

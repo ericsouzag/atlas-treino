@@ -54,7 +54,7 @@ frango frito empanado|nuggets;nugget;frango empanado;empanado de frango|fastfood
 patinho grelhado|patinho;bife de patinho;bife;carne;carne bovina;carne grelhada|carnes|219 35.9 0 7.3 0|bife:100;porcao:100|
 alcatra grelhada|alcatra;bife de alcatra|carnes|241 31.9 0 11.5 0|bife:120;porcao:100|
 contrafile grelhado|contrafile;contra file;bife de contrafile|carnes|258 30 0 15 0|bife:130;porcao:100|
-picanha grelhada|picanha;churrasco;fraldinha|carnes|290 28 0 19 0|fatia:60;porcao:100|
+picanha grelhada|picanha;churrasco|carnes|290 28 0 19 0|fatia:60;porcao:100|
 carne moida refogada|carne moida;carne moída;moida|carnes|212 26.7 0 10.9 0|colher de sopa:30;porcao:100|
 costela bovina assada|costela;costelinha|carnes|340 25 0 26 0|porcao:120;pedaco:100|
 carne de porco lombo assado|lombo;carne de porco;porco;bisteca;lombo de porco|carnes|210 28 0 10 0|fatia:80;porcao:100|
@@ -82,7 +82,7 @@ iogurte com polpa de frutas|iogurte de fruta;iogurte de morango;iogurte com frut
 iogurte proteico (tipo skyr)|iogurte proteico;skyr;iogurte high protein;iogurte whey|laticinios|62 10 3.5 0.2 0|pote:170;copo:170|
 queijo mussarela|mussarela;muçarela;queijo mussarela;queijo muçarela;queijo|laticinios|330 22.6 3 25.2 0|fatia:15;porcao:30|
 queijo minas frescal|queijo minas;minas frescal;queijo branco;queijo fresco|laticinios|264 17.4 3.2 20.2 0|fatia:30;porcao:30|
-queijo cottage|cottage;queijo cottage;ricota|laticinios|98 11 3.4 4.3 0|colher de sopa:30;porcao:100|
+queijo cottage|cottage;queijo cottage|laticinios|98 11 3.4 4.3 0|colher de sopa:30;porcao:100|
 queijo prato|queijo prato;prato fatiado|laticinios|360 23 1.5 29 0|fatia:15|
 queijo coalho|queijo coalho;coalho|laticinios|300 22 2 23 0|espetinho:70;fatia:40|
 queijo parmesao ralado|parmesao;queijo ralado;parmesão|laticinios|453 36 1.7 33 0|colher de sopa:8|
@@ -120,10 +120,10 @@ limao|limao;limão|frutas|32 0.9 10.5 0.1 1.5|unidade:60|
 acai na tigela|acai;açaí;acai na tigela;tigela de acai;acai com granola|frutas|140 2 24 4 3|copo:300;tigela:300;porcao:300;pequeno:200|a=15
 uva passa|uva passa;passas|frutas|299 3.1 79 0.5 3.7|colher de sopa:12;punhado:30|a=59
 amendoim torrado|amendoim;amendoim torrado|oleaginosas|580 26 21 49 8|punhado:30;colher de sopa:10;pacotinho:50|
-castanha de caju|castanha de caju;caju castanha|oleaginosas|570 18 30 46 3.3|unidade:3;punhado:30|
-castanha-do-para|castanha do para;castanha-do-para;castanha do pará;castanha|oleaginosas|656 14.5 12.3 63.5 7.9|unidade:4;punhado:30|
-nozes|nozes;noz|oleaginosas|620 14 18 59 6.7|unidade:5;punhado:30|
-amendoas|amendoas;amêndoas;amendoa|oleaginosas|580 21 22 50 12|unidade:1.2;punhado:30|
+castanha de caju|castanha de caju;caju castanha|oleaginosas|570 18 30 46 3.3|punhado:30;unidade:3|
+castanha-do-para|castanha do para;castanha-do-para;castanha do pará;castanha|oleaginosas|656 14.5 12.3 63.5 7.9|punhado:30;unidade:4|
+nozes|nozes;noz|oleaginosas|620 14 18 59 6.7|punhado:30;unidade:5|
+amendoas|amendoas;amêndoas;amendoa|oleaginosas|580 21 22 50 12|punhado:30;unidade:1.2|
 chia|chia;semente de chia|oleaginosas|486 16.5 42 31 34|colher de sopa:12|
 alface|alface;folhas;salada verde|verduras|15 1.4 2.9 0.2 2|prato:50;folha:8;porcao:50|
 tomate|tomate;tomates|verduras|15 1.1 3.1 0.2 1.2|unidade:100;fatia:20;porcao:80|
@@ -160,10 +160,18 @@ gelatina|gelatina;gelatina pronta|doces|62 1.3 14 0 0|copo:150;pote:120|a=14
 maionese|maionese|gorduras|302 0.6 8 30 0|colher de sopa:15;sache:10|u
 ketchup|ketchup;catchup|gorduras|100 1.2 24 0.2 0.5|colher de sopa:15;sache:8|u;a=22
 molho de tomate|molho de tomate;molho;molho de macarrao;extrato de tomate|gorduras|38 1.3 8 0.3 1.5|concha:60;colher de sopa:30|a=5
-refrigerante|refrigerante;coca;coca cola;coca-cola;guarana;guaraná;fanta;pepsi;sprite;soda|bebidas|42 0 10.6 0 0|lata:350;copo:200;garrafa:600;garrafinha:290;litro:1000|l;b;u;a=10.6
-refrigerante zero|refrigerante zero;coca zero;coca light;refrigerante diet;guarana zero|bebidas|1 0 0.1 0 0|lata:350;copo:200;garrafa:600;litro:1000|l
+refrigerante|refrigerante;coca;coca cola;coca-cola;fanta;pepsi;sprite;soda|bebidas|42 0 10.6 0 0|lata:350;copo:200;garrafa:600;garrafinha:290;litro:1000|l;b;u;a=10.6
+refrigerante zero|refrigerante zero;coca zero;coca cola zero;coca-cola zero;coca light;refrigerante diet;refrigerante light;guarana zero;pepsi zero;pepsi black;fanta zero;sprite zero;guarana antarctica zero|bebidas|1 0 0.1 0 0|lata:350;copo:200;garrafa:600;litro:1000|l
 suco de laranja natural|suco de laranja;suco natural;suco de laranja natural|bebidas|45 0.7 10.4 0.2 0.2|copo:200;copo grande:300;xicara:240|l;a=8.4
 suco de caixinha (nectar)|suco de caixinha;suco de caixa;nectar;suco industrializado;suco de uva;suco de pessego;del valle|bebidas|50 0.2 12 0 0|caixinha:200;copo:200;litro:1000|l;b;u;a=11
+suco de caju|suco de caju natural;suco caju;caju suco;suco de cajus|bebidas|45 0.5 10.8 0.1 0.3|copo:200;copo grande:300;xicara:240|l;a=8
+suco de acerola|suco de acerola natural;suco acerola|bebidas|36 0.4 8.8 0.1 0.3|copo:200;copo grande:300;xicara:240|l;a=7
+suco de maracuja|suco de maracuja natural;suco maracuja|bebidas|48 0.5 11.6 0.1 0.3|copo:200;copo grande:300;xicara:240|l;a=9
+suco de limao (limonada)|limonada;suco de limao;limonada suica;suco de limao adocado|bebidas|38 0.2 9.5 0.1 0.1|copo:200;copo grande:300;xicara:240|l;a=8.5
+suco de melancia|suco de melancia natural;suco melancia|bebidas|32 0.5 7.5 0.1 0.1|copo:200;copo grande:300;xicara:240|l;a=3
+suco de uva integral|suco de uva integral;suco integral de uva;suco de uva natural|bebidas|65 0.3 16 0.1 0.1|copo:200;copo grande:300;caixinha:200|l;a=15
+suco de graviola|suco de graviola natural;suco graviola|bebidas|50 0.6 12 0.1 0.2|copo:200;copo grande:300;xicara:240|l;a=8
+suco de tangerina|suco de tangerina natural;suco de mexerica;suco de mexerica natural|bebidas|42 0.6 10 0.1 0.1|copo:200;copo grande:300;xicara:240|l;a=8
 suco em po preparado|suco em po;tang;clight;refresco em po;refresco|bebidas|38 0 9.5 0 0|copo:200|l;b;u;a=9
 agua de coco|agua de coco;água de coco|bebidas|22 0 5.3 0 0|copo:200;caixinha:200;coco:300|l
 cerveja|cerveja;chopp;chope;cerveja long neck;cerva|bebidas|43 0.5 3.6 0 0|lata:350;long neck:355;copo:300;garrafa:600;tulipa:300|l
@@ -182,7 +190,16 @@ agua|agua;água;agua mineral|bebidas|0 0 0 0 0|copo:200;garrafa:500;litro:1000|l
 feijoada|feijoada|pratos|150 8.5 11 7.5 4|concha:130;prato:300|
 strogonoff de frango|strogonoff;estrogonofe;strogonoff de carne|pratos|150 11 5 9.5 0.5|concha:130;prato:250|
 lasanha a bolonhesa|lasanha;lasanha bolonhesa|pratos|165 9 17 7 1|porcao:250;pedaco:250|
-pizza de mussarela|pizza;pizza mussarela;pizza de queijo;pizza de calabresa;pizza de frango;pizza de presunto;pizza portuguesa;pizza margherita;pizza marguerita;pizza quatro queijos;pizza de atum;pizza de bacon|fastfood|270 11 33 10 2|fatia:110;pedaco:110;broto:300|u
+pizza de mussarela|pizza;pizza mussarela;pizza de queijo;pizza muçarela;pizza de mozzarella|fastfood|270 11 33 10 2|fatia:110;pedaco:110;broto:300|u
+pizza de calabresa|pizza calabresa;pizza de linguica calabresa;pizza de linguica|fastfood|285 12.5 28.5 13.5 1.8|fatia:110;pedaco:110;broto:300|u
+pizza de presunto|pizza presunto;pizza de presunto e queijo;pizza de queijo e presunto|fastfood|262 12.5 28 11 1.8|fatia:110;pedaco:110;broto:300|u
+pizza portuguesa|pizza portuguesa;pizza a portuguesa;pizza de ovo e presunto|fastfood|255 11.5 27 11.5 2|fatia:120;pedaco:120;broto:320|u
+pizza margherita|pizza margherita;pizza marguerita;pizza de tomate e manjericao;pizza napolitana;pizza de manjericao|fastfood|250 10.5 31 9 2|fatia:100;pedaco:100;broto:280|u
+pizza quatro queijos|pizza quatro queijos;pizza 4 queijos;pizza de quatro queijos;pizza de 4 queijos|fastfood|295 14 27 14.5 1.5|fatia:110;pedaco:110;broto:300|u
+pizza de frango com catupiry|pizza de frango;pizza frango com catupiry;pizza de frango catupiry;pizza de frango com requeijao;pizza de frango com cream cheese|fastfood|265 12.5 28 11.5 1.5|fatia:115;pedaco:115;broto:310|u
+pizza de bacon|pizza bacon;pizza de bacon com queijo;pizza de bacon e queijo|fastfood|300 13 27 15 1.5|fatia:110;pedaco:110;broto:300|u
+pizza de atum|pizza atum;pizza de atum com cebola|fastfood|250 12.5 28 9.5 1.8|fatia:110;pedaco:110;broto:300|u
+pizza de chocolate|pizza doce;pizza de chocolate com morango;pizza de brigadeiro|doces|295 5.5 38 13 1.5|fatia:100;pedaco:100;broto:260|u;a=18
 esfiha de carne|esfiha;esfirra|fastfood|250 11 29 10 1.5|unidade:90|
 coxinha|coxinha;coxinha de frango|fastfood|275 7 29 14 1|unidade:90;mini:35|u
 pastel frito|pastel;pastel de carne;pastel de queijo;pastel de feira|fastfood|300 9 30 16 1|unidade:100;grande:150|u
@@ -249,7 +266,7 @@ export const ALIMENTOS = LINHAS.split(/\r?\n/).map(l => l.trim()).filter(Boolean
 });
 
 const POR_ID = new Map(ALIMENTOS.map(a => [a.id, a]));
-export const alimentoPorId = id => POR_ID.get(id) || null;
+export const alimentoPorId = id => POR_ID.get(id) || POR_ID.get(LEGADO.get(id)) || null;
 export const TOTAL_BASE = ALIMENTOS.length;
 
 // ---- registro de alimentos extras (TACO, criados pela pessoa, Open Food Facts) ----
@@ -276,10 +293,18 @@ export function removerAlimentoDoBanco(id) {
   return true;
 }
 
-/** Aplica o arquivo data/taco.json (gerado por tools/gerar-taco.mjs). Idempotente. */
-export function aplicarTaco(json) {
-  if (!json || !Array.isArray(json.itens)) return 0;
-  for (const [id, a] of Object.entries(json.meta?.extras || {})) {
+// ---- camadas sob demanda: data/taco.json, data/ibge.json, data/usda.json (geradas por tools/unificar-banco.mjs) ----
+// Prioridade (desempate na busca): TACO > IBGE > embutido > USDA. Os arquivos já vêm desduplicados entre si e contra o embutido:
+// um alimento do embutido que a TACO/IBGE também tem é substituído pelo registro da camada (que herda apelidos e porções caseiras),
+// e o id antigo continua valendo (LEGADO), para não quebrar refeições e favoritos já salvos.
+const LEGADO = new Map();
+export const idCanonico = id => (POR_ID.has(id) ? id : LEGADO.get(id) || id);
+const linhaParaAlimento = ([id, nome, grupo, kcal, p, c, g, f, porcoes, apelidos, flags]) => montarAlimento({
+  id, nome, grupo, kcal, p, c, g, f, porcoes: parsePorcoes(porcoes),
+  aliases: (apelidos || '').split(';').filter(Boolean), ...parseFlags(flags), origem: id.slice(0, id.indexOf('-')),
+});
+function aplicarExtras(meta) {
+  for (const [id, a] of Object.entries(meta.extras || {})) {
     const base = POR_ID.get(id);
     if (!base || base.origem !== 'base') continue;
     for (const ap of a) {
@@ -288,28 +313,75 @@ export function aplicarTaco(json) {
       base.aliases.push(ap); base.aliasNorm.push(nn); base.aliasTokens.push(tokens(ap));
     }
   }
-  const lista = json.itens.map(([id, nome, grupo, kcal, p, c, g, f, porcoes, apelidos, flags]) => montarAlimento({
-    id: 'taco-' + id, nome, grupo, kcal, p, c, g, f, porcoes: parsePorcoes(porcoes),
-    aliases: (apelidos || '').split(';').filter(Boolean), ...parseFlags(flags), origem: 'taco',
-  }));
-  const n = registrarAlimentos(lista);
-  tacoCarregada = n;
+}
+function aplicarLegado(meta) {
+  for (const [antigo, novoId] of Object.entries(meta.legado || {})) {
+    if (POR_ID.get(antigo)?.origem === 'base') removerAlimentoDoBanco(antigo);
+    LEGADO.set(antigo, novoId);
+  }
+}
+/** Aplica uma camada de uma vez. Idempotente. Retorna quantos alimentos foram registrados. */
+export function aplicarCamada(json) {
+  if (!json || !Array.isArray(json.itens)) return 0;
+  const meta = json.meta || {};
+  aplicarExtras(meta);
+  const n = registrarAlimentos(json.itens.map(linhaParaAlimento));
+  aplicarLegado(meta);
   return n;
 }
-let tacoCarregada = 0;
-export const tacoPronta = () => tacoCarregada > 0;
-
-let promessaTaco = null;
-/** Carrega a TACO sob demanda (uma vez). Resolve true/false; nunca lança erro (o app funciona sem ela). */
-export function carregarBancoCompleto(url = new URL('../data/taco.json', import.meta.url).href) {
-  if (tacoCarregada) return Promise.resolve(true);
-  if (!promessaTaco) {
-    promessaTaco = fetch(url)
-      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-      .then(j => aplicarTaco(j) > 0)
-      .catch(e => { console.warn('Banco TACO indisponível (usando só o embutido)', e); promessaTaco = null; return false; });
+/** Igual a aplicarCamada, mas em fatias, cedendo o fio principal entre elas (não trava a tela em aparelhos lentos). */
+export async function aplicarCamadaEmFatias(json, tamanho = 250) {
+  if (!json || !Array.isArray(json.itens)) return 0;
+  const meta = json.meta || {};
+  aplicarExtras(meta);
+  let n = 0;
+  for (let i = 0; i < json.itens.length; i += tamanho) {
+    n += registrarAlimentos(json.itens.slice(i, i + tamanho).map(linhaParaAlimento));
+    await new Promise(r => setTimeout(r, 0));
   }
-  return promessaTaco;
+  aplicarLegado(meta);
+  return n;
+}
+/** Compatibilidade: a TACO era a única camada */
+export const aplicarTaco = aplicarCamada;
+
+const CAMADAS = ['taco', 'ibge', 'usda'];
+const prontas = new Set();
+export const camadasProntas = () => [...prontas];
+export const tacoPronta = () => prontas.has('taco');
+export const bancoCompletoPronto = () => CAMADAS.every(c => prontas.has(c));
+
+const promessas = {};
+function carregarCamada(nome, base) {
+  if (prontas.has(nome)) return Promise.resolve(true);
+  if (!promessas[nome]) {
+    promessas[nome] = fetch(new URL(`../data/${nome}.json`, base).href)
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(async j => { const n = await aplicarCamadaEmFatias(j); if (n > 0) prontas.add(nome); return n > 0; })
+      .catch(e => { console.warn(`Camada ${nome} indisponível (o app segue com o que já tem)`, e); promessas[nome] = null; return false; });
+  }
+  return promessas[nome];
+}
+let promessaTodas = null;
+/**
+ * Carrega as camadas TACO, IBGE e USDA (uma após a outra, para não travar a tela). Resolve true se ao menos a TACO carregou.
+ * Nunca lança erro: sem rede e sem cache, o app funciona só com o embutido.
+ */
+export function carregarBancoCompleto(base = import.meta.url) {
+  if (bancoCompletoPronto()) return Promise.resolve(true);
+  if (!promessaTodas) {
+    promessaTodas = (async () => {
+      let ok = false;
+      for (const c of CAMADAS) {
+        const r = await carregarCamada(c, base);
+        if (c === 'taco') ok = r;
+        await new Promise(res => setTimeout(res, 0));     // cede o fio principal entre as camadas
+      }
+      if (!bancoCompletoPronto()) promessaTodas = null;   // permite tentar de novo mais tarde
+      return ok;
+    })();
+  }
+  return promessaTodas;
 }
 
 /** Calcula nutrientes para uma quantidade em gramas/ml */
@@ -327,6 +399,8 @@ export function nutrientesPara(alimento, qtd) {
 
 /** Porção padrão (gramas) */
 export const porcaoPadrao = a => (a.porcoes[0] ? a.porcoes[0].g : 100);
+
+const ORDEM_ORIGEM = { meu: 5, off: 4, taco: 3, ibge: 2, base: 1, usda: 0 };
 
 /** Busca tolerante por texto (usada na tela de confirmação). Retorna lista ordenada por pontuação. */
 export function buscarAlimentos(consulta, limite = 8) {
@@ -348,10 +422,11 @@ export function buscarAlimentos(consulta, limite = 8) {
         const hit = qt.filter(t => at.some(x => x === t || x.startsWith(t))).length;
         if (hit) s = 40 * (hit / qt.length);
       }
-      if (i === 0) s += 1;
+      if (i === 0 && s > 0) s += 1;   // o nome canônico desempata, mas só se houve algum acerto
       if (s > melhor) melhor = s;
     }
     if (melhor > 0) res.push({ alimento: a, score: melhor });
   }
-  return res.sort((x, y) => y.score - x.score).slice(0, limite).map(r => r.alimento);
+  // empate: fonte brasileira primeiro (a pessoa > produto escolhido > TACO > IBGE > embutido > USDA)
+  return res.sort((x, y) => y.score - x.score || (ORDEM_ORIGEM[y.alimento.origem] ?? 0) - (ORDEM_ORIGEM[x.alimento.origem] ?? 0)).slice(0, limite).map(r => r.alimento);
 }

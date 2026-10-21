@@ -6,7 +6,7 @@ import { montarDocAlimento, validarNutrientes, salvarAlimentoPersonalizado, remo
 import { buscarPorCodigo, buscarPorTexto, codigoValido, mensagemErro, leitorDisponivel, lerCodigoPelaCamera, AVISO_OFF } from '../off.js';
 
 const n0 = x => (x == null || isNaN(x) ? '–' : Math.round(x).toLocaleString('pt-BR'));
-const rotuloOrigem = a => (a.origem === 'meu' ? 'meu alimento' : a.origem === 'off' ? 'produto' : '');
+const rotuloOrigem = a => (a.origem === 'meu' ? 'meu alimento' : a.origem === 'off' ? 'produto' : a.origem === 'usda' ? 'USDA' : '');
 const online = () => typeof navigator === 'undefined' || navigator.onLine !== false;
 
 // ---------------------------------------------------------------------------------------------
@@ -127,7 +127,7 @@ export function escolherAlimento({ titulo = 'Buscar alimento', consulta = '', ca
       const lista = q ? buscarAlimentos(q, 12) : candidatos.map(alimentoPorId).filter(Boolean);
       if (!lista.length) resultados.appendChild(h('p', { class: 'ajuda' }, q ? 'Nada encontrado no banco de alimentos.' : 'Digite para buscar no banco de alimentos.'));
       lista.forEach(a => resultados.appendChild(h('button', { type: 'button', onclick: () => fechar(a) },
-        h('strong', null, a.nome), a.origem !== 'base' && a.origem !== 'taco' ? h('span', { class: 'etiqueta' }, rotuloOrigem(a)) : null,
+        h('strong', null, a.nome), rotuloOrigem(a) ? h('span', { class: 'etiqueta' }, rotuloOrigem(a)) : null,
         h('div', { class: 'mudo peq' }, `${n0(a.kcal)} kcal por 100 ${a.liquido ? 'ml' : 'g'}`))));
       return lista.length;
     }

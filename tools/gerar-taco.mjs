@@ -1,4 +1,5 @@
-// Converte a TACO (4ª ed., NEPA/UNICAMP) para o banco compacto do Atlas Fitness: data/taco.json
+// Converte a TACO (4ª ed., NEPA/UNICAMP) em candidatos do banco do Atlas Fitness: tools/fonte/taco-itens.json
+// (o arquivo final data/taco.json é produzido por tools/unificar-banco.mjs, que desduplica contra IBGE, embutido e USDA)
 // Uso: node tools/gerar-taco.mjs            (lê tools/fonte/taco4-extrato.json)
 //      node tools/gerar-taco.mjs --relatorio (lista duplicatas prováveis e itens ignorados)
 //
@@ -55,7 +56,7 @@ const EXTRAS = {
   167: ['acai com guarana', 'acai com xarope'], 168: ['acai puro', 'polpa de acai'],
   175: ['banana da terra', 'banana comprida'], 179: ['banana nanica', 'banana d agua'], 180: ['banana ouro'], 182: [],
   208: ['laranja baia', 'laranja'], 209: ['suco de laranja baia'], 215: ['suco de laranja pera'],
-  232: ['maracuja', 'fruta do maracuja'], 233: ['polpa de maracuja', 'suco de maracuja'], 230: ['polpa de manga', 'suco de manga'],
+  232: ['maracuja', 'fruta do maracuja'], 233: ['polpa de maracuja'], 230: ['polpa de manga'],
   191: ['seriguela', 'ciriguela'], 204: ['jaca'], 246: ['fruta do conde', 'ata'],
   262: ['manteiga sem sal'], 263: ['margarina com sal'], 264: ['margarina sem sal'], 259: ['dende', 'oleo de dende'], 260: [],
   277: ['atum em oleo', 'atum', 'atum em lata'], 319: ['sardinha em oleo', 'sardinha enlatada'],
@@ -79,7 +80,7 @@ const EXTRAS = {
   466: ['petit suisse', 'danoninho', 'danone petit suisse'], 465: ['queijo processado', 'queijo fatiado', 'queijo cremoso em fatia', 'queijo tipo cheddar'],
   462: ['queijo minas meia cura', 'queijo curado'], 464: ['queijo parmesao', 'parmesao'], 469: ['ricota', 'ricota fresca'],
   470: ['gatorade', 'isotonico', 'powerade'], 472: ['cachaca', 'pinga', 'aguardente'], 473: ['caldo de cana', 'garapa'],
-  479: ['agua tonica', 'tonica'], 480: ['refrigerante de cola'], 481: ['guarana antarctica', 'refrigerante guarana'], 482: ['refrigerante de laranja', 'fanta laranja'],
+  479: ['agua tonica', 'tonica'], 480: ['refrigerante de cola'], 481: ['guarana', 'guarana antarctica', 'refrigerante guarana', 'refrigerante de guarana'], 482: ['refrigerante de laranja', 'fanta laranja'],
   483: ['refrigerante de limao', 'sprite', 'refrigerante limao'], 476: ['cha mate', 'mate', 'cha de mate'], 475: ['cha de erva doce'],
   484: ['omelete de queijo', 'omelete com queijo'], 485: ['ovo de codorna', 'ovos de codorna'], 486: ['clara cozida', 'clara de ovo cozida'], 487: ['gema cozida', 'gema'],
   489: ['ovo cru', 'ovo crú'], 491: ['achocolatado em po', 'nescau', 'toddy', 'chocolate em po', 'achocolatado'],
@@ -327,12 +328,13 @@ function flagsDe(a, d, c) {
 
 // ---------------------------------------------------------------------------------------------
 const baseAlias = new Set(BASE.flatMap(a => a.aliasNorm));
-const usados = new Set(baseAlias);          // apelidos já ocupados (base primeiro; depois TACO por ordem de preferência)
+const usados = new Set(baseAlias);          // apelidos do banco embutido (curados à mão) ficam com ele: se o item for o mesmo alimento da TACO, tools/unificar-banco.mjs funde e leva os apelidos junto
 const num = x => (x == null || Number.isNaN(x) ? 0 : Math.round(x * 10) / 10);
 
 // pré-processamento: partes, estado, qualificador, núcleo
 const itens = [];
 const ignorados = [];
+const dupBase = [];
 for (const a of fonte.alimentos) {
   const descricao = arruma(a.descricao);
   const partes = descricao.split(',').map(s => s.trim()).filter(Boolean);
@@ -344,7 +346,7 @@ for (const a of fonte.alimentos) {
     if (a.proteina != null && a.carboidrato != null && a.lipideos != null) kcal = Math.round(4 * a.proteina + 4 * a.carboidrato + 9 * a.lipideos);
     else { ignorados.push([a.id, descricao, 'sem energia na TACO']); continue; }
   }
-  if (DUPLICADOS.has(a.id)) { ignorados.push([a.id, descricao, 'já existe no banco base']); continue; }
+  if (DUPLICADOS.has(a.id)) dupBase.push(a.id);   // existe no banco embutido: a TACO tem prioridade, a unificação funde (tools/unificar-banco.mjs)
   const pn = partes.map(N);
   const estados = [], quals = [], nucleo = [];
   pn.forEach((x, i) => {
@@ -427,7 +429,7 @@ for (const it of ordemAlias) {
   if (/^frango/.test(it.d)) add(`${it.curto.replace('frango ', '')} de frango ${estadoTxt}`);
   // sucos e polpas: "suco de X"
   if (it.estados.some(e => /^suco/.test(N(e)))) add(`suco de ${it.nucleo.map(N).join(' ')}`);
-  if (it.estados.some(e => /^polpa/.test(N(e)))) { add(`polpa de ${it.nucleo.map(N).join(' ')}`); add(`suco de ${it.nucleo.map(N).join(' ')}`); }
+  if (it.estados.some(e => /^polpa/.test(N(e)))) { add(`polpa de ${it.nucleo.map(N).join(' ')}`); }   // polpa congelada NÃO é "suco de X" (o suco pronto vem do IBGE/embutido)
   // família: a palavra sozinha
   const fam = porFamilia.get(N(it.partes[0]));
   if (fam[0] === it) add(N(it.partes[0]));
@@ -470,10 +472,9 @@ const meta = {
   campos: ['id', 'nome', 'grupo', 'kcal', 'proteina', 'carboidrato', 'gordura', 'fibra', 'porcoes', 'apelidos', 'flags'],
   extras: EXTRAS_BASE,
 };
-fs.mkdirSync(path.join(raiz, 'data'), { recursive: true });
-fs.writeFileSync(path.join(raiz, 'data/taco.json'), JSON.stringify({ meta, itens: linhas }));
-const tam = fs.statSync(path.join(raiz, 'data/taco.json')).size;
-console.log(`taco.json: ${linhas.length} alimentos (${ignorados.length} ignorados), ${(tam / 1024).toFixed(0)} KB`);
+const saida = path.join(raiz, 'tools/fonte/taco-itens.json');
+fs.writeFileSync(saida, JSON.stringify({ meta: { ...meta, duplicadosNoBase: dupBase }, itens: linhas }));
+console.log(`taco-itens.json: ${linhas.length} alimentos (${ignorados.length} ignorados), ${dupBase.length} também no banco embutido`);
 if (RELATORIO) {
   console.log('--- ignorados'); ignorados.forEach(x => console.log(x.join(' | ')));
   console.log('--- exemplos');

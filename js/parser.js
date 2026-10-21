@@ -94,25 +94,47 @@ function pontuarAlias(q, a) {
   return { s: (2 * inter) / (q.length + a.length), nao };
 }
 
-// Índice de tokens úteis dos apelidos. Reconstruído quando o banco muda (TACO carregada, alimento criado...).
+// Índice de tokens úteis dos apelidos. Reconstruído quando o banco muda (camada carregada, alimento criado...).
+// Além da lista, guarda um índice invertido (token -> alimentos) para só pontuar os alimentos que têm alguma palavra parecida
+// com a consulta: com ~2.500 alimentos isso mantém cada interpretação em poucos milissegundos.
 let INDICE = [];
+let VOCAB = [];            // tokens distintos
+let POR_TOKEN = new Map();  // token -> Set de posições em INDICE
+let SIMILARES = new Map();  // cache: token da consulta -> posições candidatas
 let versaoIndice = -1;
 function indice() {
   if (versaoIndice !== versaoBanco()) {
     INDICE = ALIMENTOS.map(a => ({ a, aliases: a.aliasNorm.map(n => tokensUteis(n)) }));
+    POR_TOKEN = new Map();
+    INDICE.forEach((e, i) => e.aliases.forEach(al => al.forEach(t => { let s = POR_TOKEN.get(t); if (!s) POR_TOKEN.set(t, s = new Set()); s.add(i); })));
+    VOCAB = [...POR_TOKEN.keys()];
+    SIMILARES = new Map();
     versaoIndice = versaoBanco();
   }
   return INDICE;
 }
-// Prioridade de desempate por origem: o que a pessoa criou/escolheu vale mais que o embutido, que vale mais que a TACO.
-const PRIORIDADE = { meu: 0.06, off: 0.03, base: 0.004, taco: 0 };
+function candidatosDe(qtok) {
+  let c = SIMILARES.get(qtok);
+  if (!c) {
+    c = new Set();
+    for (const w of VOCAB) if (tokenSimilar(qtok, w) > 0) for (const i of POR_TOKEN.get(w)) c.add(i);
+    SIMILARES.set(qtok, c);
+  }
+  return c;
+}
+// Prioridade de desempate por origem: o que a pessoa criou/escolheu vale mais; depois a fonte brasileira (TACO > IBGE > embutido) e por último a USDA.
+const PRIORIDADE = { meu: 0.06, off: 0.03, taco: 0.012, ibge: 0.008, base: 0.004, usda: 0 };
 
 /** Encontra o melhor alimento para um texto (sem quantidade). Retorna {alimento, score, candidatos[]} */
 export function encontrarAlimento(texto) {
   const q = tokensUteis(normalizar(texto));
   if (!q.length) return { alimento: null, score: 0, candidatos: [] };
   const pont = [];
-  for (const { a, aliases } of indice()) {
+  const todos = indice();
+  const cand = new Set();
+  for (const t of q) for (const i of candidatosDe(t)) cand.add(i);
+  for (const i of [...cand].sort((x, y) => x - y)) {
+    const { a, aliases } = todos[i];
     let melhor = 0, naoM = q.length;
     aliases.forEach((al, i) => {
       const r = pontuarAlias(q, al);
@@ -152,6 +174,9 @@ export function paraGramas(alimento, n, unidade, fatorTam = 1) {
     return { gramas: n * (acharPorcao(alimento, 'unidade')?.g ?? porcaoPadrao(alimento)), estimado: true };
   }
   let por = acharPorcao(alimento, unidade);
+  if (!por && unidade === 'fatia') por = acharPorcao(alimento, 'pedaco');      // fatia e pedaço se equivalem quando só um deles está cadastrado
+  if (!por && unidade === 'pedaco') por = acharPorcao(alimento, 'fatia');
+  if (!por && ['barra', 'tablete', 'bombom', 'bola', 'casquinha', 'picole'].includes(unidade)) por = acharPorcao(alimento, 'unidade');   // "1 barra de proteína" usa a unidade do alimento
   if (fatorTam > 1) { const g = acharPorcao(alimento, 'grande'); if (g) { por = g; fatorTam = 1; } }
   if (por) return { gramas: n * por.g * fatorTam, estimado: false };
   if (unidade === 'unidade') {
@@ -215,8 +240,25 @@ function extrairQuantidade(trecho) {
   return { n: null, unidade: null, resto: palavras.join(' '), tam, explicita: false };
 }
 
-function montarItem(trecho, original) {
+/** Como extrairQuantidade, mas se não há número e o trecho inteiro é um alimento conhecido ("barra de proteína", "pão de queijo"), ele vale como um item só. */
+function quantidadeDoTrecho(trecho) {
   const q = extrairQuantidade(trecho);
+  const comNumero = /\d/.test(trecho) || paraNumero(trecho.split(' ')[0]) != null;
+  if (!comNumero && q.resto !== trecho) {
+    const cheio = encontrarAlimento(trecho);
+    if (cheio.alimento && cheio.score >= 0.95 && cheio.naoCasados === 0) return { n: null, unidade: null, resto: trecho, tam: q.tam, explicita: false };
+  }
+  // "2 barras de proteína": a "unidade" faz parte do nome do alimento ("barra de proteína") e o número conta unidades dele
+  if (q.n != null && q.explicita && q.resto && !['g', 'kg', 'ml', 'l'].includes(q.unidade) && q.unidade !== 'unidade') {
+    const nomeCheio = q.unidade + ' de ' + q.resto;
+    const cheio = encontrarAlimento(nomeCheio);
+    if (cheio.alimento && cheio.score >= 0.95 && cheio.naoCasados === 0 && cheio.alimento.aliasNorm.some(a => a.startsWith(q.unidade + ' '))) return { n: q.n, unidade: 'unidade', resto: nomeCheio, tam: q.tam, explicita: true };
+  }
+  return q;
+}
+
+function montarItem(trecho, original) {
+  const q = quantidadeDoTrecho(trecho);
   // "1 marmita", "uma porção": a própria unidade é o alimento quando não sobrou mais nada
   if (!q.resto && q.unidade && q.unidade !== 'unidade' && !['g', 'kg', 'ml', 'l'].includes(q.unidade)) q.resto = q.unidade;
   const achado = encontrarAlimento(q.resto);
@@ -253,12 +295,12 @@ export function interpretarRefeicao(texto) {
   const itens = [];
   for (const trecho of dividirTrechos(t)) {
     // 1) tenta o trecho inteiro (ex.: "cafe com leite", "pao com manteiga")
-    const q = extrairQuantidade(trecho);
+    const q = quantidadeDoTrecho(trecho);
     const inteiro = encontrarAlimento(q.resto);
-    const temCom = /\bcom\b/.test(q.resto);
+    const temCom = /\b(com|ao)\b/.test(q.resto);
     if (temCom && (inteiro.score < 0.85 || inteiro.naoCasados > 0)) {
       // 2) divide por " com " e interpreta cada parte; a quantidade vale para a primeira parte
-      const partes = q.resto.split(/\s+com\s+/).filter(Boolean);
+      const partes = q.resto.split(/\s+(?:com|ao)\s+/).filter(Boolean);
       partes.forEach((p, i) => {
         const prefixo = i === 0 && q.n != null ? `${q.n} ${q.unidade && q.unidade !== 'unidade' ? q.unidade + ' de ' : ''}` : '';
         itens.push(montarItem(`${prefixo}${p}`.trim(), trecho));

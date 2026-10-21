@@ -1,6 +1,6 @@
 // Parser de texto livre em português -> itens de refeição (banco local, sem IA).
 // Ex.: "2 ovos mexidos, 150g de arroz, 1 banana, café com leite"
-import { ALIMENTOS, alimentoPorId, porcaoPadrao, nutrientesPara } from './foods.js';
+import { ALIMENTOS, alimentoPorId, porcaoPadrao, nutrientesPara, versaoBanco } from './foods.js';
 import { normalizar, singular, levenshtein } from './texto.js';
 
 const PALAVRAS_NUM = {
@@ -53,6 +53,7 @@ function paraNumero(tok) {
 function prepararTexto(texto) {
   let t = String(texto ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
   t = t.replace(/(\d),(\d)/g, '$1.$2');            // vírgula decimal protegida
+  t = t.replace(/\bagua e sal\b/g, 'agua sal');     // "bolacha de água e sal" não são dois itens
   t = t.replace(/(\d)\s*x\s+/g, '$1 ');             // "2x ovo"
   t = t.replace(/(\d+|um|uma)\s+e\s+(meio|meia)/g, (m, a) => `${paraNumero(a) + 0.5}`);
   t = t.replace(/\bum\s+e\s+(meio|meia)\b/g, '1.5');
@@ -93,18 +94,25 @@ function pontuarAlias(q, a) {
   return { s: (2 * inter) / (q.length + a.length), nao };
 }
 
-// Pré-calcula tokens úteis dos apelidos
-const INDICE = ALIMENTOS.map(a => ({
-  a,
-  aliases: a.aliasNorm.map(n => tokensUteis(n)),
-}));
+// Índice de tokens úteis dos apelidos. Reconstruído quando o banco muda (TACO carregada, alimento criado...).
+let INDICE = [];
+let versaoIndice = -1;
+function indice() {
+  if (versaoIndice !== versaoBanco()) {
+    INDICE = ALIMENTOS.map(a => ({ a, aliases: a.aliasNorm.map(n => tokensUteis(n)) }));
+    versaoIndice = versaoBanco();
+  }
+  return INDICE;
+}
+// Prioridade de desempate por origem: o que a pessoa criou/escolheu vale mais que o embutido, que vale mais que a TACO.
+const PRIORIDADE = { meu: 0.06, off: 0.03, base: 0.004, taco: 0 };
 
 /** Encontra o melhor alimento para um texto (sem quantidade). Retorna {alimento, score, candidatos[]} */
 export function encontrarAlimento(texto) {
   const q = tokensUteis(normalizar(texto));
   if (!q.length) return { alimento: null, score: 0, candidatos: [] };
   const pont = [];
-  for (const { a, aliases } of INDICE) {
+  for (const { a, aliases } of indice()) {
     let melhor = 0, naoM = q.length;
     aliases.forEach((al, i) => {
       const r = pontuarAlias(q, al);
@@ -112,6 +120,7 @@ export function encontrarAlimento(texto) {
       // Em português o substantivo principal vem primeiro ("pizza de presunto" é pizza, não presunto)
       if (r.s > 0 && al.length <= q.length && al.some(x => tokenSimilar(q[0], x) > 0)) s += 0.12;
       if (i === 0) s += 0.002; // nome canônico desempata
+      if (r.s > 0) s += PRIORIDADE[a.origem] || 0;
       if (s > melhor) { melhor = s; naoM = r.nao; }
     });
     if (melhor > 0.3) pont.push({ a, s: melhor, nao: naoM });
@@ -208,6 +217,8 @@ function extrairQuantidade(trecho) {
 
 function montarItem(trecho, original) {
   const q = extrairQuantidade(trecho);
+  // "1 marmita", "uma porção": a própria unidade é o alimento quando não sobrou mais nada
+  if (!q.resto && q.unidade && q.unidade !== 'unidade' && !['g', 'kg', 'ml', 'l'].includes(q.unidade)) q.resto = q.unidade;
   const achado = encontrarAlimento(q.resto);
   const item = {
     trecho: original ?? trecho,

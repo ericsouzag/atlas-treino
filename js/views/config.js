@@ -9,6 +9,7 @@ import * as nuvem from '../firebase.js';
 import { exportarFotos, importarFotos, apagarTodasFotos } from '../images.js';
 import { dataISO } from '../datas.js';
 import { gravarEscolha } from '../entrada.js';
+import { cartaoMeusAlimentos } from './buscar-alimento.js';
 
 export function renderizar(raiz, ctx) {
   ctx.faixa('Ajustes');
@@ -103,6 +104,9 @@ export function renderizar(raiz, ctx) {
     h('p', { class: 'mudo' }, 'Baixe uma cópia em JSON para guardar ou levar para outro aparelho.'),
     h('div', { class: 'linha-botoes' }, h('button', { class: 'btn', type: 'button', onclick: () => exportar(false) }, icone('baixar', 18), 'Exportar dados'), h('button', { class: 'btn', type: 'button', onclick: () => exportar(true) }, icone('baixar', 18), 'Exportar com fotos'), h('button', { class: 'btn', type: 'button', onclick: () => arquivo.click() }, icone('subir', 18), 'Importar backup')), arquivo));
 
+  // ---------------- meus alimentos
+  secs.push(cartaoMeusAlimentos(redesenhar));
+
   // ---------------- aparência
   secs.push(h('section', { class: 'cartao pilha' }, h('h2', { style: { marginBottom: 0 } }, 'Aparência'),
     campo('Tema', selecao([['escuro', 'Escuro (padrão)'], ['claro', 'Claro'], ['auto', 'Automático (do aparelho)']], C.tema || 'escuro', { onchange: e => { store.salvarUnico('config', { tema: e.target.value }); document.documentElement.dataset.tema = e.target.value; } }))));
@@ -113,6 +117,7 @@ export function renderizar(raiz, ctx) {
       h('ul', { style: { paddingLeft: '20px', display: 'grid', gap: '6px' } },
         h('li', null, h('strong', null, 'O que guardamos: '), 'perfil (sexo, nascimento, altura, objetivo), refeições, treinos, medidas e fotos de progresso. Dados de saúde são dados pessoais sensíveis pela LGPD.'),
         h('li', null, h('strong', null, 'Onde fica: '), 'neste aparelho (armazenamento do navegador). Só vai para a nuvem (Google Firebase) se você criar uma conta e entrar. Fotos nunca vão para a nuvem.'),
+        h('li', null, h('strong', null, 'Busca de produtos: '), 'só quando você toca em "Buscar produto", o texto digitado (ou o código de barras) é enviado ao Open Food Facts (openfoodfacts.org) pela internet. Nada mais é enviado e os resultados não ficam salvos, a não ser o produto que você escolher.'),
         h('li', null, h('strong', null, 'Quem vê: '), 'só você. As regras do banco permitem que cada conta leia e escreva apenas os próprios dados. Não vendemos nem compartilhamos dados, e não há anúncios nem rastreadores.'),
         h('li', null, h('strong', null, 'Seus direitos: '), 'exportar (backup acima), corrigir (editar nas telas) e apagar tudo (botão abaixo; na nuvem, “Apagar dados da nuvem”).'),
         h('li', null, h('strong', null, 'Menores: '), 'a partir de 14 anos, com acompanhamento de responsável e profissional de saúde. Menores de 18 têm déficit calórico limitado.'))),
@@ -122,6 +127,8 @@ export function renderizar(raiz, ctx) {
   secs.push(h('section', { class: 'cartao pilha' }, h('h2', { style: { marginBottom: 0 } }, 'Créditos'),
     h('ul', { style: { paddingLeft: '20px', display: 'grid', gap: '6px', margin: 0 } },
       h('li', null, 'Fotos dos exercícios (posição inicial e final): free-exercise-db, github.com/yuhonas/free-exercise-db, domínio público (Unlicense). Redimensionadas para 640 px.'),
+      h('li', null, 'Alimentos brasileiros: Tabela Brasileira de Composição de Alimentos (TACO), 4ª edição revisada e ampliada, NEPA/UNICAMP, 2011 (www.unicamp.br/nepa/taco). Reprodução permitida citando a fonte. Transcrição em JSON: IgorFZ/taco-br (licença MIT). Porções caseiras, apelidos e estimativas de açúcar são do Atlas Fitness.'),
+      h('li', null, 'Produtos industrializados (busca opcional): Open Food Facts, openfoodfacts.org, dados sob a licença ODbL 1.0 (opendatacommons.org/licenses/odbl/1-0). Dados feitos por colaboradores, podem estar incompletos.'),
       h('li', null, 'Fontes Bricolage Grotesque e Figtree: licença SIL Open Font.'),
       h('li', null, 'Valores de MET: Compêndio de Atividades Físicas (Ainsworth et al., 2011), aproximados.'))));
 

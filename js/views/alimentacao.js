@@ -5,6 +5,7 @@ import { estimarRefeicao } from '../estimador.js';
 import { alimentoPorId, buscarAlimentos, nutrientesPara, porcaoPadrao } from '../foods.js';
 import { dataISO, horaHM, somarDias, rotuloDia, tsLocal, diaDoTs, horaDoTs } from '../datas.js';
 import { refeicoesDoDia, metas, aguaDoDia, setAgua, montarItemRefeicao, resumoItens, onboardingFeito, atividadesDoDia, gastoAtivoDoDia, treinosConcluidos } from '../dados.js';
+import { escolherAlimento } from './buscar-alimento.js';
 import { abrirRegistroTreino } from './registro-treino.js';
 import { descricaoAtividade } from '../atividades.js';
 import { totaisDoDia, alertasAlimentares, intervalos, avaliarIntervalo, tipoRefeicaoPorHora, TIPOS_REFEICAO } from '../nutrition.js';
@@ -250,7 +251,7 @@ export async function abrirConfirmacao({ itens, ts, tipo, texto, foto = null, fo
         lista.appendChild(h('div', { class: 'linha-item' },
           h('div', null,
             h('button', { class: 'nome-btn', type: 'button', 'aria-label': `Trocar alimento: ${l.nome}`, onclick: () => trocarAlimento(idx) }, a ? a.nome : (l.nome ? `“${l.nome}”: escolha um alimento` : 'Escolher alimento')),
-            !a ? h('div', { class: 'confianca-baixa' }, 'Não encontrei esse alimento no banco. Toque no nome para buscar.') : (l.confianca === 'baixa' ? h('div', { class: 'confianca-baixa' }, 'Correspondência incerta: confira o alimento.') : null),
+            !a ? h('div', { class: 'confianca-baixa' }, 'Não encontrei esse alimento no banco. Toque no nome para buscar, procurar o produto ou criar o seu.') : (l.confianca === 'baixa' ? h('div', { class: 'confianca-baixa' }, 'Correspondência incerta: confira o alimento.') : null),
             n ? h('div', { class: 'mudo peq' }, `${n0(n.kcal)} kcal · P ${n1(n.p)} · C ${n1(n.c)} · G ${n1(n.g)} · F ${n1(n.f)}`) : null),
           h('button', { class: 'btn-icone perigo', type: 'button', 'aria-label': `Remover ${l.nome}`, onclick: () => { linhas.splice(idx, 1); desenhar(); } }, icone('lixo')),
           h('div', { class: 'qtd' }, campo('Quantidade', qtd), campo('Unidade', un))));
@@ -258,20 +259,8 @@ export async function abrirConfirmacao({ itens, ts, tipo, texto, foto = null, fo
       recalc();
     }
     async function trocarAlimento(idx) {
-      const escolhido = await folha('Buscar alimento', fecharBusca => {
-        const resultados = h('div', { class: 'resultados-busca' });
-        const entrada = h('input', { type: 'search', placeholder: 'Ex.: arroz, frango, banana…', 'aria-label': 'Buscar alimento', value: linhas[idx].nome && !linhas[idx].alimentoId ? linhas[idx].trecho : '', oninput: debounce(() => mostrar(), 120) });
-        function mostrar() {
-          limpar(resultados);
-          const q = entrada.value.trim();
-          const base = q ? buscarAlimentos(q, 12) : (linhas[idx].candidatos || []).map(alimentoPorId).filter(Boolean);
-          if (!base.length) resultados.appendChild(h('p', { class: 'ajuda' }, q ? 'Nada encontrado. Tente outra palavra (sem acento funciona).' : 'Digite para buscar no banco de alimentos.'));
-          base.forEach(a => resultados.appendChild(h('button', { type: 'button', onclick: () => fecharBusca(a) }, h('strong', null, a.nome), h('div', { class: 'mudo peq' }, `${n0(a.kcal)} kcal por 100 ${a.liquido ? 'ml' : 'g'}`))));
-        }
-        mostrar();
-        setTimeout(() => entrada.focus(), 50);
-        return h('div', { class: 'pilha' }, entrada, resultados);
-      });
+      const l0 = linhas[idx];
+      const escolhido = await escolherAlimento({ titulo: 'Buscar alimento', consulta: l0.nome && !l0.alimentoId ? l0.nome : '', candidatos: l0.candidatos || [] });
       if (escolhido) {
         const l = linhas[idx]; const velho = l.alimentoId ? alimentoPorId(l.alimentoId) : null;
         l.alimentoId = escolhido.id; l.nome = escolhido.nome; l.unidadeSel = null; l.confianca = 'alta';
@@ -280,12 +269,7 @@ export async function abrirConfirmacao({ itens, ts, tipo, texto, foto = null, fo
       }
     }
     async function adicionar() {
-      const escolhido = await folha('Adicionar alimento', fecharBusca => {
-        const resultados = h('div', { class: 'resultados-busca' });
-        const entrada = h('input', { type: 'search', placeholder: 'Buscar alimento…', 'aria-label': 'Buscar alimento', oninput: debounce(() => { limpar(resultados); const q = entrada.value.trim(); buscarAlimentos(q, 12).forEach(a => resultados.appendChild(h('button', { type: 'button', onclick: () => fecharBusca(a) }, h('strong', null, a.nome), h('div', { class: 'mudo peq' }, `${n0(a.kcal)} kcal por 100 ${a.liquido ? 'ml' : 'g'}`)))); }, 120) });
-        setTimeout(() => entrada.focus(), 50);
-        return h('div', { class: 'pilha' }, entrada, resultados);
-      });
+      const escolhido = await escolherAlimento({ titulo: 'Adicionar alimento' });
       if (escolhido) { linhas.push({ alimentoId: escolhido.id, nome: escolhido.nome, gramas: porcaoPadrao(escolhido), confianca: 'alta', candidatos: [], unidadeSel: null }); desenhar(); }
     }
     desenhar();

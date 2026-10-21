@@ -50,7 +50,7 @@ omelete simples|omelete;omelete de queijo|ovos|190 12.5 1.5 14.7 0|unidade:110|
 peito de frango grelhado|frango;peito de frango;frango grelhado;file de frango;filé de frango;bife de frango|carnes|159 32 0 2.5 0|file:120;bife:100;porcao:100|
 frango cozido desfiado|frango desfiado;frango cozido|carnes|163 31.5 0 3.2 0|colher de sopa:25;porcao:100|
 frango assado (coxa e sobrecoxa)|coxa;sobrecoxa;coxa de frango;frango assado;frango com pele|carnes|215 26 0 12 0|unidade:90;porcao:100|
-frango frito empanado|nuggets;nugget;frango empanado;frango a milanesa;empanado de frango|fastfood|296 15 18 18 1|unidade:20;porcao:100|u
+frango frito empanado|nuggets;nugget;frango empanado;empanado de frango|fastfood|296 15 18 18 1|unidade:20;porcao:100|u
 patinho grelhado|patinho;bife de patinho;bife;carne;carne bovina;carne grelhada|carnes|219 35.9 0 7.3 0|bife:100;porcao:100|
 alcatra grelhada|alcatra;bife de alcatra|carnes|241 31.9 0 11.5 0|bife:120;porcao:100|
 contrafile grelhado|contrafile;contra file;bife de contrafile|carnes|258 30 0 15 0|bife:130;porcao:100|
@@ -218,28 +218,99 @@ function slug(s) {
   return normalizar(s).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-/** Lista de alimentos já estruturados */
-export const ALIMENTOS = LINHAS.split('\n').map(l => l.trim()).filter(Boolean).map(linha => {
+/** Monta um alimento completo (campos de busca incluídos) a partir de dados simples */
+export function montarAlimento({ id, nome, grupo = 'outros', kcal = 0, p = 0, c = 0, g = 0, f = 0, porcoes = [], aliases = [], ultra = false, bebidaAcucarada = false, liquido = false, suplemento = false, acucar = 0, origem = 'base', extra = null }) {
+  const als = [nome, ...aliases.filter(x => x && normalizar(x) !== normalizar(nome))];
+  return {
+    id, nome, grupo, kcal, p, c, g, f, porcoes, ultra, bebidaAcucarada, liquido, suplemento, acucar,
+    unidadeBase: liquido ? 'ml' : 'g',
+    origem,   // 'base' (embutido), 'taco', 'meu' (criado pela pessoa) ou 'off' (Open Food Facts, escolhido pela pessoa)
+    ...(extra || {}),
+    aliases: als,
+    aliasTokens: als.map(x => tokens(x)),
+    aliasNorm: als.map(x => normalizar(x)),
+  };
+}
+
+const parsePorcoes = txt => (txt || '').split(';').filter(Boolean).map(x => {
+  const i = x.lastIndexOf(':');
+  return { nome: x.slice(0, i), g: parseFloat(x.slice(i + 1)) };
+});
+
+/** Lista de alimentos já estruturados (o banco embutido; TACO e alimentos da pessoa são acrescentados depois) */
+export const ALIMENTOS = LINHAS.split(/\r?\n/).map(l => l.trim()).filter(Boolean).map(linha => {
   const [nome, apelidos, grupo, nums, porcoes, flags] = linha.split('|');
   const [kcal, p, c, g, f] = nums.trim().split(/\s+/).map(Number);
-  const fl = parseFlags(flags);
-  const porcs = (porcoes || '').split(';').filter(Boolean).map(x => {
-    const i = x.lastIndexOf(':');
-    return { nome: x.slice(0, i), g: parseFloat(x.slice(i + 1)) };
-  });
-  const aliases = [nome, ...(apelidos || '').split(';').filter(Boolean)];
-  return {
+  return montarAlimento({
     id: slug(nome), nome: capitalizar(acentuar(nome)), grupo, kcal, p, c, g, f,
-    porcoes: porcs, ...fl,
-    unidadeBase: fl.liquido ? 'ml' : 'g',
-    aliases,
-    aliasTokens: aliases.map(a => tokens(a)),
-    aliasNorm: aliases.map(a => normalizar(a)),
-  };
+    porcoes: parsePorcoes(porcoes), aliases: (apelidos || '').split(';').filter(Boolean),
+    ...parseFlags(flags),
+  });
 });
 
 const POR_ID = new Map(ALIMENTOS.map(a => [a.id, a]));
 export const alimentoPorId = id => POR_ID.get(id) || null;
+export const TOTAL_BASE = ALIMENTOS.length;
+
+// ---- registro de alimentos extras (TACO, criados pela pessoa, Open Food Facts) ----
+let versao = 0;
+/** Muda a cada alteração do banco (o parser usa para reconstruir seu índice) */
+export const versaoBanco = () => versao;
+
+/** Acrescenta ou substitui alimentos (por id). Retorna quantos foram acrescentados/atualizados. */
+export function registrarAlimentos(lista) {
+  let n = 0;
+  for (const a of lista) {
+    if (!a || !a.id) continue;
+    const i = POR_ID.has(a.id) ? ALIMENTOS.findIndex(x => x.id === a.id) : -1;
+    if (i >= 0) ALIMENTOS[i] = a; else ALIMENTOS.push(a);
+    POR_ID.set(a.id, a); n++;
+  }
+  if (n) versao++;
+  return n;
+}
+export function removerAlimentoDoBanco(id) {
+  const i = ALIMENTOS.findIndex(x => x.id === id);
+  if (i < 0) return false;
+  ALIMENTOS.splice(i, 1); POR_ID.delete(id); versao++;
+  return true;
+}
+
+/** Aplica o arquivo data/taco.json (gerado por tools/gerar-taco.mjs). Idempotente. */
+export function aplicarTaco(json) {
+  if (!json || !Array.isArray(json.itens)) return 0;
+  for (const [id, a] of Object.entries(json.meta?.extras || {})) {
+    const base = POR_ID.get(id);
+    if (!base || base.origem !== 'base') continue;
+    for (const ap of a) {
+      const nn = normalizar(ap);
+      if (base.aliasNorm.includes(nn)) continue;
+      base.aliases.push(ap); base.aliasNorm.push(nn); base.aliasTokens.push(tokens(ap));
+    }
+  }
+  const lista = json.itens.map(([id, nome, grupo, kcal, p, c, g, f, porcoes, apelidos, flags]) => montarAlimento({
+    id: 'taco-' + id, nome, grupo, kcal, p, c, g, f, porcoes: parsePorcoes(porcoes),
+    aliases: (apelidos || '').split(';').filter(Boolean), ...parseFlags(flags), origem: 'taco',
+  }));
+  const n = registrarAlimentos(lista);
+  tacoCarregada = n;
+  return n;
+}
+let tacoCarregada = 0;
+export const tacoPronta = () => tacoCarregada > 0;
+
+let promessaTaco = null;
+/** Carrega a TACO sob demanda (uma vez). Resolve true/false; nunca lança erro (o app funciona sem ela). */
+export function carregarBancoCompleto(url = new URL('../data/taco.json', import.meta.url).href) {
+  if (tacoCarregada) return Promise.resolve(true);
+  if (!promessaTaco) {
+    promessaTaco = fetch(url)
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(j => aplicarTaco(j) > 0)
+      .catch(e => { console.warn('Banco TACO indisponível (usando só o embutido)', e); promessaTaco = null; return false; });
+  }
+  return promessaTaco;
+}
 
 /** Calcula nutrientes para uma quantidade em gramas/ml */
 export function nutrientesPara(alimento, qtd) {
@@ -261,7 +332,8 @@ export const porcaoPadrao = a => (a.porcoes[0] ? a.porcoes[0].g : 100);
 export function buscarAlimentos(consulta, limite = 8) {
   const qn = normalizar(consulta);
   if (!qn) return [];
-  const qt = tokens(consulta);
+  let qt = tokens(consulta).filter(t => t.length >= 2);   // "1" e "e" não ajudam a achar nada
+  if (!qt.length) qt = tokens(consulta);
   const res = [];
   for (const a of ALIMENTOS) {
     let melhor = 0;

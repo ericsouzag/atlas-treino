@@ -1,5 +1,6 @@
 // Casca do app: roteamento por hash, navegação, tema e registro do service worker.
 import { store } from './store.js';
+import { iniciarBanco } from './banco.js';
 import { h, limpar, icone, aviso, confirmar } from './ui.js';
 import { onboardingFeito, config, perfil } from './dados.js';
 import { iniciarNuvem, usuarioAtual, aguardarUsuario, definirDecisorEnvio } from './firebase.js';
@@ -46,7 +47,7 @@ const ctx = {
   /** Define título e controles da faixa superior */
   faixa(titulo, ...controles) {
     limpar(el.faixa);
-    el.faixa.append(h('span', { class: 'marca', 'aria-hidden': 'true' }, 'Atlas'), h('h1', { id: 'titulo-pagina' }, titulo), ...controles);
+    el.faixa.append(h('span', { class: 'marca', 'aria-hidden': 'true' }, h('img', { src: 'icons/marca-atlas-v2.png', alt: '', width: 42, height: 34, decoding: 'async' }), h('span', { class: 'marca-nome' }, 'Atlas')), h('h1', { id: 'titulo-pagina' }, titulo), ...controles);
     document.title = `${titulo} · Atlas Fitness`;
   },
 };
@@ -76,6 +77,7 @@ async function renderizar(manter = false) {
 
 async function iniciar() {
   store.iniciar();
+  iniciarBanco();   // alimentos da pessoa agora; TACO em segundo plano (arquivo local)
   window.__atlas = { store };   // útil para depuração no console
   el.faixa = document.getElementById('faixa'); el.abas = document.getElementById('abas'); el.main = document.getElementById('principal');
   aplicarTema();

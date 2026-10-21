@@ -77,21 +77,50 @@ function chunk(tipo, dados) {
   const cr = Buffer.alloc(4); cr.writeUInt32BE(crc(td));
   return Buffer.concat([l, td, cr]);
 }
-function png(tam, rgba) {
-  const raw = Buffer.alloc((tam * 4 + 1) * tam);
-  for (let j = 0; j < tam; j++) { raw[j * (tam * 4 + 1)] = 0; rgba.copy(raw, j * (tam * 4 + 1) + 1, j * tam * 4, (j + 1) * tam * 4); }
-  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(tam, 0); ihdr.writeUInt32BE(tam, 4); ihdr[8] = 8; ihdr[9] = 6;
+function png(tam, rgba, alt = tam) {
+  const raw = Buffer.alloc((tam * 4 + 1) * alt);
+  for (let j = 0; j < alt; j++) { raw[j * (tam * 4 + 1)] = 0; rgba.copy(raw, j * (tam * 4 + 1) + 1, j * tam * 4, (j + 1) * tam * 4); }
+  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(tam, 0); ihdr.writeUInt32BE(alt, 4); ihdr[8] = 8; ihdr[9] = 6;
   return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw, { level: 9 })), chunk('IEND', Buffer.alloc(0))]);
+}
+
+// Símbolo em gelo sem fundo (alfa = máscara de luminosidade), recortado na caixa do desenho, para a faixa do topo.
+function renderMarca(arte, larg) {
+  const bx = { x0: 206, y0: 266, x1: 816, y1: 758 }; // caixa do símbolo na arte de 1024 px (com folga)
+  const bw = bx.x1 - bx.x0, bh = bx.y1 - bx.y0, alt = Math.round(larg * bh / bw);
+  const px = Buffer.alloc(larg * alt * 4), esc = bw / larg;
+  for (let j = 0; j < alt; j++) for (let i = 0; i < larg; i++) {
+    let s = 0, n = 0;
+    for (let y = Math.floor(bx.y0 + j * esc); y < Math.ceil(bx.y0 + (j + 1) * esc); y++) for (let x = Math.floor(bx.x0 + i * esc); x < Math.ceil(bx.x0 + (i + 1) * esc); x++) { s += arte.m[y * arte.w + x]; n++; }
+    const o = (j * larg + i) * 4;
+    px[o] = SIMBOLO[0]; px[o + 1] = SIMBOLO[1]; px[o + 2] = SIMBOLO[2]; px[o + 3] = Math.round(255 * s / n);
+  }
+  return png(larg, px, alt);
+}
+
+// favicon.ico com PNGs embutidos (32 e 48 px)
+function ico(pngs) {
+  const cab = Buffer.alloc(6); cab.writeUInt16LE(1, 2); cab.writeUInt16LE(pngs.length, 4);
+  let desloc = 6 + 16 * pngs.length; const ents = [];
+  for (const [tam, buf] of pngs) {
+    const e = Buffer.alloc(16); e[0] = tam; e[1] = tam; e.writeUInt16LE(1, 4); e.writeUInt16LE(32, 6); e.writeUInt32LE(buf.length, 8); e.writeUInt32LE(desloc, 12);
+    ents.push(e); desloc += buf.length;
+  }
+  return Buffer.concat([cab, ...ents, ...pngs.map(p => p[1])]);
 }
 
 const arte = lerPng(fs.readFileSync(new URL('./arte/icone-original.png', import.meta.url)));
 fs.mkdirSync(new URL('../icons/', import.meta.url), { recursive: true });
 const saida = (nome, buf) => fs.writeFileSync(new URL('../icons/' + nome, import.meta.url), buf);
+// Nomes com "-v2": o navegador e o service worker nunca reaproveitam o arquivo antigo (ícone de quatro ladrilhos).
 // "any": cantos arredondados, símbolo um pouco maior; maskable/apple: sangria total, símbolo dentro da zona segura (80%)
-saida('icon-192.png', render(arte, 192, { escala: 1.15, arredondado: true }));
-saida('icon-512.png', render(arte, 512, { escala: 1.15, arredondado: true }));
-saida('icon-maskable-512.png', render(arte, 512, { escala: 1.1, arredondado: false }));
-saida('apple-touch-icon.png', render(arte, 180, { escala: 1.1, arredondado: false }));
-saida('favicon-32.png', render(arte, 32, { escala: 1.25, arredondado: true }));
-saida('icon-48-teste.png', render(arte, 48, { escala: 1.15, arredondado: true }));
+saida('icon-v2-192.png', render(arte, 192, { escala: 1.15, arredondado: true }));
+saida('icon-v2-512.png', render(arte, 512, { escala: 1.15, arredondado: true }));
+saida('icon-v2-maskable-512.png', render(arte, 512, { escala: 1.1, arredondado: false }));
+saida('apple-touch-icon-v2.png', render(arte, 180, { escala: 1.1, arredondado: false }));
+const f32 = render(arte, 32, { escala: 1.25, arredondado: true }), f48 = render(arte, 48, { escala: 1.2, arredondado: true });
+saida('favicon-v2-32.png', f32);
+saida('favicon-v2-48.png', f48);
+saida('favicon-v2.ico', ico([[32, f32], [48, f48]]));
+saida('marca-atlas-v2.png', renderMarca(arte, 168)); // faixa do topo (exibida a ~42 px de largura: 4x)
 console.log('Ícones gerados em app/icons/ a partir de tools/arte/icone-original.png');

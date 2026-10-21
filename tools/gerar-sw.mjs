@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 const raiz = path.resolve(import.meta.dirname, '..');
-const pastas = ['css', 'js', 'fonts', 'icons'];
+const pastas = ['css', 'js', 'fonts', 'icons', 'data'];
 const lista = ['index.html', 'manifest.webmanifest', 'firebase-config.js'];
 const varre = d => fs.readdirSync(path.join(raiz, d), { withFileTypes: true }).forEach(e => { const rel = path.posix.join(d, e.name); e.isDirectory() ? varre(rel) : lista.push(rel); });
 pastas.forEach(varre);

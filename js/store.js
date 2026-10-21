@@ -7,10 +7,10 @@
 // Exclusão é feita por "tombstone" (_d: true) para a sincronização conseguir propagar remoções.
 
 const CHAVE = 'atlas.v1';
-export const COLECOES = ['refeicoes', 'corpo', 'treinos', 'agua', 'favoritos', 'atividades', 'marcas'];
+export const COLECOES = ['refeicoes', 'corpo', 'treinos', 'agua', 'favoritos', 'atividades', 'marcas', 'alimentos'];
 export const SINGLETONS = ['perfil', 'plano', 'config'];
 
-const vazio = () => ({ v: 1, perfil: null, plano: null, config: null, refeicoes: {}, corpo: {}, treinos: {}, agua: {}, favoritos: {}, atividades: {}, marcas: {} });
+const vazio = () => ({ v: 1, perfil: null, plano: null, config: null, refeicoes: {}, corpo: {}, treinos: {}, agua: {}, favoritos: {}, atividades: {}, marcas: {}, alimentos: {} });
 
 let estado = vazio();
 let ouvintes = new Set();

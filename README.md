@@ -14,7 +14,7 @@ PWA de **alimentação + treino + corpo + relatórios**, em português do Brasil
 
 ## Visual (v1.4)
 
-Identidade "Piso de Ladrilho" (ver `../DESIGN.md`): o progresso do dia é um piso de ladrilhos que se acendem; cantos de folha de ladrilho; cobalto como única cor de ação; claro e escuro automáticos. Fontes Bricolage Grotesque e Figtree ficam em `fonts/` (offline). O ícone (quatro ladrilhos) é gerado por `node tools/gerar-icones.mjs` (192, 512, maskable, apple-touch, favicon).
+Identidade "Piso de Ladrilho" (ver `../DESIGN.md`): o progresso do dia é um piso de ladrilhos que se acendem; cantos de folha de ladrilho; cobalto como única cor de ação; claro e escuro automáticos. Fontes Bricolage Grotesque e Figtree ficam em `fonts/` (offline). A faixa do topo é uma corda trançada de aparelho (só CSS) com o símbolo halter + A. Os ícones vêm da arte oficial (`tools/arte/icone-original.png`) por `node tools/gerar-icones-arte.mjs`, com nomes `-v2` (icon-v2-192/512/maskable, apple-touch-icon-v2, favicon-v2-32/48/.ico, marca-atlas-v2) para vencer o cache do navegador e do service worker; os `<link>` do index.html levam `?v=2`. Ao trocar a arte de novo, use `-v3` e atualize index.html, manifest e rode gerar-sw.
 
 ## Ficha sugerida
 
@@ -71,7 +71,7 @@ js/
   views/         onboarding, alimentacao, treino, corpo, relatorios, config
 img/ex/      300 fotos de exercícios (free-exercise-db, domínio público)
 tests/      testes em Node (sem dependências)
-tools/      servir.mjs, gerar-icones.mjs, gerar-sw.mjs
+tools/      servir.mjs, gerar-icones-arte.mjs, gerar-sw.mjs
 docs/       FIREBASE_SETUP.md
 ```
 

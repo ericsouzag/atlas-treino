@@ -94,10 +94,27 @@ img, svg { max-width: 100%; }
 
 /* ---------- estrutura ---------- */
 .app { min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; grid-template-areas: "faixa" "main"; padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom)); }
-.faixa { grid-area: faixa; position: sticky; top: 0; z-index: 20; background: var(--destaque); color: var(--on-destaque); padding: calc(10px + env(safe-area-inset-top)) 16px 12px; display: flex; align-items: center; gap: 10px; }
-.faixa::after { content: ''; position: absolute; left: 0; right: 0; bottom: -8px; height: 8px; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='8'%3E%3Cpath d='M0 0a8 8 0 0 0 16 0z' fill='%234B5320'/%3E%3C/svg%3E") 0 0 / 16px 8px repeat-x; }
+/* Faixa do topo = corda de aparelho de academia (cabo de tríceps): três cordões trançados em verde militar, torcidos na diagonal,
+   com luz no alto e sombra embaixo (volume), e um nó em cada ponta. Só gradientes CSS, sem imagem; sem movimento. */
+.faixa { --corda-fio: #4B5320; grid-area: faixa; position: sticky; top: 0; z-index: 20; color: var(--on-destaque); padding: calc(10px + env(safe-area-inset-top)) 30px 12px; display: flex; align-items: center; gap: 10px; border-radius: 0 0 14px 14px;
+  background-color: var(--corda-fio);
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,.12) 0, rgba(255,255,255,0) 30%, rgba(0,0,0,0) 56%, rgba(0,0,0,.34) 100%),
+    repeating-linear-gradient(118deg, rgba(255,255,255,.08) 0, rgba(0,0,0,.2) 20px),
+    repeating-linear-gradient(118deg, rgba(0,0,0,.34) 0 1.5px, rgba(255,255,255,.07) 1.5px 3px, rgba(0,0,0,0) 3px 12px, rgba(0,0,0,.2) 12px 14px),
+    repeating-linear-gradient(118deg, rgba(0,0,0,.26) 0 2px, rgba(0,0,0,0) 2px 16px, rgba(255,255,255,.05) 16px 17px, rgba(0,0,0,0) 17px 24px),
+    repeating-linear-gradient(28deg, rgba(0,0,0,.07) 0 1px, rgba(255,255,255,.035) 1px 2px, rgba(0,0,0,0) 2px 4px);
+  box-shadow: 0 1px 0 rgba(0,0,0,.5), 0 7px 10px -6px rgba(0,0,0,.6); }
+.faixa::before, .faixa::after { content: ''; position: absolute; top: 0; bottom: 0; width: 20px; pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.4) 0 1.5px, rgba(255,255,255,.1) 1.5px 3px, rgba(0,0,0,0) 3px 7px),
+    linear-gradient(180deg, rgba(255,255,255,.14), rgba(0,0,0,0) 40%, rgba(0,0,0,.4)),
+    #3A4118; }
+.faixa::before { left: 0; border-radius: 0 0 12px 0; box-shadow: 2px 0 4px -1px rgba(0,0,0,.55); }
+.faixa::after { right: 0; border-radius: 0 0 0 12px; box-shadow: -2px 0 4px -1px rgba(0,0,0,.55); }
 .marca { display: inline-flex; align-items: center; gap: 8px; font: 800 14px/1 'Bricolage Grotesque', sans-serif; letter-spacing: .06em; white-space: nowrap; }
-.marca::before { content: ''; width: 18px; height: 18px; background: #D9772B; border-radius: 0 100% 0 0; box-shadow: inset 0 0 0 0 transparent; }
+.marca img { display: block; width: 42px; height: 34px; filter: drop-shadow(0 1px 1px rgba(0,0,0,.5)); }
+.faixa h1, .marca-nome { text-shadow: 0 1px 2px rgba(0,0,0,.65); }
 .faixa h1 { font: 800 25px/1 'Bricolage Grotesque', sans-serif; letter-spacing: -.01em; flex: 1; min-width: 0; }
 .faixa .btn-icone { color: var(--on-destaque); }
 .faixa .btn-icone:hover { background: rgba(255,255,255,.16); }
@@ -132,14 +149,14 @@ main { grid-area: main; padding: 22px 16px 28px; max-width: 760px; width: 100%; 
   .aba[aria-current="page"]::before { display: none; }
   main { max-width: 1120px; padding: 28px 32px 48px; }
   .layout-2 { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 28px; align-items: start; }
-  .faixa { padding-left: 24px; padding-right: 24px; }
+  .faixa { padding-left: 36px; padding-right: 36px; } .faixa::before, .faixa::after { width: 24px; }
 }
 @media (max-width: 899px) {
   .layout-2 { display: grid; gap: 14px; }
   .layout-2 > section { display: contents; }
   .o1 { order: 1; } .o2 { order: 2; margin-top: 0; } .o3 { order: 3; } .o4 { order: 4; } .o5 { order: 5; } .o6 { order: 6; } .o7 { order: 7; }
 }
-@media (max-width: 599px) { .marca { display: none; } .faixa { gap: 4px; } .faixa h1 { font-size: 24px; } }
+@media (max-width: 599px) { .marca-nome { display: none; } .marca img { width: 36px; height: 29px; } .faixa { gap: 6px; padding-left: 28px; padding-right: 26px; } .faixa h1 { font-size: 24px; } }
 
 /* ---------- botões e campos ---------- */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 18px; border-radius: var(--botao-forma); border: 2px solid var(--tinta); background: var(--folha2); color: var(--tinta); font-weight: 700; text-decoration: none; transition: transform .12s var(--ease), background .15s, color .15s; }
@@ -431,3 +448,10 @@ table.tab-proj { width: 100%; border-collapse: collapse; font-size: 14px; }
 }
 @media (max-width: 380px) { .bloco-kcal .grande { font-size: 58px; } .faixa h1 { font-size: 22px; } }
 @media print { .abas, .faixa, .toasts { display: none; } }
+
+/* ---- v1.5: busca de produtos, meus alimentos, leitor de código de barras */
+.etiqueta { display: inline-block; margin-left: 8px; padding: 1px 8px; border: 1px solid var(--linha-forte); border-radius: 8px 2px 8px 2px; font-size: 12px; font-weight: 700; color: var(--tinta2); vertical-align: middle; }
+.lista-simples { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.lista-simples li { min-height: 48px; padding: 4px 0; border-bottom: 1px solid var(--linha); }
+.leitor-video { width: 100%; max-height: 50dvh; background: #000; border-radius: 18px 6px 18px 6px; object-fit: cover; }
+.rotulo-grupo { font-weight: 700; padding: 0; margin-bottom: 4px; }

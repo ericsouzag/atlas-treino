@@ -1,4 +1,4 @@
-// Aba Alimentação: texto livre -> estimativa local -> confirmação -> dia em formato de bandeja + comanda.
+// Aba Alimentação: texto livre -> estimativa local -> confirmação -> dia em formato de piso de ladrilhos + lista.
 import { h, limpar, icone, iconeCheio, campo, entradaNum, selecao, lerNumero, n0, n1, aviso, folha, confirmar, caixaAviso, debounce } from '../ui.js';
 import { store } from '../store.js';
 import { estimarRefeicao } from '../estimador.js';
@@ -38,30 +38,36 @@ export function renderizar(raiz, ctx) {
   const m = metas();
   const agua = aguaDoDia(diaSel);
 
-  // ---------- bandeja
+  // ---------- piso do dia (ladrilhos que se acendem)
   const restante = m.kcal - tot.kcal;
-  const comp = (cls, nome, valor, meta, extra) => {
-    const el = h('div', { class: `comp ${cls} ${valor > meta * 1.05 ? 'estourou' : ''}` }, h('div', { class: 'nivel', style: { '--n': pctN(niveisAnteriores[extra] ?? 0, meta) + '%' } }),
-      h('span', { class: 'nome' }, nome), h('span', { class: 'valor' }, n0(valor), h('small', null, ` / ${n0(meta)} g`)));
-    return el;
+  const prev = niveisAnteriores;
+  const piso = [];   // [elemento, quantos acender, total]
+  const fileira = (id, total, valor, meta, pequeno) => {
+    const n = Math.max(0, Math.min(total, Math.round(total * (meta > 0 ? valor / meta : 0))));
+    const antes = Math.max(0, Math.min(total, Math.round(total * (meta > 0 ? (prev[id] ?? 0) / meta : 0))));
+    const caixa = h('span', { class: `ladrilhos ${pequeno ? 'ladrilhos-p' : ''} ${valor > meta * 1.05 ? 'estourou' : ''}`, 'aria-hidden': 'true', style: { '--col': Math.min(total, 10) } });
+    const lista = Array.from({ length: total }, (_, i) => { const t = h('i', { class: `ladr ${i < antes ? 'on' : ''}` }); caixa.appendChild(t); return t; });
+    piso.push([lista, antes, n]);
+    return caixa;
   };
-  const cKcal = h('div', { class: `comp comp-kcal ${tot.kcal > m.kcal * 1.05 ? 'estourou' : ''}` },
-    h('div', { class: 'nivel', style: { '--n': pctN(niveisAnteriores.kcal, m.kcal) + '%' } }),
+  const cKcal = h('div', { class: `bloco bloco-kcal ${tot.kcal > m.kcal * 1.05 ? 'estourou' : ''}` },
     h('span', { class: 'leg' }, restante >= 0 ? 'kcal restantes' : 'kcal acima da meta'),
     h('span', { class: 'grande' }, n0(Math.abs(restante))),
-    h('span', { class: 'sub' }, `${n0(tot.kcal)} de ${n0(m.kcal)} kcal`));
-  const cP = comp('comp-prot', 'Proteína', tot.p, m.prot, 'p'), cC = comp('comp-carb', 'Carboidrato', tot.c, m.carb, 'c'), cG = comp('comp-gord', 'Gordura', tot.g, m.gord, 'g');
-  const bandeja = h('div', { class: 'bandeja o1', role: 'group', 'aria-label': `Resumo do dia: ${n0(tot.kcal)} de ${n0(m.kcal)} calorias, proteína ${n0(tot.p)} de ${n0(m.prot)} gramas, carboidrato ${n0(tot.c)} de ${n0(m.carb)}, gordura ${n0(tot.g)} de ${n0(m.gord)}` }, cKcal, cP, cC, cG);
-  // anima apenas o que mudou
+    h('span', { class: 'sub' }, `${n0(tot.kcal)} de ${n0(m.kcal)} kcal`),
+    fileira('kcal', 30, tot.kcal, m.kcal, false));
+  const macro = (cls, nome, valor, meta, id) => h('div', { class: `bloco bloco-macro ${cls} ${valor > meta * 1.05 ? 'estourou' : ''}` },
+    h('span', { class: 'nome' }, nome), h('span', { class: 'valor' }, n0(valor), h('small', null, ` / ${n0(meta)} g`)), fileira(id, 10, valor, meta, true));
+  const cP = macro('macro-prot', 'Proteína', tot.p, m.prot, 'p'), cC = macro('macro-carb', 'Carboidrato', tot.c, m.carb, 'c'), cG = macro('macro-gord', 'Gordura', tot.g, m.gord, 'g');
+  const bandeja = h('div', { class: 'piso o1', role: 'group', 'aria-label': `Resumo do dia: ${n0(tot.kcal)} de ${n0(m.kcal)} calorias, proteína ${n0(tot.p)} de ${n0(m.prot)} gramas, carboidrato ${n0(tot.c)} de ${n0(m.carb)}, gordura ${n0(tot.g)} de ${n0(m.gord)}` }, cKcal, cP, cC, cG);
+  // acende em sequência só os ladrilhos novos (a animação é desligada por prefers-reduced-motion no CSS)
   requestAnimationFrame(() => requestAnimationFrame(() => {
-    cKcal.querySelector('.nivel').style.setProperty('--n', pctN(tot.kcal, m.kcal) + '%');
-    [[cP, tot.p, m.prot], [cC, tot.c, m.carb], [cG, tot.g, m.gord]].forEach(([c, v, mt]) => c.querySelector('.nivel').style.setProperty('--n', pctN(v, mt) + '%'));
+    piso.forEach(([lista, antes, n]) => lista.forEach((t, i) => { if (i >= antes && i < n) { t.style.transitionDelay = ((i - antes) * 28) + 'ms'; t.classList.add('on'); } }));
   }));
   niveisAnteriores = { kcal: tot.kcal, p: tot.p, c: tot.c, g: tot.g, f: tot.f, agua };
 
   const fibraMeta = m.fibra || 28, aguaMeta = m.agua || 2500;
-  const miniF = h('div', { class: 'mini' }, h('div', { class: 'topo' }, h('span', null, 'Fibra'), h('span', null, `${n0(tot.f)} / ${n0(fibraMeta)} g`)), h('div', { class: 'barra', style: { '--cor': 'var(--fibra)' } }, h('i', { style: { '--n': pctN(tot.f, fibraMeta) + '%' } })));
-  const miniA = h('div', { class: 'mini' }, h('div', { class: 'topo' }, h('span', null, 'Água'), h('span', null, `${n1(agua / 1000)} / ${n1(aguaMeta / 1000)} L`)), h('div', { class: 'barra', style: { '--cor': 'var(--agua)' } }, h('i', { style: { '--n': pctN(agua, aguaMeta) + '%' } })));
+  const miniF = h('div', { class: 'mini mini-fibra' }, h('div', { class: 'topo' }, h('span', null, 'Fibra'), h('span', null, `${n0(tot.f)} / ${n0(fibraMeta)} g`)), fileira('f', 10, tot.f, fibraMeta, true));
+  const miniA = h('div', { class: 'mini mini-agua' }, h('div', { class: 'topo' }, h('span', null, 'Água'), h('span', null, `${n1(agua / 1000)} / ${n1(aguaMeta / 1000)} L`)), fileira('agua', 10, agua, aguaMeta, true));
 
   const blocoAgua = h('div', { class: 'flex-entre cartao o6', style: { padding: '8px 8px 8px 14px', flexWrap: 'wrap' } },
     h('div', { class: 'flex nowrap' }, icone('gota', 20), h('strong', null, 'Água'), h('span', { class: 'mudo nowrap' }, `${n0(agua)} ml`)),

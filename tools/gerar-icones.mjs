@@ -1,55 +1,51 @@
-// Gera os ícones PNG do app (sem dependências): bandeja de marmita com 4 compartimentos sobre fundo tomate.
-// Uso: node tools/gerar-icones.mjs
+// Gera os ícones PNG do app (sem dependências): quatro ladrilhos com quarto de círculo formando uma roseta, sobre cobalto.
+// Sem texto, legível em 48 px. Uso: node tools/gerar-icones.mjs
 import fs from 'node:fs';
 import zlib from 'node:zlib';
 
 const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
-const TOMATE = hex('#C23A1E'), ALUM = hex('#E6E9E3'), SOMBRA = hex('#B9BFB4');
-const CORES = [hex('#F4B3A2'), hex('#E7A6B2'), hex('#F4D27C'), hex('#CAD582')];
+const COBALTO = hex('#2342C7');
+// [cor do ladrilho, cor do quarto de círculo, canto do círculo]
+const LADRILHOS = [
+  [hex('#FFC83D'), hex('#FFFFFF'), 'tl'],
+  [hex('#FFFFFF'), hex('#2342C7'), 'tr'],
+  [hex('#F0745A'), hex('#FFD6CC'), 'bl'],
+  [hex('#A9BBFF'), hex('#2342C7'), 'br'],
+];
 
-// retângulo arredondado: dentro? (coordenadas normalizadas 0..1)
+// retângulo com cantos arredondados (coordenadas normalizadas)
 const dentro = (x, y, r) => {
   const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
   const dx = Math.abs(x - cx) - (r.w / 2 - r.r), dy = Math.abs(y - cy) - (r.h / 2 - r.r);
   return Math.hypot(Math.max(dx, 0), Math.max(dy, 0)) + Math.min(Math.max(dx, dy), 0) <= r.r;
 };
 
-function camadas(maskable) {
-  const e = maskable ? 0.54 : 0.64;           // largura da bandeja
-  const w = e, h = e * 0.74, x = 0.5 - w / 2, y = 0.5 - h / 2 + 0.01;
-  const g = w * 0.035, pad = w * 0.06;
-  const iw = w - 2 * pad - g, ih = h - 2 * pad - 2 * g;
-  const esq = { x: x + pad, y: y + pad, w: iw * 0.54, h: h - 2 * pad, r: w * 0.07 };
-  const dw = iw * 0.46, dh = ih / 3;
-  const dir = [0, 1, 2].map(i => ({ x: x + pad + esq.w + g, y: y + pad + i * (dh + g), w: dw, h: dh, r: w * 0.05 }));
-  return {
-    fundo: maskable ? null : { x: 0, y: 0, w: 1, h: 1, r: 0.22 },
-    sombra: { x, y: y + h * 0.04, w, h, r: w * 0.14 },
-    bandeja: { x, y, w, h, r: w * 0.14 },
-    comps: [esq, ...dir],
-  };
+function layout(maskable) {
+  const e = maskable ? 0.54 : 0.66;            // lado do conjunto (maskable respeita a zona segura de 80%)
+  const g = e * 0.07, m = (e - g) / 2, x0 = 0.5 - e / 2, y0 = 0.5 - e / 2;
+  const mods = [[0, 0], [1, 0], [0, 1], [1, 1]].map(([i, j]) => ({ x: x0 + i * (m + g), y: y0 + j * (m + g), w: m, h: m, r: m * 0.1 }));
+  return { fundo: maskable ? null : { x: 0, y: 0, w: 1, h: 1, r: 0.22 }, mods, raio: m * 0.78 };
 }
 
 function render(tam, maskable) {
-  const c = camadas(maskable), SS = 3, px = Buffer.alloc(tam * tam * 4);
+  const L = layout(maskable), SS = 3, px = Buffer.alloc(tam * tam * 4);
   for (let j = 0; j < tam; j++) for (let i = 0; i < tam; i++) {
     let acc = [0, 0, 0, 0];
     for (let sj = 0; sj < SS; sj++) for (let si = 0; si < SS; si++) {
       const x = (i + (si + 0.5) / SS) / tam, y = (j + (sj + 0.5) / SS) / tam;
       let col = null;
-      if (maskable || dentro(x, y, c.fundo)) col = TOMATE;
-      if (col) {
-        if (dentro(x, y, c.sombra)) col = SOMBRA;
-        if (dentro(x, y, c.bandeja)) col = ALUM;
-        c.comps.forEach((r, k) => { if (dentro(x, y, r)) col = CORES[k]; });
-        // nível preenchido (marmita se enchendo) no compartimento grande
-        const g = c.comps[0];
-        if (dentro(x, y, g) && y > g.y + g.h * 0.38) col = TOMATE.map((v, n) => Math.round(v * 0.55 + CORES[0][n] * 0.45));
-      }
+      if (maskable || dentro(x, y, L.fundo)) col = COBALTO;
+      if (col) L.mods.forEach((r, k) => {
+        if (!dentro(x, y, r)) return;
+        const [cor, quarto, canto] = LADRILHOS[k];
+        col = cor;
+        const cx = canto.includes('l') ? r.x : r.x + r.w, cy = canto.includes('t') ? r.y : r.y + r.h;
+        if (Math.hypot(x - cx, y - cy) <= L.raio) col = quarto;
+      });
       if (col) { acc[0] += col[0]; acc[1] += col[1]; acc[2] += col[2]; acc[3] += 255; }
     }
-    const n = SS * SS, a = acc[3] / n, o = (j * tam + i) * 4;
-    if (acc[3] > 0) { const k = acc[3] / 255; px[o] = acc[0] / k; px[o + 1] = acc[1] / k; px[o + 2] = acc[2] / k; px[o + 3] = a; }
+    const n = SS * SS, o = (j * tam + i) * 4;
+    if (acc[3] > 0) { const k = acc[3] / 255; px[o] = acc[0] / k; px[o + 1] = acc[1] / k; px[o + 2] = acc[2] / k; px[o + 3] = acc[3] / n; }
   }
   return png(tam, px);
 }
@@ -76,4 +72,5 @@ saida('icon-512.png', render(512, false));
 saida('icon-maskable-512.png', render(512, true));
 saida('apple-touch-icon.png', render(180, true));
 saida('favicon-32.png', render(32, false));
+saida('icon-48-teste.png', render(48, false));
 console.log('Ícones gerados em app/icons/');

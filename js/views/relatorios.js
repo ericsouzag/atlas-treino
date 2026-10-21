@@ -71,10 +71,10 @@ export function renderizar(raiz, ctx) {
     graficoResponsivo(cx, w => graficoLinhas({ largura: w, altura: 220, titulo: `Projeção de ${nomeSerie} em ${horizonte} semanas, com faixa de incerteza`, xTipo: 'num', rotuloXNum: v => v === 0 ? 'hoje' : `${Math.round(v)} sem`, formatoY: v => n1(v),
       series: [{ nome: nomeSerie, classe: cls, pts: serieDe(chave).filter(p => p.x <= horizonte), tracejado: false, pontos: false }], banda: { pts: banda, classe: '' } }));
     prev.push(cx, legenda([{ nome: nomeSerie + ': estimativa central', classe: cls }, { nome: 'faixa de incerteza', classe: 'ch-banda-l' }]));
-    prev.push(h('table', { class: 'tab-proj' }, h('thead', null, h('tr', null, ['Em', 'Peso', 'Gordura', 'Massa magra'].map(c => h('th', { scope: 'col' }, c)))),
+    prev.push(h('div', { style: { overflowX: 'auto' } }, h('table', { class: 'tab-proj' }, h('thead', null, h('tr', null, ['Em', 'Peso', 'Gordura', 'Massa magra'].map(c => h('th', { scope: 'col' }, c)))),
       h('tbody', null, [4, 8, 12].map(n => { const r = pr.porHorizonte[n]; const f = (v) => n1(v); const rg = a => `${f(a[0])} a ${f(a[1])}`;
         return h('tr', null, h('td', null, `${n} sem`), h('td', null, h('div', null, `${f(r.central.peso)} kg`), h('small', { class: 'mudo' }, rg(r.peso) + ' kg')), h('td', null, h('div', null, `${f(r.central.gordura)} kg · ${f(r.central.pct)}%`), h('small', { class: 'mudo' }, rg(r.gordura) + ' kg')), h('td', null, h('div', null, `${f(r.central.magra)} kg`), h('small', { class: 'mudo' }, rg(r.magra) + ' kg')));
-      }))));
+      })))));
     const pp = pr.p;
     prev.push(h('div', { class: 'cartao', style: { background: 'var(--folha2)' } }, h('h3', null, 'Como ler esta previsão'),
       h('div', { class: 'pilha', style: { gap: '8px', marginTop: '8px', color: 'var(--tinta2)' } },

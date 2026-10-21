@@ -122,7 +122,7 @@ export function renderizar(raiz, ctx) {
   secs.push(h('section', { class: 'cartao pilha' }, h('h2', { style: { marginBottom: 0 } }, 'Créditos'),
     h('ul', { style: { paddingLeft: '20px', display: 'grid', gap: '6px', margin: 0 } },
       h('li', null, 'Fotos dos exercícios (posição inicial e final): free-exercise-db, github.com/yuhonas/free-exercise-db, domínio público (Unlicense). Redimensionadas para 640 px.'),
-      h('li', null, 'Fontes Barlow e Barlow Condensed: licença SIL Open Font.'),
+      h('li', null, 'Fontes Bricolage Grotesque e Figtree: licença SIL Open Font.'),
       h('li', null, 'Valores de MET: Compêndio de Atividades Físicas (Ainsworth et al., 2011), aproximados.'))));
 
   // ---------------- apagar tudo

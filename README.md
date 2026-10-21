@@ -12,6 +12,14 @@ PWA de **alimentação + treino + corpo + relatórios**, em português do Brasil
 
 > Tudo é estimativa. O app não substitui médico, nutricionista ou educador físico.
 
+## Visual (v1.4)
+
+Identidade "Piso de Ladrilho" (ver `../DESIGN.md`): o progresso do dia é um piso de ladrilhos que se acendem; cantos de folha de ladrilho; cobalto como única cor de ação; claro e escuro automáticos. Fontes Bricolage Grotesque e Figtree ficam em `fonts/` (offline). O ícone (quatro ladrilhos) é gerado por `node tools/gerar-icones.mjs` (192, 512, maskable, apple-touch, favicon).
+
+## Ficha sugerida
+
+Na aba Treino há a ficha pronta **Semanal Seg–Sáb** (a ficha real do Eric, em `js/fichas.js`), com pré-visualização por dia, o porquê de cada exercício, e botões Adotar / Desfazer / Voltar ao gerador automático. Séries, repetições e descanso não vêm da ficha original: são padrões do planner por nível e objetivo. O quadrado de cada exercício marca como feito na semana atual (coleção `marcas`, sincronizada).
+
 ## Como rodar
 
 Precisa de um servidor estático (módulos ES não abrem com `file://`). Na pasta `app/`:

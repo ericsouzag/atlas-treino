@@ -1,17 +1,12 @@
 // Service worker do Atlas Fitness: funciona offline. Atualize VERSAO a cada publicação para renovar o cache.
-const VERSAO = 'atlas-v1.3.2';
+const VERSAO = 'atlas-v1.4.0';
 const ARQUIVOS = [
   './',
   './css/app.css',
   './css/fonts.css',
   './firebase-config.js',
-  './fonts/barlow-400.woff2',
-  './fonts/barlow-500.woff2',
-  './fonts/barlow-600.woff2',
-  './fonts/barlow-700.woff2',
-  './fonts/barlow-cond-500.woff2',
-  './fonts/barlow-cond-600.woff2',
-  './fonts/barlow-cond-700.woff2',
+  './fonts/bricolage-grotesque.woff2',
+  './fonts/figtree.woff2',
   './icons/apple-touch-icon.png',
   './icons/favicon-32.png',
   './icons/icon-192.png',
@@ -26,6 +21,7 @@ const ARQUIVOS = [
   './js/entrada.js',
   './js/estimador.js',
   './js/exercises.js',
+  './js/fichas.js',
   './js/firebase.js',
   './js/foods.js',
   './js/ilustracao.js',

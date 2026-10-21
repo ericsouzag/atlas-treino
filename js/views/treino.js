@@ -4,7 +4,8 @@ import { store, novoId } from '../store.js';
 import { perfil as getPerfil, pesoAtual, ultimoDesempenho, treinosConcluidos } from '../dados.js';
 import { GRUPOS, PORCOES, EXERCICIOS, exPorId, nomePorcao, disponivel, temLesao, LESOES } from '../exercises.js';
 import { gerarPlano, coberturaDia, volumeSemanal, alternativas, trocarExercicio, textoDiferenca, descricaoDivisao, metaSeriesSemana, prescricao } from '../planner.js';
-import { nomeDia, dataISO, dataCurta, diaSemana } from '../datas.js';
+import { nomeDia, dataISO, dataCurta, diaSemana, somarDias, segundaDaSemana } from '../datas.js';
+import { FICHAS, montarPlanoDaFicha, avisosDaFicha } from '../fichas.js';
 import { kcalTreino, duracaoEstimada } from '../nutrition.js';
 import { ilustracao } from '../ilustracao.js';
 
@@ -50,7 +51,8 @@ export function renderizar(raiz, ctx) {
     if (!n) { aviso('Escolha pelo menos um dia de treino.'); return; }
     if (plano && !(await confirmar('Gerar novas fichas?', 'As fichas atuais (incluindo trocas que você fez) serão substituídas. O histórico de treinos continua salvo.', { sim: 'Gerar novas' }))) return;
     const novo = gerarPlano(draft, P);
-    salvarPlano({ config: draft, plano: novo });
+    delete draft.ficha;
+    salvarPlano({ config: draft, plano: novo, anterior: null });
     diaSel = null;
     aviso('Fichas geradas.');
     redesenhar();
@@ -58,6 +60,7 @@ export function renderizar(raiz, ctx) {
   desenharCfg();
 
   const blocos = [];
+  blocos.push(cartaoFichaSugerida({ reg, P, redesenhar }));
   const cfgEl = plano ? h('details', { class: 'cartao', style: { padding: '4px 16px' } }, h('summary', { style: { minHeight: '48px', display: 'flex', alignItems: 'center', cursor: 'pointer', fontWeight: 700, fontSize: '17px' } }, 'Alterar dias e divisão da semana'), cartaoCfg) : cartaoCfg;
   if (plano) cartaoCfg.style.cssText = 'border:0;box-shadow:none;padding:0 0 12px;background:transparent';
   if (!plano) blocos.push(cfgEl);
@@ -68,6 +71,9 @@ export function renderizar(raiz, ctx) {
     const hojeDow = diaSemana(dataISO());
     if (diaSel == null || !diasPlano.includes(diaSel)) diaSel = diasPlano.includes(hojeDow) ? hojeDow : diasPlano[0];
     const dia = plano.dias[diaSel];
+    const dataMarca = somarDias(segundaDaSemana(dataISO()), diaSel === 0 ? 6 : diaSel - 1);
+    const marcas = store.obter('marcas', dataMarca)?.feitos || {};
+    const feitos = (dia.exercicios || []).filter(e => marcas[e.exId]).length;
     const painel = h('section', { class: 'pilha', 'aria-label': 'Ficha do dia' });
 
     const tabs = h('div', { class: 'tabs', role: 'tablist', 'aria-label': 'Dias de treino' }, diasPlano.map(d => h('button', { class: 'tab', role: 'tab', type: 'button', 'aria-selected': String(d === diaSel), onclick: () => { diaSel = d; redesenhar(); } }, nomeDia(d, true) + (d === hojeDow ? ' · hoje' : ''))));
@@ -84,6 +90,7 @@ export function renderizar(raiz, ctx) {
       const cob = coberturaDia(dia);
       painel.append(h('details', { class: 'cartao', open: false }, h('summary', { style: { cursor: 'pointer', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: '600' } }, 'Cobertura das porções musculares neste dia', icone('baixo', 18)),
         h('div', { class: 'pilha', style: { marginTop: '8px' } }, cob.map(g => h('div', null, h('strong', null, g.nome), h('div', { class: 'cobertura' }, g.porcoes.map(p => h('span', { class: `cob-${p.nivel}`, title: p.exercicios.join(', ') }, (p.nivel === 'ok' ? '✓ ' : p.nivel === 'parcial' ? '~ ' : '✕ ') + p.nome))))))));
+      painel.append(h('div', { class: 'flex-entre' }, h('p', { class: 'mudo peq' }, `Toque no quadrado para marcar como feito (${dataCurta(dataMarca)})`), h('strong', { class: feitos === dia.exercicios.length ? 'pos' : '' }, `${feitos}/${dia.exercicios.length}`)));
       dia.exercicios.forEach((it, idx) => painel.append(cartaoExercicio(it, idx)));
     }
     blocos.push(tabs, painel);
@@ -95,7 +102,7 @@ export function renderizar(raiz, ctx) {
       const ult = ultimoDesempenho(ex.id);
       return h('article', { class: 'ex' },
         h('div', { class: 'ex-cab' },
-          h('span', { class: 'ex-n', 'aria-hidden': 'true' }, String(idx + 1)),
+          h('button', { class: 'feito-ex', type: 'button', 'aria-pressed': String(!!marcas[it.exId]), 'aria-label': `Marcar ${ex.nome} como feito`, onclick: () => { const novo = { ...marcas }; if (novo[it.exId]) delete novo[it.exId]; else novo[it.exId] = true; store.salvar('marcas', { id: dataMarca, data: dataMarca, feitos: novo }); redesenhar(); } }, marcas[it.exId] ? icone('ok', 22) : String(idx + 1)),
           h('div', null, h('h3', { class: 'ex-nome' }, ex.nome), h('p', { class: 'ex-pres' }, `${it.series} séries × ${it.reps}${/s$/.test(it.reps) ? '' : ' repetições'} · descanso ${it.descanso} s`), h('p', { class: 'mudo peq' }, `${ex.equipamento} · ${GRUPOS[ex.grupoPrincipal].nome}`)),
           h('button', { class: 'btn btn-peq btn-trocar', type: 'button', 'aria-label': `Trocar ${ex.nome}`, onclick: () => trocar(it, idx) }, icone('trocar', 18), h('span', { class: 'lbl' }, 'Trocar'))),
         ilustracao(ex.id, 'g'),
@@ -121,7 +128,7 @@ export function renderizar(raiz, ctx) {
       const r = trocarExercicio(plano, diaSel, idx, escolha, P);
       if (!r) return;
       plano.dias[diaSel].exercicios[idx] = r.item;
-      salvarPlano({ plano, config: reg.config });
+      salvarPlano({ ...reg, plano });
       aviso(r.avisos.length ? 'Trocado. Atenção: ' + r.avisos[0] : 'Exercício trocado e justificativa atualizada.');
       redesenhar();
     }
@@ -267,4 +274,54 @@ function partesJustificativa(txt) {
   const fora = i >= 0 ? txt.slice(i).trim() : '';
   const frases = antes.split(/(?<=.)s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ])/).filter(Boolean);
   return [h('ul', { style: { margin: 0, paddingLeft: '18px', display: 'grid', gap: '4px' } }, frases.map(f => h('li', null, f))), fora ? h('p', { class: 'mudo peq' }, fora) : null].filter(Boolean);
+}
+
+// ---------------------------------------------------------------------------
+// Ficha sugerida pronta ("Semanal Seg–Sáb"): pré-visualização por dia, o porquê e adoção
+function cartaoFichaSugerida({ reg, P, redesenhar }) {
+  const F = FICHAS['semanal-seg-sab'];
+  const adotada = reg?.config?.ficha === F.id;
+  let diaPrev = F.dias[0].dow;
+  const corpo = h('div', { class: 'pilha' });
+  const desenhar = () => {
+    limpar(corpo);
+    const d = F.dias.find(x => x.dow === diaPrev);
+    const av = avisosDaFicha(F, P);
+    juntar(corpo,
+      h('p', { class: 'mudo' }, F.resumo),
+      adotada ? caixaAviso('ok', 'Ficha adotada', 'Os dias, os grupos e os exercícios abaixo estão na sua aba. Você pode trocar exercícios por porção normalmente.') : null,
+      h('div', { class: 'tabs', role: 'tablist', 'aria-label': 'Dias da ficha sugerida' }, F.dias.map(x => h('button', { class: 'tab', role: 'tab', type: 'button', 'aria-selected': String(x.dow === diaPrev), onclick: () => { diaPrev = x.dow; desenhar(); } }, nomeDia(x.dow, true)))),
+      h('h3', null, d.titulo),
+      h('ol', { class: 'ficha-prev' }, d.itens.map(it => { const ex = exPorId(it.ex); return h('li', null, h('strong', null, ex.nome), h('span', { class: 'mudo peq' }, it.porcao)); })),
+      h('p', { class: 'peq' }, d.nota),
+      h('details', null, h('summary', { style: { minHeight: '44px', display: 'flex', alignItems: 'center', cursor: 'pointer', fontWeight: 600, color: 'var(--destaque-esc)' } }, 'Por que esta ficha? (princípios)'),
+        h('ul', { style: { paddingLeft: '20px', display: 'grid', gap: '6px' } }, F.principios.map(t => h('li', null, t)))),
+      caixaAviso('info', 'Séries, repetições e descanso', 'A ficha original traz só os exercícios e as porções. Séries, repetições e descanso são padrões do planner para o seu nível e objetivo, e dá para ajustar durante o treino.'),
+      av.map(t => caixaAviso('medio', null, t)),
+      adotada
+        ? h('div', { class: 'linha-botoes' },
+          reg.anterior ? h('button', { class: 'btn', type: 'button', onclick: desfazer }, 'Desfazer (voltar à ficha anterior)') : null,
+          h('button', { class: 'btn', type: 'button', onclick: voltarAutomatico }, 'Voltar ao gerador automático'))
+        : h('button', { class: 'btn btn-primario', type: 'button', onclick: adotar }, icone('ok', 20), 'Adotar esta ficha'));
+  };
+  async function adotar() {
+    if (reg?.plano && !(await confirmar('Adotar a ficha sugerida?', 'Os dias e as fichas atuais serão substituídos (você poderá desfazer). O histórico de treinos continua salvo.', { sim: 'Adotar' }))) return;
+    const { plano, config } = montarPlanoDaFicha(F, P);
+    store.salvarUnico('plano', { config, plano, anterior: reg?.plano ? { config: reg.config, plano: reg.plano } : null });
+    diaSel = null; aviso('Ficha Semanal Seg–Sáb adotada.'); redesenhar();
+  }
+  function desfazer() {
+    const a = reg.anterior;
+    store.salvarUnico('plano', { config: a.config, plano: a.plano, anterior: null });
+    diaSel = null; aviso('Voltamos à ficha anterior.'); redesenhar();
+  }
+  function voltarAutomatico() {
+    const dias = reg.config.dias; const cfg = { dias, modo: 'auto', gruposPorDia: {}, duracao: reg.config.duracao || 75 };
+    store.salvarUnico('plano', { config: cfg, plano: gerarPlano(cfg, P), anterior: null });
+    diaSel = null; aviso('Fichas geradas automaticamente.'); redesenhar();
+  }
+  desenhar();
+  return h('details', { class: 'cartao destaque-ficha', open: !reg?.plano || adotada && false },
+    h('summary', { class: 'sum-ficha' }, h('span', null, h('span', { class: 'rotulo' }, adotada ? 'Ficha adotada' : 'Sugestão pronta'), h('strong', null, 'Ficha sugerida: Semanal Seg–Sáb')), icone('baixo', 20)),
+    corpo);
 }

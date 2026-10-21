@@ -30,8 +30,7 @@ export function navegar(rota) { location.hash = `#/${rota}`; }
 
 function aplicarTema() {
   const t = config().tema;
-  if (t === 'claro' || t === 'escuro') document.documentElement.dataset.tema = t;
-  else delete document.documentElement.dataset.tema;
+  document.documentElement.dataset.tema = t === 'claro' || t === 'auto' ? t : 'escuro';   // escuro é o padrão
 }
 
 function desenharAbas(rota) {

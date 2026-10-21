@@ -105,7 +105,7 @@ export function renderizar(raiz, ctx) {
 
   // ---------------- aparência
   secs.push(h('section', { class: 'cartao pilha' }, h('h2', { style: { marginBottom: 0 } }, 'Aparência'),
-    campo('Tema', selecao([['auto', 'Automático (do aparelho)'], ['claro', 'Claro'], ['escuro', 'Escuro']], C.tema || 'auto', { onchange: e => { store.salvarUnico('config', { tema: e.target.value }); const v = e.target.value; if (v === 'claro' || v === 'escuro') document.documentElement.dataset.tema = v; else delete document.documentElement.dataset.tema; } }))));
+    campo('Tema', selecao([['escuro', 'Escuro (padrão)'], ['claro', 'Claro'], ['auto', 'Automático (do aparelho)']], C.tema || 'escuro', { onchange: e => { store.salvarUnico('config', { tema: e.target.value }); document.documentElement.dataset.tema = e.target.value; } }))));
 
   // ---------------- privacidade e saúde
   secs.push(h('section', { class: 'cartao pilha' }, h('h2', { style: { marginBottom: 0 } }, 'Privacidade e avisos de saúde'),

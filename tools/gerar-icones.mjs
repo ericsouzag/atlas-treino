@@ -1,16 +1,16 @@
-// Gera os ícones PNG do app (sem dependências): quatro ladrilhos com quarto de círculo formando uma roseta, sobre cobalto.
+// Gera os ícones PNG do app (sem dependências): quatro ladrilhos com quarto de círculo formando uma roseta, sobre verde militar (paleta Campanha; ícone provisório).
 // Sem texto, legível em 48 px. Uso: node tools/gerar-icones.mjs
 import fs from 'node:fs';
 import zlib from 'node:zlib';
 
 const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
-const COBALTO = hex('#2342C7');
+const FUNDO = hex('#4B5320');   // verde militar
 // [cor do ladrilho, cor do quarto de círculo, canto do círculo]
 const LADRILHOS = [
-  [hex('#FFC83D'), hex('#FFFFFF'), 'tl'],
-  [hex('#FFFFFF'), hex('#2342C7'), 'tr'],
-  [hex('#F0745A'), hex('#FFD6CC'), 'bl'],
-  [hex('#A9BBFF'), hex('#2342C7'), 'br'],
+  [hex('#E8EEF0'), hex('#4B5320'), 'tl'],
+  [hex('#D9772B'), hex('#F6D2B0'), 'tr'],
+  [hex('#A3B86A'), hex('#3A4118'), 'bl'],
+  [hex('#C2CCCB'), hex('#4B5320'), 'br'],
 ];
 
 // retângulo com cantos arredondados (coordenadas normalizadas)
@@ -34,7 +34,7 @@ function render(tam, maskable) {
     for (let sj = 0; sj < SS; sj++) for (let si = 0; si < SS; si++) {
       const x = (i + (si + 0.5) / SS) / tam, y = (j + (sj + 0.5) / SS) / tam;
       let col = null;
-      if (maskable || dentro(x, y, L.fundo)) col = COBALTO;
+      if (maskable || dentro(x, y, L.fundo)) col = FUNDO;
       if (col) L.mods.forEach((r, k) => {
         if (!dentro(x, y, r)) return;
         const [cor, quarto, canto] = LADRILHOS[k];

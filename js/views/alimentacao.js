@@ -72,10 +72,8 @@ export function renderizar(raiz, ctx) {
 
   const blocoAgua = h('div', { class: 'flex-entre cartao o6', style: { padding: '8px 8px 8px 14px', flexWrap: 'wrap' } },
     h('div', { class: 'flex nowrap' }, icone('gota', 20), h('strong', null, 'Água'), h('span', { class: 'mudo nowrap' }, `${n0(agua)} ml`)),
-    h('div', { class: 'flex', style: { gap: '4px' } },
-      h('button', { class: 'btn btn-peq', type: 'button', 'aria-label': 'Tirar 200 ml', onclick: () => { setAgua(diaSel, agua - 200); redesenhar(); } }, icone('menos', 18), '200'),
-      h('button', { class: 'btn btn-peq', type: 'button', 'aria-label': 'Adicionar copo de 200 ml', onclick: () => { setAgua(diaSel, agua + 200); redesenhar(); } }, icone('mais', 18), '200'),
-      h('button', { class: 'btn btn-peq', type: 'button', 'aria-label': 'Adicionar garrafa de 500 ml', onclick: () => { setAgua(diaSel, agua + 500); redesenhar(); } }, icone('mais', 18), '500')));
+    h('div', { class: 'flex', style: { gap: '4px', width: '100%' } },
+      [-100, 100, 200, 500].map(v => h('button', { class: 'btn btn-peq', type: 'button', style: { flex: '1 1 0', minWidth: 0, paddingInline: '4px' }, 'aria-label': v < 0 ? 'Tirar 100 ml' : `Adicionar ${v} ml`, onclick: () => { setAgua(diaSel, agua + v); redesenhar(); } }, icone(v < 0 ? 'menos' : 'mais', 18), String(Math.abs(v))))));
 
   // ---------- treino do dia: botão, balanço e lista
   const abrirTreino = async (editar = null) => {

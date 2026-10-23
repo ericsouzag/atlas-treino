@@ -62,7 +62,11 @@ export const REGRAS = [
 
   // ---------- doces, biscoitos, salgadinhos e afins (sempre 4, exceto os casos tradicionais listados adiante)
   ['preparos-infantis-instantaneos', 4, re(/mucilon|arrozina|cremogema|vitamilho|vitaflocos|farinha lactea|mingau de milho infantil|mingau tradicional|mistura para|mistura de|curau.*mistura|^sustagem/)],
-  ['cereal-matinal-barra', 4, re(/cereal matinal|sucrilho|cap n crunch|cheerios|corn flakes|raisin bran|frosted|barra de (cereal|cereais|granola|proteina)|barrinha|^granola|^musli|^mix de cereais/), { revisar: 'granola e muesli variam muito de marca (com ou sem açúcar e aditivos)' }],
+  // granola: depende do que leva. Com açúcar, xarope e aditivos (tradicional de mercado) = 4; só aveia, castanhas, mel e óleo (sem açúcar/caseira) = 3; muesli simples (flocos + frutas secas + castanhas) = 1
+  ['granola-sem-acucar', 3, re(/^granola (sem acucar|caseira|zero|artesanal|fit)/), { revisar: 'granola sem açúcar: 3 (aveia, castanhas, mel e óleo); se a embalagem trouxer xarope, aromatizantes ou emulsificantes, é 4' }],
+  ['muesli-simples', 1, re(/^(muesli|musli)/), { revisar: 'muesli só de flocos, frutas secas e castanhas = 1; muesli com açúcar/xarope adicionado = 4' }],
+  ['granola-industrializada', 4, re(/^granola/), { revisar: 'granola de mercado costuma levar açúcar/xarope e aditivos (4); a sem açúcar/caseira é uma variante separada (3)' }],
+  ['cereal-matinal-barra', 4, re(/cereal matinal|sucrilho|cap n crunch|cheerios|corn flakes|raisin bran|frosted|barra de (cereal|cereais|granola|proteina)|barrinha|^mix de cereais/), { revisar: 'barras e cereais matinais: açúcar e aditivos são o padrão' }],
   ['pipoca-industrial', 4, re(/pipoca.*(micro|queijo|doce ou salgada|light)/)],
   ['salgadinho-snack', 4, re(/salgadinho|\bchips\b|pretzel|nachos|tortilla|baconzito|presuntinho biscoito|batata palha|batata tipo chips|batata chips|anel de cebola|anéis de cebola|aneis de cebola|onion rings|hash brown/)],
   ['biscoito-artesanal', 3, re(/^(sequilho|tareco|brevidade|cavaco chines|quebra quebra|solda)\b/), { revisar: 'biscoitos de padaria/artesanais: podem ser 4 conforme a receita' }],

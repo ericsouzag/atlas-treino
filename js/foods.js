@@ -22,7 +22,10 @@ pao de queijo|pao de queijo|cereais|363 5.1 34.2 22.6 0.6|unidade:25;grande:50|
 tapioca (massa pronta)|tapioca;beiju;crepioca sem ovo|cereais|240 0.1 59.5 0.2 0.3|unidade:80;colher de sopa:20|
 cuscuz de milho cozido|cuscuz;cuscuz nordestino;cuscuz de milho|cereais|113 2.2 25.3 0.7 2.1|prato:150;porcao:120;fatia:100|
 aveia em flocos|aveia;flocos de aveia;aveia em flocao|cereais|394 13.9 66.6 8.5 9.1|porcao:30;colher de sopa:15;xicara:80|
-granola|granola|cereais|420 8 68 13 6|porcao:40;colher de sopa:15;xicara:100|a=15
+granola tradicional (industrializada)|granola;granola tradicional;granola industrializada;granola com mel;granola crocante|cereais|388 9.5 73.8 6.3 8.5|porcao:40;colher de sopa:10;colher de sobremesa:5;xicara:100|u;a=19.3
+granola sem acucar (caseira)|granola sem acucar;granola caseira;granola zero;granola zero acucar;granola sem acucar adicionado;granola artesanal;granola fit|cereais|440 11 58 18 9|porcao:40;colher de sopa:10;colher de sobremesa:5;xicara:100|a=6
+barra de granola|barra de granola;barrinha de granola;barra granola|cereais|410 6.5 68 12 4|barra:25;unidade:25|u;a=30
+muesli (sem acucar adicionado)|muesli;musli;mueslix;muesli simples|cereais|365 10 66 6.5 8|porcao:40;colher de sopa:10;xicara:90|a=14
 cereal matinal acucarado|cereal matinal;sucrilhos;sucrilho;cereal|cereais|380 6 85 2 3|xicara:30;tigela:40|u;a=35
 barra de cereal|barra de cereal;barrinha de cereal;barrinha|cereais|390 6 70 10 4|unidade:25|u;a=28
 pipoca de micro-ondas|pipoca;pipoca de microondas|cereais|460 9.5 55 22 10|saco:100;xicara:15;punhado:20|u
@@ -304,7 +307,22 @@ export function removerAlimentoDoBanco(id) {
 // Prioridade (desempate na busca): TACO > IBGE > embutido > USDA. Os arquivos já vêm desduplicados entre si e contra o embutido:
 // um alimento do embutido que a TACO/IBGE também tem é substituído pelo registro da camada (que herda apelidos e porções caseiras),
 // e o id antigo continua valendo (LEGADO), para não quebrar refeições e favoritos já salvos.
-const LEGADO = new Map();
+const LEGADO = new Map([['granola', 'granola-tradicional-industrializada']]);   // 'granola' era um item só; agora são variantes (ver FAMILIAS_VARIANTES)
+
+/**
+ * Famílias de variantes: o mesmo alimento falado de jeitos diferentes, com valores e grau NOVA distintos.
+ * A tela de confirmação mostra as irmãs para trocar com 1 toque (ex.: granola comum -> sem açúcar).
+ * A primeira da lista é a que o texto sem qualificação ("granola") escolhe.
+ */
+export const FAMILIAS_VARIANTES = [
+  { nome: 'granola e afins', ids: ['granola-tradicional-industrializada', 'granola-sem-acucar-caseira', 'barra-de-granola', 'muesli-sem-acucar-adicionado'] },
+];
+/** Alimentos irmãos (variantes) de um alimento, já presentes no banco; [] se ele não pertence a uma família */
+export function variantesDe(id) {
+  const canon = idCanonico(id);
+  const fam = FAMILIAS_VARIANTES.find(f => f.ids.includes(canon));
+  return fam ? fam.ids.filter(x => x !== canon).map(x => POR_ID.get(x)).filter(Boolean) : [];
+}
 export const idCanonico = id => (POR_ID.has(id) ? id : LEGADO.get(id) || id);
 const linhaParaAlimento = ([id, nome, grupo, kcal, p, c, g, f, porcoes, apelidos, flags]) => montarAlimento({
   id, nome, grupo, kcal, p, c, g, f, porcoes: parsePorcoes(porcoes),

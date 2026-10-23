@@ -39,7 +39,9 @@ A flag `ultra` antiga é uma dica imprecisa (ela marcava "batata doce" por conte
 | Salgados de lanchonete (coxinha, pastel, quibe, empada, esfiha), pizza, hambúrguer/sanduíches | **4** | padrão fast food. Versões artesanais poderiam ser 3. Acarajé: 1. Sanduíche natural: 3. |
 | Doces e sobremesas (brigadeiro, cocada, paçoca, sorvete, pudim, chocolate) | **4** | confeitaria. Exceções: açúcar/mel/melado/rapadura (2); goiabada, marmelada, doces de fruta e frutas em calda (3). Bolo/torta sem flag ultra: 3. |
 | Chocolate amargo 70% | **3** | pode ser 4 conforme a marca (lecitina, aromas). |
-| Granola, muesli, barras de cereal, cereal matinal | **4** | açúcar e aditivos são o padrão. |
+| Granola tradicional (industrializada), barra de granola/cereal, cereal matinal | **4** | açúcar, xarope e aditivos são o padrão de mercado. |
+| Granola sem açúcar / caseira (aveia, castanhas, mel, óleo) | **3** | o Guia não cita granola; pela definição, alimentos in natura com óleo/mel adicionados e tostados = processado (3). Se a embalagem trouxer xarope, aromatizantes ou emulsificantes, é 4. |
+| Muesli sem açúcar adicionado (flocos, frutas secas, castanhas) | **1** | mistura de alimentos minimamente processados. Com açúcar/xarope adicionado: 4 (não modelado, use Meus alimentos). |
 | Pipoca de panela/sem óleo | **1**; de micro-ondas/sabores: **4**. |
 | Castanhas e sementes torradas **com sal ou óleo** | **3**; sem sal: 1. Pastas de amendoim/amêndoa/tahine: 3 (dependem da marca). |
 | Tofu, tempeh | **3**; proteína de soja texturizada, "carne vegetal", extrato de soja em pó: **4**. |
@@ -74,3 +76,8 @@ Revisão manual feita sobre (a) a listagem completa dos grupos 2, 3 e 4 e dos gr
 - "Fermento biológico" caía em embutido ("tablete"): restrito a caldo em tablete.
 
 Depois das correções, a segunda leitura da amostra de 200 não encontrou erro de classe. Restam, por natureza, os casos da tabela acima (dependem de marca ou preparo).
+
+
+## Granola: decisão (23/10/2026)
+
+O banco tinha quatro granolas divergentes (embutido 420 kcal, IBGE 388, USDA 489, "Musli" do IBGE copiado da granola), todas em NOVA 4. Passaram a ser variantes separadas no embutido (valores, porções e justificativa em tools/relatorio-banco.md, seção Curadoria): **Granola tradicional (industrializada)** = 4, **Granola sem açúcar (caseira)** = 3, **Barra de granola** = 4, **Muesli (sem açúcar adicionado)** = 1. Regras: granola-sem-acucar (3), muesli-simples (1), granola-industrializada (4), antes de cereal-matinal-barra. "Granola" sem qualificação cai na tradicional (4); a tela de confirmação mostra "Trocar por" com as irmãs (FAMILIAS_VARIANTES em js/foods.js). "Açaí com granola" permanece 4. Os ids antigos (granola, ibge-6504101-99, usda-s171646...) resolvem para a variante correspondente.

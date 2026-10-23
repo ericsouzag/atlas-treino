@@ -2,7 +2,7 @@
 import { h, limpar, icone, iconeCheio, campo, entradaNum, selecao, lerNumero, n0, n1, aviso, folha, confirmar, caixaAviso, debounce } from '../ui.js';
 import { store } from '../store.js';
 import { estimarRefeicao } from '../estimador.js';
-import { alimentoPorId, buscarAlimentos, nutrientesPara, porcaoPadrao, bancoCompletoPronto } from '../foods.js';
+import { alimentoPorId, variantesDe, buscarAlimentos, nutrientesPara, porcaoPadrao, bancoCompletoPronto } from '../foods.js';
 import { dataISO, horaHM, somarDias, rotuloDia, tsLocal, diaDoTs, horaDoTs } from '../datas.js';
 import { refeicoesDoDia, metas, aguaDoDia, setAgua, montarItemRefeicao, resumoItens, onboardingFeito, atividadesDoDia, gastoAtivoDoDia, treinosConcluidos } from '../dados.js';
 import { escolherAlimento } from './buscar-alimento.js';
@@ -197,7 +197,11 @@ export function renderizar(raiz, ctx) {
     const ehFav = favoritos.some(f => f.origemId === r.id);
     return h('article', { class: 'refeicao', 'aria-label': `${r.tipo} às ${horaDoTs(r.ts)}` },
       h('header', null, h('span', { class: 'hora' }, horaDoTs(r.ts)), h('span', { class: 'tipo' }, r.tipo), h('span', { class: 'total' }, `${n0(kcalDe(r))} kcal`)),
-      r.itens.map(i => h('div', { class: 'item-linha' }, h('span', { class: 'nm' }, i.nome), h('span', { class: 'qt' }, `${n0(i.gramas)} ${i.liquido ? 'ml' : 'g'}`), h('span', { class: 'pt', 'aria-hidden': 'true' }), h('span', { class: 'kc' }, n0(i.kcal)))),
+      // itens em grade de 2 colunas (cabeçalho da refeição e ações ocupam a linha toda); leitura em Z, na ordem do registro
+      h('ul', { class: 'itens-grade' }, r.itens.map(i => h('li', { class: 'item-card' },
+        h('span', { class: 'nm', title: i.nome }, i.nome),
+        h('span', { class: 'qk' }, h('span', { class: 'qt' }, `${n0(i.gramas)} ${i.liquido ? 'ml' : 'g'}`), h('span', { class: 'kc' }, `${n0(i.kcal)} kcal`)),
+        h('span', { class: 'mc' }, `P ${n0(i.p)} · C ${n0(i.c)} · G ${n0(i.g)}`)))),
       fotoBox,
       h('div', { class: 'acoes' },
         h('button', { class: `btn-icone ${ehFav ? 'ativo' : ''}`, type: 'button', 'aria-pressed': String(ehFav), 'aria-label': ehFav ? 'Remover dos favoritos' : 'Favoritar refeição', onclick: () => { alternarFavorito(r, favoritos); redesenhar(); } }, ehFav ? iconeCheio('estrela') : icone('estrela')),
@@ -257,7 +261,11 @@ export async function abrirConfirmacao({ itens, ts, tipo, texto, foto = null, fo
           h('div', null,
             h('button', { class: 'nome-btn', type: 'button', 'aria-label': `Trocar alimento: ${l.nome}`, onclick: () => trocarAlimento(idx) }, a ? a.nome : (l.nome ? `“${l.nome}”: escolha um alimento` : 'Escolher alimento')),
             !a ? h('div', { class: 'confianca-baixa' }, 'Não encontrei esse alimento no banco. Toque no nome para buscar, procurar o produto ou criar o seu.') : (l.confianca === 'baixa' ? h('div', { class: 'confianca-baixa' }, 'Correspondência incerta: confira o alimento.') : null),
-            n ? h('div', { class: 'mudo peq' }, `${n0(n.kcal)} kcal · P ${n1(n.p)} · C ${n1(n.c)} · G ${n1(n.g)} · F ${n1(n.f)}`) : null),
+            n ? h('div', { class: 'mudo peq' }, `${n0(n.kcal)} kcal · P ${n1(n.p)} · C ${n1(n.c)} · G ${n1(n.g)} · F ${n1(n.f)}`) : null,
+            // variantes do mesmo alimento (ex.: granola tradicional / sem açúcar / barra): troca com 1 toque, mantendo a quantidade em gramas
+            a && variantesDe(a.id).length ? h('div', { class: 'variantes', role: 'group', 'aria-label': `Trocar ${a.nome} por uma variante` },
+              h('span', { class: 'mudo peq' }, 'Trocar por:'),
+              variantesDe(a.id).map(v => h('button', { class: 'chip chip-peq', type: 'button', title: `${v.nome}: ${n0(v.kcal)} kcal por 100 ${v.liquido ? 'ml' : 'g'}`, 'aria-label': `Trocar por ${v.nome}`, onclick: () => { l.alimentoId = v.id; l.nome = v.nome; l.unidadeSel = null; l.confianca = 'alta'; desenhar(); } }, v.nome.replace(/\s*\(.*$/, '')))) : null),
           h('button', { class: 'btn-icone perigo', type: 'button', 'aria-label': `Remover ${l.nome}`, onclick: () => { linhas.splice(idx, 1); desenhar(); } }, icone('lixo')),
           h('div', { class: 'qtd' }, campo('Quantidade', qtd), campo('Unidade', un))));
       });

@@ -7,12 +7,12 @@ Gerado por `node tools/unificar-banco.mjs`. Prioridade ao desduplicar: **TACO > 
 | Fonte | Candidatos | Fundidos em outra | Descartados (inconsistência/nome) | Mantidos |
 |---|---:|---:|---:|---:|
 | TACO (4ª ed.) | 593 | 0 | 1 | 592 |
-| IBGE (POF 2008-2009) | 855 | 92 | 26 | 737 |
-| Embutido (js/foods.js) | 204 | 77 | 14 | 113 |
-| USDA (FDC) | 902 | 134 | 24 | 744 |
-| **Total** | 2554 | 303 | 65 | **2186** |
+| IBGE (POF 2008-2009) | 855 | 92 | 28 | 735 |
+| Embutido (js/foods.js) | 207 | 76 | 14 | 117 |
+| USDA (FDC) | 902 | 134 | 26 | 742 |
+| **Total** | 2557 | 302 | 69 | **2186** |
 
-No app, o embutido (204 itens) carrega junto com o código; 91 deles foram absorvidos por registros de maior prioridade (TACO/IBGE) e saem do banco quando a camada carrega.
+No app, o embutido (207 itens) carrega junto com o código; 90 deles foram absorvidos por registros de maior prioridade (TACO/IBGE) e saem do banco quando a camada carrega.
 37 das fusões embutido->TACO vieram da lista revisada à mão (itens da TACO marcados como já existentes no embutido, casando também por apelido). 109 apelidos repetidos entre registros foram retirados (cada apelido tem um dono: o item curado à mão ou a fonte de maior prioridade).
 Os candidatos da USDA já vêm filtrados por regras de seleção/tradução (tools/gerar-usda.mjs): de ~8 mil itens do FDC só entram os que têm tradução de qualidade.
 
@@ -21,7 +21,7 @@ Os candidatos da USDA já vêm filtrados por regras de seleção/tradução (too
 - ibge -> taco: 69
 - ibge -> ibge: 23
 - base -> taco: 49
-- base -> ibge: 28
+- base -> ibge: 27
 - usda -> ibge: 46
 - usda -> taco: 68
 - usda -> base: 20
@@ -29,8 +29,8 @@ Os candidatos da USDA já vêm filtrados por regras de seleção/tradução (too
 ## Arquivos (descompactados)
 
 - data/taco.json: 592 itens, 83 KB
-- data/ibge.json: 737 itens, 86 KB
-- data/usda.json: 744 itens, 75 KB
+- data/ibge.json: 735 itens, 86 KB
+- data/usda.json: 742 itens, 75 KB
 - Total das camadas: 244 KB (orçamento: 3 MB)
 
 ## Itens fundidos (amostra de cada par)
@@ -181,7 +181,6 @@ Os candidatos da USDA já vêm filtrados por regras de seleção/tradução (too
 
 - Pão integral (pao-integral, 253 kcal) -> Pão integral (ibge-8001401-99, 247 kcal)
 - Pão de queijo (pao-de-queijo, 363 kcal) -> Pão de queijo (ibge-8000801-99, 363 kcal)
-- Granola (granola, 420 kcal) -> Granola (ibge-6504101-99, 388 kcal)
 - Barra de cereal (barra-de-cereal, 390 kcal) -> Barra de cereais (ibge-6907201-99, 353 kcal)
 - Biscoito recheado (biscoito-recheado, 472 kcal) -> Biscoito recheado (ibge-8004801-99, 472 kcal)
 - Farofa pronta (farofa-pronta, 410 kcal) -> Farofa pronta (ibge-8502901-99, 406 kcal)
@@ -344,15 +343,42 @@ Os candidatos da USDA já vêm filtrados por regras de seleção/tradução (too
 - Frango, coxa e sobrecoxa (com pele, assado) (usda-s173617, 184 kcal) -> Frango assado (coxa e sobrecoxa) (frango-assado-coxa-e-sobrecoxa, 215 kcal)
 - Sardinha em lata (usda-s175139, 208 kcal) -> Sardinha em lata (sardinha-em-lata, 208 kcal)
 
+## Curadoria: granola, barra de granola e muesli
+
+Revisão de 23/10/2026. Antes havia registros divergentes para "granola" (embutido 420 kcal; IBGE 388; USDA 489; "Musli" do IBGE = cópia da granola) e todos caíam em NOVA 4. Agora são variantes curadas no embutido (js/foods.js), por 100 g:
+
+| Variante (id) | kcal | P | C | G | Fibra | Açúcar | NOVA | Porções |
+|---|---:|---:|---:|---:|---:|---:|:-:|---|
+| Granola tradicional (industrializada) (granola-tradicional-industrializada) | 388 | 9,5 | 73,8 | 6,3 | 8,5 | 19 | 4 | porção 40 g, colher de sopa 10 g, xícara 100 g |
+| Granola sem açúcar (caseira) (granola-sem-acucar-caseira) | 440 | 11 | 58 | 18 | 9 | 6 | 3 | porção 40 g, colher de sopa 10 g, xícara 100 g |
+| Barra de granola (barra-de-granola) | 410 | 6,5 | 68 | 12 | 4 | 30 | 4 | barra 25 g |
+| Muesli (sem açúcar adicionado) (muesli-sem-acucar-adicionado) | 365 | 10 | 66 | 6,5 | 8 | 14 | 1 | porção 40 g, colher de sopa 10 g, xícara 90 g |
+
+Por quê: a tradicional adota o valor do IBGE (POF, produto brasileiro). Seus 388 kcal ficam no meio da faixa que rótulos de marcas brasileiras mostram (130 a 175 kcal por 40 g, ou 325 a 437 kcal por 100 g). A sem açúcar leva mais castanha e óleo e menos açúcar, por isso mais gordura e kcal; é estimativa por composição típica (aveia, castanhas, mel, óleo), abaixo da granola caseira da USDA (489, com muita castanha). A barra (~100 kcal por barra de 25 g) fica entre a "Barra de cereais" do IBGE (353) e a barra dura da USDA (471). O muesli do IBGE era cópia da granola; o novo vem de composição típica (flocos, frutas secas, castanhas). Tudo é estimativa: a marca muda o valor, e quem souber o rótulo pode criar em Meus alimentos.
+
+Registros substituídos (somem da busca; os ids antigos continuam resolvendo para a variante indicada):
+
+- ibge-6504101-99 -> granola-tradicional-industrializada: Granola do IBGE: valores adotados na granola tradicional curada
+- ibge-6504601-99 -> muesli-sem-acucar-adicionado: Musli do IBGE é cópia exata da Granola (mesmos valores); muesli tem item próprio
+- usda-s171646 -> granola-sem-acucar-caseira: granola caseira dos EUA (489 kcal, muita castanha): serve de referência da variante sem açúcar/caseira, que tem valor próprio
+- usda-s167542 -> barra-de-granola: barra dura dos EUA (471 kcal) distante dos rótulos brasileiros; a barra de granola curada (410 kcal) a substitui
+
+"Açaí com granola" (IBGE, 110 kcal) segue como está e em NOVA 4 (açaí na tigela costuma levar xarope de guaraná). Aveia em flocos (TACO) segue em 1.
+
 ## Descartados
 
 - valores inconsistentes: 4
+- substituídos pela curadoria (granola/muesli): 4
 - mesmo nome com valores diferentes de fonte de maior prioridade: 61
 
 - [taco] Fermento em pó químico (taco-513): inconsistente: kcal 90 vs macros 179
 - [usda] Piña colada (usda-s168752): inconsistente: kcal 174 vs macros 109
 - [usda] Daiquiri (usda-s169574): inconsistente: kcal 186 vs macros 29
 - [usda] Whiskey sour (usda-s173662): inconsistente: kcal 149 vs macros 53
+- [ibge] Granola (ibge-6504101-99): substituído pela curadoria (granola-tradicional-industrializada): Granola do IBGE: valores adotados na granola tradicional curada
+- [ibge] Musli (ibge-6504601-99): substituído pela curadoria (muesli-sem-acucar-adicionado): Musli do IBGE é cópia exata da Granola (mesmos valores); muesli tem item próprio
+- [usda] Barra de granola (usda-s167542): substituído pela curadoria (barra-de-granola): barra dura dos EUA (471 kcal) distante dos rótulos brasileiros; a barra de granola curada (410 kcal) a substitui
+- [usda] Granola (USDA) (usda-s171646): substituído pela curadoria (granola-sem-acucar-caseira): granola caseira dos EUA (489 kcal, muita castanha): serve de referência da variante sem açúcar/caseira, que tem valor próprio
 - [ibge] Lentilha (cozida) (ibge-6302901-99): mesmo nome de taco-577 (taco) com valores diferentes (136 vs 93 kcal)
 - [ibge] Batata-inglesa (cozida) (ibge-6400101-99): mesmo nome de taco-91 (taco) com valores diferentes (86 vs 52 kcal)
 - [ibge] Cará (cozido) (ibge-6400701-2): mesmo nome de taco-102 (taco) com valores diferentes (100 vs 78 kcal)

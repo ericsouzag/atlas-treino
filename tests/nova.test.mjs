@@ -161,4 +161,18 @@ teste('Open Food Facts: usa nova_group do produto quando existe; senão sem clas
   igual(sem.nova, null); ok(sem.ultra, 'produto sem NOVA mantém a flag antiga de industrializado');
 });
 
+console.log('\nGranola e afins');
+teste('granola: tradicional = 4, sem açúcar/caseira = 3, barra = 4, muesli simples = 1, açaí com granola = 4', () => {
+  const cl = nome => classificarNova({ nome, grupo: 'cereais', fonte: 'base' }).nova;
+  igual(cl('Granola'), 4); igual(cl('Granola tradicional (industrializada)'), 4);
+  for (const n of ['Granola sem açúcar (caseira)', 'Granola caseira', 'Granola zero']) igual(cl(n), 3, n);
+  igual(cl('Barra de granola'), 4); igual(cl('Muesli (sem açúcar adicionado)'), 1);
+  igual(classificarNova({ nome: 'Açaí com granola', grupo: 'pratos', fonte: 'ibge' }).nova, 4);
+});
+teste('granola no banco real: classe gravada nas variantes', () => {
+  igual(alimentoPorId('granola-tradicional-industrializada').nova, 4);
+  igual(alimentoPorId('granola-sem-acucar-caseira').nova, 3);
+  igual(alimentoPorId('barra-de-granola').nova, 4);
+  igual(alimentoPorId('muesli-sem-acucar-adicionado').nova, 1);
+});
 fim();

@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { teste, igual, perto, ok, fim } from './_t.mjs';
-import { ALIMENTOS, aplicarCamada, alimentoPorId, idCanonico, nutrientesPara, buscarAlimentos, camadasProntas, registrarAlimentos, removerAlimentoDoBanco, aplicarCamadaEmFatias } from '../js/foods.js';
+import { variantesDe, ALIMENTOS, aplicarCamada, alimentoPorId, idCanonico, nutrientesPara, buscarAlimentos, camadasProntas, registrarAlimentos, removerAlimentoDoBanco, aplicarCamadaEmFatias } from '../js/foods.js';
 import { interpretarRefeicao, encontrarAlimento, somarItens } from '../js/parser.js';
 import { para100, validarNutrientes, montarDocAlimento, alimentoDeDoc } from '../js/banco.js';
 import { normalizar } from '../js/texto.js';
@@ -75,7 +75,7 @@ teste('ids únicos e com a origem certa', () => {
   }
 });
 teste('ids antigos do embutido continuam resolvendo (refeições e favoritos já salvos)', () => {
-  const absorvidos = Object.entries({ ...CAMADAS.taco.meta.legado, ...CAMADAS.ibge.meta.legado });
+  const absorvidos = Object.entries({ ...CAMADAS.taco.meta.legado, ...CAMADAS.ibge.meta.legado }).filter(([antigo]) => !/^(ibge|usda)-/.test(antigo));   // redirecionamentos de ids de camada (granola) são testados na seção Granola
   ok(absorvidos.length > 40, 'houve fusões do embutido com TACO/IBGE: ' + absorvidos.length);
   for (const [antigo, novo] of absorvidos) {
     ok(embutidos.includes(antigo), 'era um id do embutido: ' + antigo);
@@ -238,5 +238,39 @@ teste('interpretar 60 frases leva menos de 2 s (índice pré-calculado)', () => 
   const t0 = Date.now();
   for (let i = 0; i < 60; i++) interpretarRefeicao(FRASES[i % FRASES.length][0] + ', 100g de arroz');
   ok(Date.now() - t0 < 2000, `${Date.now() - t0} ms`);
+});
+
+console.log('\nGranola: variantes, valores e parser');
+teste('granola: três variantes + muesli, sem duplicata visível, valores coerentes por 100 g', () => {
+  const nomes = ALIMENTOS.filter(a => /granola|muesli|musli/.test(normalizar(a.nome)) && !/acai/.test(normalizar(a.nome)));
+  const por = Object.fromEntries(nomes.map(a => [a.id, a]));
+  igual(nomes.length, 4, 'tradicional, sem açúcar, barra e muesli (IBGE/USDA foram substituídos pela curadoria)');
+  const t = por['granola-tradicional-industrializada'], s = por['granola-sem-acucar-caseira'], b = por['barra-de-granola'];
+  ok(t && s && b, 'variantes existem');
+  perto(t.kcal, 388, 0.01); ok(t.acucar >= 15, 'tradicional tem açúcar'); ok(s.acucar < t.acucar, 'sem açúcar tem menos açúcar'); ok(s.kcal > t.kcal, 'sem açúcar tem mais castanha/óleo');
+  ok(b.kcal >= 380 && b.kcal <= 450);
+  for (const a of nomes) { const e = a.p * 4 + a.c * 4 + a.g * 9; ok(Math.abs(e - a.kcal) / a.kcal < 0.08, a.nome + ' kcal incoerente com macros'); }
+  perto(nutrientesPara(t, 40).kcal, 155, 1);   // porção de rótulo ~40 g
+  igual(t.porcoes.find(p => p.nome === 'colher de sopa').g, 10); igual(t.porcoes.find(p => p.nome === 'xicara').g, 100);
+});
+teste('granola: ids antigos (embutido, IBGE, USDA) resolvem para a variante certa', () => {
+  igual(idCanonico('granola'), 'granola-tradicional-industrializada');
+  igual(alimentoPorId('granola').nome, 'Granola tradicional (industrializada)');
+  igual(alimentoPorId('ibge-6504101-99').id, 'granola-tradicional-industrializada');
+  igual(alimentoPorId('usda-s171646').id, 'granola-sem-acucar-caseira');
+  igual(alimentoPorId('usda-s167542').id, 'barra-de-granola');
+});
+teste('parser: "granola" sem qualificação vai para a tradicional; apelidos levam à variante', () => {
+  const cai = (txt, id) => { const it = interpretarRefeicao(txt)[0]; igual(it.alimentoId, id, txt); };
+  cai('granola', 'granola-tradicional-industrializada'); cai('40 g de granola', 'granola-tradicional-industrializada'); cai('granola tradicional', 'granola-tradicional-industrializada');
+  for (const f of ['granola sem acucar', 'granola sem açúcar', 'granola caseira', 'granola zero']) cai(f, 'granola-sem-acucar-caseira');
+  cai('1 barra de granola', 'barra-de-granola'); cai('muesli', 'muesli-sem-acucar-adicionado');
+  igual(interpretarRefeicao('2 colheres de sopa de granola')[0].gramas, 20);
+  igual(interpretarRefeicao('1 xicara de granola')[0].gramas, 100);
+});
+teste('variantesDe: a granola oferece as irmãs para trocar na confirmação', () => {
+  const ids = variantesDe('granola').map(a => a.id);
+  ok(ids.includes('granola-sem-acucar-caseira') && ids.includes('barra-de-granola') && !ids.includes('granola-tradicional-industrializada'));
+  igual(variantesDe('arroz-branco-cozido').length, 0);
 });
 fim();

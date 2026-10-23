@@ -131,6 +131,7 @@ export function renderizar(raiz, ctx) {
       h('li', null, 'Alimentos consumidos no Brasil: IBGE, Pesquisa de Orçamentos Familiares 2008-2009, Tabelas de Composição Nutricional dos Alimentos Consumidos no Brasil e Tabela de Medidas Referidas (porções caseiras), Rio de Janeiro: IBGE (www.ibge.gov.br). Nomes padronizados e acentuados pelo Atlas Fitness; itens repetidos com a TACO foram unificados.'),
       h('li', null, 'Alimentos e suplementos importados: USDA FoodData Central (fdc.nal.usda.gov), Foundation Foods e SR Legacy, domínio público (CC0 1.0). Nomes traduzidos para o português pelo Atlas Fitness. Fonte: U.S. Department of Agriculture, Agricultural Research Service.'),
       h('li', null, 'Produtos industrializados (busca opcional): Open Food Facts, openfoodfacts.org, dados sob a licença ODbL 1.0 (opendatacommons.org/licenses/odbl/1-0). Dados feitos por colaboradores, podem estar incompletos.'),
+      h('li', null, 'Grau de processamento dos alimentos: classificação NOVA, conforme o Guia Alimentar para a População Brasileira (Ministério da Saúde, 2014). A classe de cada alimento é uma estimativa por regras do Atlas Fitness e pode variar conforme a marca e o preparo; em produtos do Open Food Facts vale o grupo NOVA do cadastro, quando existe.'),
       h('li', null, 'Fontes Bricolage Grotesque e Figtree: licença SIL Open Font.'),
       h('li', null, 'Valores de MET: Compêndio de Atividades Físicas (Ainsworth et al., 2011), aproximados.'))));
 

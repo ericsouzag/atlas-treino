@@ -6,6 +6,7 @@ PWA de **alimentação + treino + corpo + relatórios**, em português do Brasil
 - **Treino**: escolha os dias; o app monta fichas que cobrem todas as porções de cada músculo (peitoral clavicular/esternal/costal, três cabeças do tríceps, etc.), explica por que cada exercício entrou, troca por alternativas que ativam as mesmas porções e registra cargas, repetições e gasto calórico.
 - **Registrar treino do dia** (na aba Alimentação): marca o treino programado como feito (completo ou parcial) com 1 toque, ou registra outra atividade (corrida, caminhada, bike, natação, HIIT, esportes...) com ritmo/pace, distância (km ou milhas), duração e kcal ao vivo. Entra no balanço do dia, nos relatórios e no gasto da previsão.
 - **Corpo**: peso, % de gordura (manual, fórmula da Marinha, dobras de Jackson-Pollock 3/7 ou IMC), 14 medidas, fotos de progresso e histórico.
+- **Grau de processamento (NOVA)**: na aba Alimentação, o cartão "Seu dia por grau de processamento" mostra quanto do dia veio de in natura/minimamente processados, ingredientes culinários, processados e ultraprocessados (por calorias, com alternância para gramas), com lista dos alimentos de cada grupo. Em Relatórios há a versão de 7 e 30 dias. Veja a seção "Grau de processamento (NOVA)" abaixo.
 - **Relatórios**: gráficos em SVG, previsão de composição em 4/8/12 semanas (modelo p-ratio + Forbes, com faixa de incerteza), detecção de platô e guias.
 - **Boas-vindas** (primeira abertura, só com Firebase configurado): entrar com e-mail/senha, criar conta (com aceite de privacidade), Google, esqueci a senha, ou **Continuar sem login**. A escolha é lembrada; quem está logado vai direto ao app; conta existente puxa os dados e pula o onboarding; conta nova com dados locais pergunta se quer enviá-los. Sem Firebase configurado a tela não aparece.
 - **Dados**: sempre salvos no aparelho; opcionalmente sincronizados com Firebase (login com e-mail/senha ou Google). Exportar/importar JSON e apagar tudo (LGPD) em Ajustes.
@@ -38,7 +39,7 @@ O service worker (offline) só liga em `https://` (GitHub Pages). Em `localhost`
 node tests/rodar.mjs
 ```
 
-Cobre parser de alimentos e banco (inclui `tests/alimentos.test.mjs`: conversão e validação de nutrientes, camadas TACO/IBGE/USDA, desduplicação, ids antigos e 70 frases do dia a dia), TMB/TDEE/metas/% de gordura, planner (cobertura de porções por dia, equipamentos, lesões, troca), p-ratio/previsão/platô e a camada de dados.
+Cobre a classificação NOVA (`tests/nova.test.mjs`: regras, cobertura do banco, agregação, itens sem classe, dia vazio, dia misto, Meus alimentos e Open Food Facts), parser de alimentos e banco (inclui `tests/alimentos.test.mjs`: conversão e validação de nutrientes, camadas TACO/IBGE/USDA, desduplicação, ids antigos e 70 frases do dia a dia), TMB/TDEE/metas/% de gordura, planner (cobertura de porções por dia, equipamentos, lesões, troca), p-ratio/previsão/platô e a camada de dados.
 
 ## Publicar no GitHub Pages
 
@@ -64,6 +65,8 @@ js/
   parser.js      texto livre -> itens (quantidades, unidades, sinônimos; índice invertido por palavra)
   estimador.js   estimarRefeicao(texto, foto): ponto de plugue para IA (TODO)
   nutrition.js   TMB (Mifflin/Katch), TDEE, metas, % de gordura, alertas
+  nova-regras.js classificação NOVA (1 a 4) de um alimento por regras (usada pelos geradores e pelo embutido)
+  nova.js        agregação do dia por grupo NOVA (kcal, gramas, %), texto de leitura (funções puras)
   exercises.js   músculos em porções + 156 exercícios
   planner.js     montagem de fichas, justificativas, volume, troca
   composition.js p-ratio, Forbes, simulação semanal, platô, calibração
@@ -74,7 +77,7 @@ js/
 img/ex/      300 fotos de exercícios (free-exercise-db, domínio público)
 tests/      testes em Node (sem dependências)
 data/       taco.json, ibge.json, usda.json (banco de alimentos por camada, carregado sob demanda)
-tools/      servir.mjs, gerar-icones-arte.mjs, gerar-sw.mjs, gerar-taco/ibge/usda.mjs, unificar-banco.mjs, lib-banco.mjs, ler-xls.mjs, relatorio-banco.md, fonte/
+tools/      servir.mjs, gerar-icones-arte.mjs, gerar-sw.mjs, gerar-taco/ibge/usda.mjs, unificar-banco.mjs, lib-banco.mjs, ler-xls.mjs, relatorio-banco.md, regras-nova.md, relatorio-nova.md, relatorio-nova.mjs, fonte/
 docs/       FIREBASE_SETUP.md
 ```
 
@@ -108,7 +111,7 @@ node tools/gerar-taco.mjs                       # tools/fonte/taco4-extrato.json
 node tools/gerar-ibge.mjs --xls tabelacompleta.xls tabelamedidas_bd.xls   # planilhas do IBGE -> ibge-extrato.json -> ibge-itens.json (sem --xls usa o extrato)
 node tools/gerar-usda.mjs --csv <pasta-foundation> <pasta-sr-legacy>      # CSV do FDC -> usda-extrato.json -> usda-itens.json (sem --csv usa o extrato)
 node tools/unificar-banco.mjs                   # desduplica e grava data/*.json e tools/relatorio-banco.md
-node tools/gerar-sw.mjs atlas-v1.5.0            # renova o cache offline
+node tools/gerar-sw.mjs atlas-v1.6.0            # renova o cache offline
 ```
 
 Fontes originais (baixadas só para gerar os extratos): IBGE `ftp.ibge.gov.br/Orcamentos_Familiares/Pesquisa_de_Orcamentos_Familiares_2008_2009/` (pastas `Tabelas_de_Composicao_Nutricional_dos_Alimentos_Consumidos_no_Brasil` e `Tabela_de_Medidas_Referidas_para_os_Alimentos_Consumidos_no_Brasil`) e USDA `fdc.nal.usda.gov/download-datasets` (`FoodData_Central_foundation_food_csv_2026-04-30.zip` e `FoodData_Central_sr_legacy_food_csv_2018-04.zip`). O relatório de desduplicação (contagens por fonte, fundidos, descartados) fica em `tools/relatorio-banco.md`.
@@ -119,6 +122,16 @@ Fontes originais (baixadas só para gerar os extratos): IBGE `ftp.ibge.gov.br/Or
 - **IBGE**: dados do IBGE (POF 2008-2009), citados como fonte em Ajustes. As páginas de termos de uso do IBGE bloquearam o acesso automático (HTTP 403), então os termos exatos de reprodução não foram verificados no texto oficial; a prática do IBGE é permitir o uso de dados e tabelas citando a fonte, e o app cita. Se o app virar comercial, vale pedir confirmação ao IBGE.
 - **USDA FoodData Central**: domínio público (CC0 1.0 Universal; conferido em fdc.nal.usda.gov/download-datasets). Pede-se citar o FoodData Central como fonte, o que o app faz.
 - **Open Food Facts**: ODbL 1.0 (opendatacommons.org/licenses/odbl/1-0); só o produto que a pessoa escolhe é guardado, com a fonte indicada.
+
+## Grau de processamento (NOVA)
+
+Classificação **NOVA** do *Guia Alimentar para a População Brasileira* (Ministério da Saúde, 2014): 1 in natura/minimamente processado, 2 ingrediente culinário, 3 processado, 4 ultraprocessado. **Todo alimento do banco tem a classe** (campo `nova`, gravada como flag `n=1..4` nos arquivos de `data/`; no embutido é calculada na carga). É uma **estimativa por regras** (categoria da fonte + palavras-chave + flag `ultra` + exceções explícitas), não um rótulo oficial: a classe real varia com marca e preparo, e a tela avisa isso.
+
+- Regras: `js/nova-regras.js` (código) e `tools/regras-nova.md` (decisões e casos discutíveis, revisão por amostragem). Relatório de cobertura e itens limítrofes: `tools/relatorio-nova.md`, regerado por `node tools/unificar-banco.mjs`.
+- Cálculo: `js/nova.js` (puro, testado). A classe vem do banco **na hora de calcular**: refeições antigas ganham o gráfico sem migração; se o alimento saiu do banco, vale a classe guardada no item, e sem ela o item fica "sem classificação" (à parte, com opção de tirá-lo do denominador).
+- Telas: `js/views/nova-card.js` (Alimentação) e a seção "Grau de processamento (NOVA)" de `js/views/relatorios.js` (semana e 30 dias, reutiliza `charts.js`). O aviso de ultraprocessados acima de um terço das calorias mora no cartão (não há mais um alerta repetido).
+- Meus alimentos: seletor opcional "Tipo (NOVA)" (padrão "Não sei" = sem classificação). Produtos do Open Food Facts usam o `nova_group` do cadastro quando existe (campo pedido em `js/off.js`); o formulário de conferência permite corrigir.
+- Créditos: Guia Alimentar (Ministério da Saúde, 2014) em Ajustes > Créditos.
 
 ## Ilustrações dos exercícios
 

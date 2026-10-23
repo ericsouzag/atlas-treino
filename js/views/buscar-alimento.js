@@ -1,6 +1,6 @@
 // Escolha de alimento: busca local (embutido + TACO + os meus), busca opcional no Open Food Facts,
 // leitura de código de barras e "Criar meu alimento". Usada na tela de confirmação da refeição e em Ajustes.
-import { h, limpar, icone, campo, entradaNum, lerNumero, aviso, folha, confirmar, caixaAviso, debounce } from '../ui.js';
+import { h, limpar, icone, campo, entradaNum, lerNumero, aviso, folha, confirmar, caixaAviso, debounce, selecao } from '../ui.js';
 import { buscarAlimentos, alimentoPorId } from '../foods.js';
 import { montarDocAlimento, validarNutrientes, salvarAlimentoPersonalizado, removerAlimentoPersonalizado, listarMeusAlimentos, listarProdutosSalvos } from '../banco.js';
 import { buscarPorCodigo, buscarPorTexto, codigoValido, mensagemErro, leitorDisponivel, lerCodigoPelaCamera, AVISO_OFF } from '../off.js';
@@ -30,6 +30,7 @@ function formularioAlimento({ doc = null, inicial = {}, modo = 'meu', aoSalvar, 
   const porc0 = (d.porcoes && d.porcoes[0]) || (inicial.porcaoG ? { nome: 'porção do rótulo', g: inicial.porcaoG } : null);
   const porcNome = h('input', { type: 'text', value: porc0 ? porc0.nome : 'porção', maxlength: 30, autocomplete: 'off' });
   const porcG = entradaNum(porc0 ? porc0.g : '', { 'aria-label': 'Tamanho da porção' });
+  const novaSel = selecao([['', 'Não sei'], ['1', '1 · In natura / minimamente processado'], ['2', '2 · Ingrediente culinário (óleo, açúcar, sal...)'], ['3', '3 · Processado (pão, queijo, conserva...)'], ['4', '4 · Ultraprocessado (refrigerante, biscoito recheado...)']], String(d.nova ?? inicial.nova ?? ''), { 'aria-label': 'Tipo NOVA (grau de processamento)' });
   const liquido = h('input', { type: 'checkbox', id: 'f-liq', checked: !!(d.liquido ?? inicial.liquido) });
   const unidade = () => (liquido.checked ? 'ml' : 'g');
   const errosBox = h('div', { 'aria-live': 'polite' });
@@ -48,7 +49,7 @@ function formularioAlimento({ doc = null, inicial = {}, modo = 'meu', aoSalvar, 
     return montarDocAlimento({
       tipo: ehOff ? 'off' : 'meu', id: d.id, codigo: d.codigo ?? inicial.codigo, marca: marca.value, nome: nome.value, base,
       porcaoG: lerNumero(porcG.value), porcaoNome: porcNome.value, kcal: lerNumero(kcal.value), p: lerNumero(p.value), c: lerNumero(c.value), g: lerNumero(g.value),
-      f: lerNumero(f.value), acucar: lerNumero(acucar.value), liquido: liquido.checked,
+      f: lerNumero(f.value), acucar: lerNumero(acucar.value), liquido: liquido.checked, nova: novaSel.value,
       apelidos: apelidos.value.split(',').map(x => x.trim()).filter(Boolean),
     });
   }
@@ -74,7 +75,9 @@ function formularioAlimento({ doc = null, inicial = {}, modo = 'meu', aoSalvar, 
       h('label', { class: 'opcao' }, radios[0], h('span', null, h('strong', null, 'Por 100 g (ou 100 ml)'), h('span', { class: 'd' }, 'Como na tabela nutricional do rótulo.'))),
       h('label', { class: 'opcao' }, radios[1], h('span', null, h('strong', null, 'Por porção'), h('span', { class: 'd' }, 'O app converte para 100 g usando o tamanho da porção.')))),
     h('label', { class: 'opcao', for: 'f-liq' }, liquido, h('span', null, h('strong', null, 'É uma bebida (medida em ml)'))),
-    rotBase, grade, porcBloco, errosBox,
+    rotBase, grade, porcBloco,
+    campo('Tipo (NOVA)', novaSel, ehOff && inicial.nova ? 'Vem do Open Food Facts; corrija se não bater com o rótulo.' : 'Opcional. Alimenta o gráfico "grau de processamento" da aba Alimentação. Em dúvida, deixe "Não sei".'),
+    errosBox,
     h('div', { class: 'linha-botoes' }, h('button', { class: 'btn', type: 'button', onclick: aoCancelar }, 'Cancelar'), h('button', { class: 'btn btn-primario', type: 'button', onclick: salvar }, icone('ok', 18), ehOff ? 'Usar este produto' : 'Salvar alimento')));
 }
 

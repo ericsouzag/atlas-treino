@@ -28,10 +28,10 @@ Os candidatos da USDA já vêm filtrados por regras de seleção/tradução (too
 
 ## Arquivos (descompactados)
 
-- data/taco.json: 592 itens, 82 KB
-- data/ibge.json: 737 itens, 84 KB
-- data/usda.json: 744 itens, 73 KB
-- Total das camadas: 238 KB (orçamento: 3 MB)
+- data/taco.json: 592 itens, 83 KB
+- data/ibge.json: 737 itens, 86 KB
+- data/usda.json: 744 itens, 75 KB
+- Total das camadas: 244 KB (orçamento: 3 MB)
 
 ## Itens fundidos (amostra de cada par)
 

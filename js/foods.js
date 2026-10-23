@@ -4,8 +4,10 @@
 // Formato de cada linha:
 //   nome | apelidos (;) | grupo | kcal prot carbo gord fibra | porções (nome:gramas;...) | flags
 // A PRIMEIRA porção é a padrão quando a pessoa não informa quantidade.
-// flags: u = ultraprocessado, b = bebida açucarada, l = líquido (ml), a=NN = açúcar g/100g, t = suplemento
+// flags: u = ultraprocessado, b = bebida açucarada, l = líquido (ml), a=NN = açúcar g/100g, t = suplemento, n=1..4 = grau NOVA
+// (nos arquivos de data/ a classe vem gravada em n=; no embutido ela é calculada na carga por js/nova-regras.js)
 import { normalizar, tokens } from './texto.js';
+import { classificarNova } from './nova-regras.js';
 
 const LINHAS = `
 arroz branco cozido|arroz;arroz branco;arroz soltinho|cereais|128 2.5 28.1 0.2 1.6|escumadeira:100;colher de sopa:25;concha:90;xicara:160;prato:220|
@@ -215,13 +217,14 @@ prato feito (arroz, feijao, carne e salada)|pf;prato feito;marmita;marmitex;quen
 `;
 
 function parseFlags(s = '') {
-  const f = { ultra: false, bebidaAcucarada: false, liquido: false, suplemento: false, acucar: 0 };
+  const f = { ultra: false, bebidaAcucarada: false, liquido: false, suplemento: false, acucar: 0, nova: null };
   for (const p of s.split(';').map(x => x.trim()).filter(Boolean)) {
     if (p === 'u') f.ultra = true;
     else if (p === 'b') f.bebidaAcucarada = true;
     else if (p === 'l') f.liquido = true;
     else if (p === 't') f.suplemento = true;
     else if (p.startsWith('a=')) f.acucar = parseFloat(p.slice(2));
+    else if (p.startsWith('n=')) { const n = parseInt(p.slice(2), 10); f.nova = n >= 1 && n <= 4 ? n : null; }
   }
   return f;
 }
@@ -236,10 +239,11 @@ function slug(s) {
 }
 
 /** Monta um alimento completo (campos de busca incluídos) a partir de dados simples */
-export function montarAlimento({ id, nome, grupo = 'outros', kcal = 0, p = 0, c = 0, g = 0, f = 0, porcoes = [], aliases = [], ultra = false, bebidaAcucarada = false, liquido = false, suplemento = false, acucar = 0, origem = 'base', extra = null }) {
+export function montarAlimento({ id, nome, grupo = 'outros', kcal = 0, p = 0, c = 0, g = 0, f = 0, porcoes = [], aliases = [], ultra = false, bebidaAcucarada = false, liquido = false, suplemento = false, acucar = 0, nova = null, origem = 'base', extra = null }) {
   const als = [nome, ...aliases.filter(x => x && normalizar(x) !== normalizar(nome))];
   return {
     id, nome, grupo, kcal, p, c, g, f, porcoes, ultra, bebidaAcucarada, liquido, suplemento, acucar,
+    nova: nova >= 1 && nova <= 4 ? nova : null,   // 1 in natura, 2 ingrediente culinário, 3 processado, 4 ultraprocessado, null = sem classificação
     unidadeBase: liquido ? 'ml' : 'g',
     origem,   // 'base' (embutido), 'taco', 'meu' (criado pela pessoa) ou 'off' (Open Food Facts, escolhido pela pessoa)
     ...(extra || {}),
@@ -258,10 +262,13 @@ const parsePorcoes = txt => (txt || '').split(';').filter(Boolean).map(x => {
 export const ALIMENTOS = LINHAS.split(/\r?\n/).map(l => l.trim()).filter(Boolean).map(linha => {
   const [nome, apelidos, grupo, nums, porcoes, flags] = linha.split('|');
   const [kcal, p, c, g, f] = nums.trim().split(/\s+/).map(Number);
+  const fl = parseFlags(flags), nomeExib = capitalizar(acentuar(nome));
+  // grau NOVA do embutido: calculado por regras (js/nova-regras.js; documentação em tools/regras-nova.md)
+  const nova = classificarNova({ nome: nomeExib, grupo, fonte: 'base', ultra: fl.ultra, bebAc: fl.bebidaAcucarada, supl: fl.suplemento, acucar: fl.acucar }).nova;
   return montarAlimento({
-    id: slug(nome), nome: capitalizar(acentuar(nome)), grupo, kcal, p, c, g, f,
+    id: slug(nome), nome: nomeExib, grupo, kcal, p, c, g, f,
     porcoes: parsePorcoes(porcoes), aliases: (apelidos || '').split(';').filter(Boolean),
-    ...parseFlags(flags),
+    ...fl, nova,
   });
 });
 

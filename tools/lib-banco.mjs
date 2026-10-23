@@ -144,6 +144,7 @@ export function flagsDe(it) {
   const f = [];
   if (it.liquido) f.push('l'); if (it.bebAc) f.push('b'); if (it.ultra) f.push('u'); if (it.supl) f.push('t');
   if (it.acucar > 0) f.push('a=' + arred(it.acucar, 1));
+  if (it.nova >= 1 && it.nova <= 4) f.push('n=' + it.nova);   // grau de processamento NOVA (js/nova-regras.js); ausente = sem classificação
   return f.join(';');
 }
 

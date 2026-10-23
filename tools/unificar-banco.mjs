@@ -11,6 +11,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ALIMENTOS as BASE } from '../js/foods.js';
+import { classificarNova } from '../js/nova-regras.js';
+import { gerarRelatorioNova } from './relatorio-nova.mjs';
 import { N, arred, chaveNome, mesmoAlimento, flagsDe, formatarPorcoes, lerPorcoes, problemasNutri } from './lib-banco.mjs';
 
 const raiz = path.resolve(import.meta.dirname, '..');
@@ -166,6 +168,13 @@ let apelidosRemovidos = 0;
 }
 
 // ---------------------------------------------------------------------------------------------
+// 3d) Grau NOVA de cada item final (regras em js/nova-regras.js; reprodutível a cada execução; vai para as flags como n=1..4)
+for (const it of aceitos) {
+  const r = classificarNova({ nome: it.nome, grupo: it.grupo, fonte: it.fonte, ultra: it.ultra, bebAc: it.bebAc, supl: it.supl, acucar: it.acucar });
+  it.nova = r.nova; it.novaRegra = r.regra; it.novaRevisar = r.revisar;
+}
+
+// ---------------------------------------------------------------------------------------------
 // 4) Grava as camadas
 const camadas = { taco: [], ibge: [], usda: [] };
 const finais = { base: [] };
@@ -247,6 +256,8 @@ for (const d of descartados.slice(0, 120)) md += `- [${d.fonte}] ${d.nome} (${d.
 if (descartados.length > 120) md += `- ... e mais ${descartados.length - 120}\n`;
 md += `\nExtras do gerador da USDA (sem energia/macros ou incoerentes): ${usdaJ.descartados?.length || 0}. Do gerador do IBGE: ${ibgeJ.meta.descartados?.length || 0}.\n`;
 fs.writeFileSync(path.join(raiz, 'tools/relatorio-banco.md'), md);
+const resNova = gerarRelatorioNova(aceitos.map(i => ({ id: i.id, nome: i.nome, grupo: i.grupo, fonte: i.fonte, ultra: !!i.ultra, nova: i.nova, novaRegra: i.novaRegra, novaRevisar: i.novaRevisar })), path.join(raiz, 'tools/relatorio-nova.md'));
+console.log('NOVA:', JSON.stringify(resNova));
 console.log(`final: taco ${camadas.taco.length}, ibge ${camadas.ibge.length}, usda ${camadas.usda.length}, embutido restante ${baseSobra} => ${totalFinal}`);
 console.log(`fundidos ${fundidos.length}:`, JSON.stringify(fundPar), `| descartados ${descartados.length} | legado ${Object.keys(legado).length}`);
 console.log('tamanhos', Object.entries(tamanhos).map(([k, v]) => `${k} ${kb(v)}`).join(', '));

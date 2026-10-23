@@ -2,7 +2,7 @@
 import { h, limpar, icone, iconeCheio, campo, entradaNum, selecao, lerNumero, n0, n1, aviso, folha, confirmar, caixaAviso, debounce } from '../ui.js';
 import { store } from '../store.js';
 import { estimarRefeicao } from '../estimador.js';
-import { alimentoPorId, buscarAlimentos, nutrientesPara, porcaoPadrao } from '../foods.js';
+import { alimentoPorId, buscarAlimentos, nutrientesPara, porcaoPadrao, bancoCompletoPronto } from '../foods.js';
 import { dataISO, horaHM, somarDias, rotuloDia, tsLocal, diaDoTs, horaDoTs } from '../datas.js';
 import { refeicoesDoDia, metas, aguaDoDia, setAgua, montarItemRefeicao, resumoItens, onboardingFeito, atividadesDoDia, gastoAtivoDoDia, treinosConcluidos } from '../dados.js';
 import { escolherAlimento } from './buscar-alimento.js';
@@ -10,6 +10,8 @@ import { abrirRegistroTreino } from './registro-treino.js';
 import { descricaoAtividade } from '../atividades.js';
 import { totaisDoDia, alertasAlimentares, intervalos, avaliarIntervalo, tipoRefeicaoPorHora, TIPOS_REFEICAO } from '../nutrition.js';
 import { salvarFoto, urlFoto } from '../images.js';
+import { cartaoNova } from './nova-card.js';
+import { garantirBanco } from '../banco.js';
 
 let diaSel = null;               // dia exibido (persiste entre re-renders)
 let rascunho = { texto: '', foto: null, fotoURL: null, data: null, hora: null, tipoManual: null, editandoHora: false };
@@ -105,7 +107,8 @@ export function renderizar(raiz, ctx) {
           h('button', { class: 'btn-icone perigo', type: 'button', 'aria-label': `Excluir ${d.nome}`, onclick: () => { store.remover('atividades', a.id); aviso('Atividade removida.', { acao: 'Desfazer', aoAcao: () => { store.salvar('atividades', a); redesenhar(); } }); redesenhar(); } }, icone('lixo')))); })])) : null;
 
   // ---------- alertas
-  const alertas = alertasAlimentares(tot, m.kcal).map(a => caixaAviso(a.nivel, a.titulo, a.texto));
+  // o aviso de ultraprocessados agora vive no cartão "grau de processamento" (mesma conta, sem mensagem repetida)
+  const alertas = alertasAlimentares(tot, m.kcal).filter(a => a.titulo !== 'Muitos ultraprocessados').map(a => caixaAviso(a.nivel, a.titulo, a.texto));
   if (ehHoje) {
     const msg = avaliarIntervalo(intervalos(refeicoes, new Date(), true), 5.5, new Date());
     if (msg && refeicoes.length) alertas.push(caixaAviso('medio', 'Intervalo longo sem comer', msg));
@@ -206,8 +209,12 @@ export function renderizar(raiz, ctx) {
     ? h('div', { class: 'comanda' }, refeicoes.map(cartaoRef))
     : h('div', { class: 'vazio' }, h('h3', null, ehHoje ? 'Nada registrado hoje' : 'Nada registrado neste dia'), h('ul', null, h('li', null, 'Escreva acima o que comeu e toque em "Estimar calorias".'), h('li', null, 'Confira a tradução em kcal e macros antes de salvar.')));
 
+  const quandoNova = ehHoje ? 'hoje' : diaSel === somarDias(hoje, -1) ? 'ontem' : 'neste dia';
+  const cartaoProc = cartaoNova({ refeicoes, quando: quandoNova });
+  // as camadas do banco (TACO/IBGE/USDA) carregam em segundo plano: refeições que as usam só ganham a classe depois disso
+  if (!bancoCompletoPronto()) garantirBanco(2500).then(() => { if (cartaoProc.isConnected) cartaoProc.replaceWith(cartaoNova({ refeicoes, quando: quandoNova })); });
   raiz.append(h('div', { class: 'layout-2' },
-    h('section', { class: 'pilha', 'aria-label': 'Resumo do dia' }, bandeja, h('div', { class: 'sub-bandeja o2' }, miniF, miniA), botaoTreino, cartaoBalanco, alertas.length ? h('div', { class: 'pilha o3' }, alertas) : null, blocoAgua),
+    h('section', { class: 'pilha', 'aria-label': 'Resumo do dia' }, bandeja, h('div', { class: 'sub-bandeja o2' }, miniF, miniA), botaoTreino, cartaoBalanco, alertas.length ? h('div', { class: 'pilha o3' }, alertas) : null, cartaoProc, blocoAgua),
     h('section', { class: 'pilha' }, caixaEntrada, barraFavs,
       h('div', { class: 'o7' }, h('div', { class: 'cab-lista' }, h('h2', { class: 'titulo-sec' }, ehHoje ? 'Refeições de hoje' : `Refeições · ${rotuloDia(diaSel, hoje)}`), h('span', { class: 'mudo peq' }, `${refeicoes.length} ${refeicoes.length === 1 ? 'registro' : 'registros'}`)), comanda), listaAtiv)));
 }

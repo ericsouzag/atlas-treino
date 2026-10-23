@@ -10,7 +10,7 @@
 //   - Limites da API: ~100 consultas/min por produto e ~10/min para buscas; o app só faz uma busca por toque.
 //   - O navegador não permite definir User-Agent; usamos os parâmetros da própria URL e nada de dados pessoais.
 const HOSTS = ['https://world.openfoodfacts.org', 'https://br.openfoodfacts.org'];
-const CAMPOS = 'code,product_name,generic_name,brands,quantity,serving_size,serving_quantity,nutriments,countries_tags';
+const CAMPOS = 'code,product_name,generic_name,brands,quantity,serving_size,serving_quantity,nutriments,countries_tags,nova_group';
 
 export const AVISO_OFF = 'Dados do Open Food Facts, podem estar incompletos.';
 
@@ -65,10 +65,11 @@ export function normalizarProduto(prod) {
   if (c == null) faltando.push('carboidrato');
   if (g == null) faltando.push('gordura');
   if (faltando.length) avisos.push(`Faltam no cadastro: ${faltando.join(', ')}. Complete antes de usar.`);
+  const ng = numero(prod.nova_group);   // grupo NOVA calculado pelo Open Food Facts (1 a 4), quando existe
   const out = {
     codigo: String(prod.code || ''), nome, marca, quantidade: qtd,
     kcal: arred(kcal, 0), p: arred(p), c: arred(c), g: arred(g), f: arred(f), acucar: arred(acucar),
-    porcaoG: porcaoG && porcaoG > 0 && porcaoG < 2000 ? porcaoG : null, porcaoTexto: serv, liquido, avisos,
+    porcaoG: porcaoG && porcaoG > 0 && porcaoG < 2000 ? porcaoG : null, porcaoTexto: serv, liquido, avisos, nova: ng != null && Number.isInteger(ng) && ng >= 1 && ng <= 4 ? ng : null,
   };
   out.utilizavel = !!nome && kcal != null && kcal >= 0 && kcal <= 900;
   if (kcal != null && kcal > 900) avisos.push('Calorias fora do possível (provável erro de cadastro). Corrija os números.');

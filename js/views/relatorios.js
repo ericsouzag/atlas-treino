@@ -4,7 +4,11 @@ import { store } from '../store.js';
 import { perfil as getPerfil, config, corpoOrdenado, metas, totaisPorDia, treinosConcluidos, pesoAtual } from '../dados.js';
 import { analisarComposicao, resumoTreinos, detectarPlato } from '../composition.js';
 import { graficoLinhas, graficoBarras, graficoResponsivo, legenda, tabelaDados } from '../charts.js';
-import { dataISO, somarDias, segundaDaSemana, dataCurta, diasEntre } from '../datas.js';
+import { dataISO, somarDias, segundaDaSemana, dataCurta, diasEntre, diaDoTs } from '../datas.js';
+import { resumoNova, resumoNovaPorDia, percentuaisInteiros, GRUPOS_NOVA } from '../nova.js';
+import { bancoCompletoPronto } from '../foods.js';
+import { garantirBanco } from '../banco.js';
+import { AVISO_NOVA } from './nova-card.js';
 import { GUIAS, dicasContextuais, guiaPorId } from '../tips.js';
 import { intervalos, alertasAlimentares } from '../nutrition.js';
 import { nuvemConfigurada } from '../../firebase-config.js';
@@ -12,7 +16,7 @@ import { usuarioAtual as nuvemUsuario } from '../firebase.js';
 
 const MEDIDAS = [['cintura', 'Cintura'], ['abdomen', 'Abdômen'], ['quadril', 'Quadril'], ['peito', 'Peito'], ['ombros', 'Ombros'], ['pescoco', 'Pescoço'], ['braco_d', 'Braço direito'], ['braco_e', 'Braço esquerdo'], ['coxa_d', 'Coxa direita'], ['coxa_e', 'Coxa esquerda'], ['panturrilha_d', 'Panturrilha direita'], ['panturrilha_e', 'Panturrilha esquerda']];
 const ddmm = iso => `${+iso.slice(8)}/${+iso.slice(5, 7)}`;
-let horizonte = 12, metrica = 'peso', medidaSel = 'cintura', janelaDias = 14;
+let horizonte = 12, metrica = 'peso', medidaSel = 'cintura', janelaDias = 14, janelaNova = 7;
 
 const cartao = (titulo, ...filhos) => h('section', { class: 'cartao pilha' }, h('h2', { style: { marginBottom: 0 } }, titulo), ...filhos);
 
@@ -123,6 +127,26 @@ export function renderizar(raiz, ctx) {
       tabelaDados('Calorias e macros', ['Dia', 'kcal', 'Prot (g)', 'Carbo (g)', 'Gord (g)'], comRef.map(d => [dataCurta(d), n0(totais[d].kcal), n0(totais[d].p), n0(totais[d].c), n0(totais[d].g)])));
   } else gCal.push(vazio('Gráficos de calorias e macros', ['Registre refeições em pelo menos 2 dias na aba Alimentação.']));
   secoes.push(cartao('Calorias e macros', ...gCal));
+
+  // ------------------------------------------------ 4b. grau de processamento (NOVA)
+  if (!bancoCompletoPronto()) garantirBanco(2500).then(() => { if (bancoCompletoPronto()) ctx.redesenhar(); });
+  {
+    const diasN = []; for (let i = janelaNova - 1; i >= 0; i--) diasN.push(somarDias(hoje, -i));
+    const porDia = {};
+    for (const r of store.listar('refeicoes')) { const d = diaDoTs(r.ts); if (d >= diasN[0] && d <= hoje) (porDia[d] ||= []).push(r); }
+    const lista = resumoNovaPorDia(porDia), mapa = Object.fromEntries(lista.map(x => [x.data, x]));
+    const bl = [h('div', { class: 'chips', role: 'group', 'aria-label': 'Período' }, [7, 30].map(n => h('button', { class: `chip ${janelaNova === n ? 'ativo' : ''}`, type: 'button', 'aria-pressed': String(janelaNova === n), onclick: () => { janelaNova = n; redesenhar(); } }, n === 7 ? 'Semana' : '30 dias')))];
+    if (lista.length >= 1) {
+      const tudo = resumoNova(Object.values(porDia).flat()), pt = percentuaisInteiros(tudo, 'kcal');
+      bl.push(h('p', null, `Nos últimos ${janelaNova} dias (${lista.length} com registro): `, h('strong', null, `${pt[4]}% das calorias`), ` vieram de ultraprocessados e ${pt[1]}% de alimentos in natura ou minimamente processados.`));
+      const cx = h('div'); graficoResponsivo(cx, w => graficoBarras({ largura: w, altura: 210, titulo: `Porcentagem das calorias de cada dia por grau de processamento, últimos ${janelaNova} dias`, formatoY: v => v + '%',
+        categorias: diasN.map(d => ({ rotulo: janelaNova === 7 ? ddmm(d) : String(+d.slice(8)), partes: mapa[d] ? [4, 3, 2, 1, 0].map(g => ({ v: mapa[d].pct[g], classe: 'ch-n' + g, nome: (g ? GRUPOS_NOVA[g - 1].curto : 'Sem classificação') + ' %' })) : [] })) }));
+      bl.push(cx, h('ul', { class: 'legenda nova-linha-leg' }, [1, 2, 3, 4].map(g => h('li', null, h('span', { class: `nova-chave n${g}`, 'aria-hidden': 'true' }, String(g)), GRUPOS_NOVA[g - 1].curto)), h('li', null, h('span', { class: 'nova-chave n0', 'aria-hidden': 'true' }, '?'), 'Sem classificação')));
+      bl.push(tabelaDados('Grau de processamento por dia', ['Dia', 'kcal', 'In natura %', 'Ingred. %', 'Processado %', 'Ultra %', 'Sem classe %'], lista.map(x => [dataCurta(x.data), n0(x.kcal), x.pct[1], x.pct[2], x.pct[3], x.pct[4], x.pct[0]])));
+      bl.push(h('p', { class: 'ajuda' }, AVISO_NOVA));
+    } else bl.push(vazio('Gráfico de grau de processamento', ['Registre refeições na aba Alimentação para ver a mistura de in natura, processados e ultraprocessados em cada dia.']));
+    const c4 = cartao('Grau de processamento (NOVA)', ...bl); c4.classList.add('nova-rel'); secoes.push(c4);
+  }
 
   // ------------------------------------------------ 5. treino e balanço semanal
   const semanas = []; { let s = segundaDaSemana(hoje); for (let i = 7; i >= 0; i--) semanas.push(somarDias(s, -7 * i)); }

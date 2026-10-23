@@ -41,7 +41,10 @@ export function validarNutrientes({ kcal, p, c, g, f = 0, acucar = 0 }) {
 }
 
 /** Monta o documento guardado no store a partir do formulário */
-export function montarDocAlimento({ tipo = 'meu', id, nome, marca = '', codigo = '', base = '100', porcaoG = null, kcal, p, c, g, f, acucar, liquido = false, porcaoNome = 'porção', apelidos = [] }) {
+/** Classe NOVA válida (1 a 4) ou null ("não sei") */
+export const novaValida = v => { const n = Number(v); return v !== '' && v != null && Number.isInteger(n) && n >= 1 && n <= 4 ? n : null; };
+
+export function montarDocAlimento({ tipo = 'meu', id, nome, marca = '', codigo = '', base = '100', porcaoG = null, kcal, p, c, g, f, acucar, liquido = false, porcaoNome = 'porção', apelidos = [], nova = null }) {
   const nm = String(nome || '').trim();
   let v = { kcal: num(kcal), p: num(p) ?? 0, c: num(c) ?? 0, g: num(g) ?? 0, f: num(f) ?? 0, acucar: num(acucar) ?? 0 };
   const pg = num(porcaoG);
@@ -56,6 +59,7 @@ export function montarDocAlimento({ tipo = 'meu', id, nome, marca = '', codigo =
     tipo, nome: nm, ...(marca ? { marca: String(marca).trim() } : {}), ...(codigo ? { codigo: String(codigo).trim() } : {}),
     kcal: arred(v.kcal ?? 0, 1), p: arred(v.p, 1), c: arred(v.c, 1), g: arred(v.g, 1), f: arred(v.f, 1), acucar: arred(v.acucar, 1),
     liquido: !!liquido, porcoes, apelidos: apelidos.map(x => String(x).trim()).filter(Boolean),
+    ...(novaValida(nova) ? { nova: novaValida(nova) } : {}),   // grau NOVA informado pela pessoa (ou vindo do Open Food Facts); ausente = sem classificação
   };
 }
 
@@ -63,9 +67,12 @@ export function montarDocAlimento({ tipo = 'meu', id, nome, marca = '', codigo =
 export function alimentoDeDoc(d) {
   const nomeExib = d.marca && !d.nome.toLowerCase().includes(d.marca.toLowerCase()) ? `${d.nome} (${d.marca})` : d.nome;
   const aliases = [...(d.apelidos || []), d.nome, ...(d.marca ? [`${d.nome} ${d.marca}`] : [])];
+  const nova = novaValida(d.nova);
   return montarAlimento({
     id: d.id, nome: nomeExib, grupo: d.tipo === 'off' ? 'produtos' : 'meus', kcal: d.kcal, p: d.p, c: d.c, g: d.g, f: d.f || 0,
-    acucar: d.acucar || 0, liquido: !!d.liquido, ultra: d.tipo === 'off', porcoes: d.porcoes || [],
+    acucar: d.acucar || 0, liquido: !!d.liquido, nova,
+    // produto do Open Food Facts sem NOVA segue contando como ultraprocessado na flag antiga; com NOVA, vale a classe
+    ultra: nova ? nova === 4 : d.tipo === 'off', porcoes: d.porcoes || [],
     aliases, origem: d.tipo === 'off' ? 'off' : 'meu', extra: { codigo: d.codigo || null, marca: d.marca || null },
   });
 }

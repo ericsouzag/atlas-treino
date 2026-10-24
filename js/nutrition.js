@@ -215,7 +215,7 @@ export function tipoRefeicaoPorHora(hora) {
   if (hora < 21.5) return 'Jantar';
   return 'Ceia';
 }
-export const TIPOS_REFEICAO = ['Café da manhã', 'Lanche da manhã', 'Almoço', 'Lanche da tarde', 'Pré-treino', 'Pós-treino', 'Jantar', 'Ceia'];
+export const TIPOS_REFEICAO = ['Café da manhã', 'Lanche da manhã', 'Almoço', 'Lanche da tarde', 'Pré-treino', 'Pós-treino', 'Jantar', 'Ceia', 'Outro'];
 
 /** totais de um conjunto de refeições (cada refeição tem .itens com kcal/p/c/g/f/acucar) */
 export function totaisDoDia(refeicoes) {

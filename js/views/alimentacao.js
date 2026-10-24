@@ -11,6 +11,7 @@ import { descricaoAtividade } from '../atividades.js';
 import { totaisDoDia, alertasAlimentares, intervalos, avaliarIntervalo, tipoRefeicaoPorHora, TIPOS_REFEICAO } from '../nutrition.js';
 import { salvarFoto, urlFoto } from '../images.js';
 import { cartaoNova } from './nova-card.js';
+import { agruparRefeicoes, tipoEfetivo, faixaHorario } from '../grupos-refeicao.js';
 import { garantirBanco } from '../banco.js';
 
 let diaSel = null;               // dia exibido (persiste entre re-renders)
@@ -180,7 +181,7 @@ export function renderizar(raiz, ctx) {
   for (const r of todas) { const k = resumoItens(r.itens).slice(0, 60); if (!vistos.has(k) && r.itens.length) { vistos.add(k); recentes.push({ id: 'r' + r.id, nome: k, itens: r.itens, tipo: r.tipo, recente: true }); } if (recentes.length >= 4) break; }
   function repetir(f) {
     const hr = ehHoje ? horaHM() : horaHM();
-    const r = store.salvar('refeicoes', { ts: tsLocal(diaSel, hr), tipo: tipoRefeicaoPorHora(+hr.slice(0, 2) + +hr.slice(3) / 60), texto: f.nome, itens: f.itens.map(i => ({ ...i })), repetida: true });
+    const r = store.salvar('refeicoes', { ts: tsLocal(diaSel, hr), tipo: f.tipo || tipoRefeicaoPorHora(+hr.slice(0, 2) + +hr.slice(3) / 60), texto: f.nome, itens: f.itens.map(i => ({ ...i })), repetida: true });
     const k = f.itens.reduce((s, i) => s + (i.kcal || 0), 0);
     aviso(`Adicionado: ${n0(k)} kcal.`, { acao: 'Desfazer', aoAcao: () => { store.remover('refeicoes', r.id); redesenhar(); } });
     redesenhar();
@@ -191,26 +192,44 @@ export function renderizar(raiz, ctx) {
 
   // ---------- comanda
   const kcalDe = r => r.itens.reduce((s, i) => s + (i.kcal || 0), 0);
-  const cartaoRef = r => {
-    const fotoBox = h('div');
-    if (r.fotoId) urlFoto(r.fotoId).then(u => { if (u) fotoBox.appendChild(h('div', { class: 'foto-mini' }, h('img', { src: u, alt: 'Foto da refeição' }))); });
+  const nomeMin = t => t.charAt(0).toLowerCase() + t.slice(1);
+  // um lançamento (linha de ações): horário, nº de itens e as ações de sempre (favoritar, repetir, editar, excluir)
+  const linhaLancamento = (r, varios) => {
     const ehFav = favoritos.some(f => f.origemId === r.id);
-    return h('article', { class: 'refeicao', 'aria-label': `${r.tipo} às ${horaDoTs(r.ts)}` },
-      h('header', null, h('span', { class: 'hora' }, horaDoTs(r.ts)), h('span', { class: 'tipo' }, r.tipo), h('span', { class: 'total' }, `${n0(kcalDe(r))} kcal`)),
-      // itens em grade de 2 colunas (cabeçalho da refeição e ações ocupam a linha toda); leitura em Z, na ordem do registro
-      h('ul', { class: 'itens-grade' }, r.itens.map(i => h('li', { class: 'item-card' },
-        h('span', { class: 'nm', title: i.nome }, i.nome),
+    const fotoBox = h('span');
+    if (r.fotoId) urlFoto(r.fotoId).then(u => { if (u) fotoBox.appendChild(h('span', { class: 'foto-mini' }, h('img', { src: u, alt: 'Foto da refeição' }))); });
+    return h('div', { class: 'lanc', role: 'group', 'aria-label': `Lançamento das ${horaDoTs(r.ts)}` },
+      h('span', { class: 'lanc-info' }, h('b', null, horaDoTs(r.ts)), h('span', { class: 'mudo peq' }, ` ${r.itens.length} ${r.itens.length === 1 ? 'item' : 'itens'}`), fotoBox),
+      h('span', { class: 'lanc-acoes' },
+        h('button', { class: `btn-icone ${ehFav ? 'ativo' : ''}`, type: 'button', 'aria-pressed': String(ehFav), 'aria-label': `${ehFav ? 'Remover dos favoritos' : 'Favoritar'} o lançamento das ${horaDoTs(r.ts)}`, onclick: () => { alternarFavorito(r, favoritos); redesenhar(); } }, ehFav ? iconeCheio('estrela') : icone('estrela')),
+        h('button', { class: 'btn-icone', type: 'button', 'aria-label': `Repetir agora o lançamento das ${horaDoTs(r.ts)}`, onclick: () => repetir({ nome: resumoItens(r.itens), itens: r.itens }) }, icone('repetir')),
+        h('button', { class: 'btn-icone', type: 'button', 'aria-label': `Editar o lançamento das ${horaDoTs(r.ts)} (dá para mudar o tipo de refeição)`, onclick: async () => { const x = await abrirConfirmacao({ itens: r.itens.map(i => ({ ...i, trecho: i.nome, confianca: 'alta' })), ts: r.ts, tipo: tipoEfetivo(r), texto: r.texto, id: r.id, fotoId: r.fotoId, edicao: true }); if (x) redesenhar(); } }, icone('lapis')),
+        h('button', { class: 'btn-icone perigo', type: 'button', 'aria-label': `Excluir o lançamento das ${horaDoTs(r.ts)}`, onclick: () => { store.remover('refeicoes', r.id); aviso('Lançamento excluído.', { acao: 'Desfazer', aoAcao: () => { store.salvar('refeicoes', r); redesenhar(); } }); redesenhar(); } }, icone('lixo'))));
+  };
+  const cartaoGrupo = g => {
+    const todosItens = g.refeicoes.flatMap(r => r.itens);
+    const favGrupoId = `grupo:${diaSel}:${g.chave}`;
+    const ehFavG = favoritos.some(f => f.origemId === favGrupoId);
+    const faixa = faixaHorario(g);
+    return h('article', { class: 'refeicao grupo-refeicao', 'aria-label': `${g.tipo}, ${faixa}, ${n0(g.totais.kcal)} kcal` },
+      h('header', null, h('span', { class: 'tipo-grande' }, g.tipo), h('span', { class: 'faixa-h' }, faixa), h('span', { class: 'total' }, `${n0(g.totais.kcal)} kcal`)),
+      h('p', { class: 'macros-grupo' }, `P ${n0(g.totais.p)} g · C ${n0(g.totais.c)} g · G ${n0(g.totais.g)} g`, g.refeicoes.length > 1 ? ` · ${g.refeicoes.length} lançamentos` : ''),
+      // itens em grade de 2 colunas (leitura em Z, por horário do lançamento); cada um mostra o horário em que foi lançado
+      h('ul', { class: 'itens-grade' }, g.itens.map(i => h('li', { class: 'item-card', title: `${i.nome}, lançado às ${i.hora}` },
+        h('span', { class: 'topo-item' }, h('span', { class: 'nm' }, i.nome), h('span', { class: 'hr' }, i.hora)),
         h('span', { class: 'qk' }, h('span', { class: 'qt' }, `${n0(i.gramas)} ${i.liquido ? 'ml' : 'g'}`), h('span', { class: 'kc' }, `${n0(i.kcal)} kcal`)),
         h('span', { class: 'mc' }, `P ${n0(i.p)} · C ${n0(i.c)} · G ${n0(i.g)}`)))),
-      fotoBox,
-      h('div', { class: 'acoes' },
-        h('button', { class: `btn-icone ${ehFav ? 'ativo' : ''}`, type: 'button', 'aria-pressed': String(ehFav), 'aria-label': ehFav ? 'Remover dos favoritos' : 'Favoritar refeição', onclick: () => { alternarFavorito(r, favoritos); redesenhar(); } }, ehFav ? iconeCheio('estrela') : icone('estrela')),
-        h('button', { class: 'btn-icone', type: 'button', 'aria-label': 'Repetir agora', onclick: () => repetir({ nome: resumoItens(r.itens), itens: r.itens }) }, icone('repetir')),
-        h('button', { class: 'btn-icone', type: 'button', 'aria-label': 'Editar refeição', onclick: async () => { const x = await abrirConfirmacao({ itens: r.itens.map(i => ({ ...i, trecho: i.nome, confianca: 'alta' })), ts: r.ts, tipo: r.tipo, texto: r.texto, id: r.id, fotoId: r.fotoId, edicao: true }); if (x) redesenhar(); } }, icone('lapis')),
-        h('button', { class: 'btn-icone perigo', type: 'button', 'aria-label': 'Excluir refeição', onclick: () => { store.remover('refeicoes', r.id); aviso('Refeição excluída.', { acao: 'Desfazer', aoAcao: () => { store.salvar('refeicoes', r); redesenhar(); } }); redesenhar(); } }, icone('lixo'))));
+      h('div', { class: 'lancs' }, g.refeicoes.map(r => linhaLancamento(r, g.refeicoes.length > 1))),
+      h('div', { class: 'acoes acoes-grupo' },
+        h('button', { class: `btn btn-peq ${ehFavG ? 'ativo' : ''}`, type: 'button', 'aria-pressed': String(ehFavG), onclick: () => {
+          const f = favoritos.find(x => x.origemId === favGrupoId);
+          if (f) { store.remover('favoritos', f.id); aviso('Removido dos favoritos.'); }
+          else { store.salvar('favoritos', { nome: `${g.tipo}: ${resumoItens(todosItens)}`.slice(0, 60), tipo: g.tipo, itens: todosItens.map(i => ({ ...i })), origemId: favGrupoId }); aviso('Favoritado. Aparece em "Repetir com 1 toque".'); }
+          redesenhar(); } }, ehFavG ? iconeCheio('estrela', 18) : icone('estrela', 18), 'Favoritar'),
+        h('button', { class: 'btn btn-peq', type: 'button', onclick: () => repetir({ nome: resumoItens(todosItens), itens: todosItens, tipo: g.tipo }) }, icone('repetir', 18), `Repetir este ${nomeMin(g.tipo)}`)));
   };
   const comanda = refeicoes.length
-    ? h('div', { class: 'comanda' }, refeicoes.map(cartaoRef))
+    ? h('div', { class: 'comanda' }, agruparRefeicoes(refeicoes).map(cartaoGrupo))
     : h('div', { class: 'vazio' }, h('h3', null, ehHoje ? 'Nada registrado hoje' : 'Nada registrado neste dia'), h('ul', null, h('li', null, 'Escreva acima o que comeu e toque em "Estimar calorias".'), h('li', null, 'Confira a tradução em kcal e macros antes de salvar.')));
 
   const quandoNova = ehHoje ? 'hoje' : diaSel === somarDias(hoje, -1) ? 'ontem' : 'neste dia';

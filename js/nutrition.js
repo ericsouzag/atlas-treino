@@ -207,15 +207,16 @@ export function calcularMetas(perfil, peso, gorduraPct = null, hoje = new Date()
 // ------------------------- dia / refeições ------------------------------
 
 export function tipoRefeicaoPorHora(hora) {
-  if (hora < 5) return 'Ceia';
-  if (hora < 10) return 'Café da manhã';
-  if (hora < 12) return 'Lanche da manhã';
+  if (hora < 5) return 'Lanchinho da madrugada';
+  if (hora < 11) return 'Café da manhã';
   if (hora < 15) return 'Almoço';
-  if (hora < 18) return 'Lanche da tarde';
+  if (hora < 18) return 'Café da tarde';
   if (hora < 21.5) return 'Jantar';
-  return 'Ceia';
+  return 'Lanchinho da madrugada';
 }
-export const TIPOS_REFEICAO = ['Café da manhã', 'Lanche da manhã', 'Almoço', 'Lanche da tarde', 'Pré-treino', 'Pós-treino', 'Jantar', 'Ceia', 'Outro'];
+export const TIPOS_REFEICAO = ['Café da manhã', 'Almoço', 'Café da tarde', 'Pré-treino', 'Pós-treino', 'Jantar', 'Lanchinho da madrugada'];
+/** Tipos antigos já gravados (até a v1.7.0) e o tipo atual correspondente. 'Outro' é derivado do horário. */
+export const TIPOS_ANTIGOS = { 'lanche da manha': 'Café da manhã', 'lanche da tarde': 'Café da tarde', 'ceia': 'Lanchinho da madrugada', 'lanche': 'Café da tarde', 'cafe': 'Café da manhã', 'janta': 'Jantar' };
 
 /** totais de um conjunto de refeições (cada refeição tem .itens com kcal/p/c/g/f/acucar) */
 export function totaisDoDia(refeicoes) {

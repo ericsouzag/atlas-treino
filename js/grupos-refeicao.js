@@ -1,17 +1,22 @@
 // Agrupa os lançamentos de um dia por tipo de refeição (só apresentação: nada é gravado nem alterado).
 // Dois "cafés da manhã" lançados no mesmo dia viram UM grupo "Café da manhã" com os itens juntos.
 // Função pura (testada em tests/grupos.test.mjs). Lançamento sem tipo ganha o tipo derivado do horário.
-import { tipoRefeicaoPorHora, TIPOS_REFEICAO } from './nutrition.js';
+import { tipoRefeicaoPorHora, TIPOS_REFEICAO, TIPOS_ANTIGOS } from './nutrition.js';
 import { normalizar } from './texto.js';
 
 const horaDe = ts => (typeof ts === 'string' && /T\d\d:\d\d/.test(ts) ? ts.slice(11, 16) : '');
 
-/** Tipo efetivo de um lançamento: o gravado (se houver) ou o derivado do horário; 'Outro' se nada serve */
+/** Tipo efetivo de um lançamento: o gravado (tipos antigos são convertidos), ou o derivado do horário */
 export function tipoEfetivo(r) {
-  const t = String(r?.tipo || '').trim();
-  if (t) { const canon = TIPOS_REFEICAO.find(x => normalizar(x) === normalizar(t)); return canon || t; }
-  const h = horaDe(r?.ts);
-  return h ? tipoRefeicaoPorHora(+h.slice(0, 2) + +h.slice(3) / 60) : 'Outro';
+  const t = String(r?.tipo || '').trim(), h = horaDe(r?.ts);
+  const porHora = () => (h ? tipoRefeicaoPorHora(+h.slice(0, 2) + +h.slice(3) / 60) : TIPOS_REFEICAO[0]);
+  if (t) {
+    const nt = normalizar(t);
+    const canon = TIPOS_REFEICAO.find(x => normalizar(x) === nt) || TIPOS_ANTIGOS[nt];
+    if (canon) return canon;
+    if (nt !== 'outro') return t; // tipo livre digitado pela pessoa: preserva
+  }
+  return porHora();
 }
 
 /**

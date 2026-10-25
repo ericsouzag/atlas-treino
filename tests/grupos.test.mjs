@@ -20,7 +20,7 @@ teste('tipos diferentes ficam em grupos separados, ordenados pelo primeiro lanç
 });
 teste('tipo ausente é derivado do horário; tipo desconhecido é mantido; sem horário vira Outro', () => {
   igual(tipoEfetivo({ ts: '2026-10-24T07:30' }), 'Café da manhã'); igual(tipoEfetivo({ ts: '2026-10-24T13:00', tipo: '' }), 'Almoço');
-  igual(tipoEfetivo({ ts: '2026-10-24T22:30', tipo: null }), 'Ceia'); igual(tipoEfetivo({ ts: 'x' }), 'Outro');
+  igual(tipoEfetivo({ ts: '2026-10-24T22:30', tipo: null }), 'Lanchinho da madrugada'); igual(tipoEfetivo({ ts: 'x' }), 'Café da manhã');
   igual(tipoEfetivo({ ts: '2026-10-24T08:00', tipo: 'cafe da manha' }), 'Café da manhã', 'sem acento/caixa casa com o tipo padrão');
   igual(tipoEfetivo({ ts: '2026-10-24T08:00', tipo: 'Brunch' }), 'Brunch');
   const gs = agruparRefeicoes([L('1', '07:10', undefined, [it('A', 10)]), L('2', '07:50', 'Café da manhã', [it('B', 20)])]);
@@ -30,7 +30,15 @@ teste('dia vazio, lançamento sem itens e ordem independente da entrada', () => 
   igual(agruparRefeicoes([]).length, 0); igual(agruparRefeicoes(null).length, 0);
   const gs = agruparRefeicoes([L('1', '10:00', 'Lanche da manhã', [])]);
   igual(gs.length, 1); igual(gs[0].itens.length, 0); igual(gs[0].totais.kcal, 0); igual(faixaHorario(gs[0]), '10:00');
-  const a = [L('2', '16:00', 'Lanche da tarde', [it('X', 1)]), L('1', '09:00', 'Café da manhã', [it('Y', 1)])];
+  const a = [L('2', '16:00', 'Café da tarde', [it('X', 1)]), L('1', '09:00', 'Café da manhã', [it('Y', 1)])];
   igual(agruparRefeicoes(a)[0].tipo, 'Café da manhã'); igual(a[0].id, '2', 'não altera a lista original');
 });
+teste('tipos antigos migram para os atuais e Outro vira o do horário', () => {
+  igual(tipoEfetivo({ ts: '2026-10-24T10:00', tipo: 'Lanche da manhã' }), 'Café da manhã');
+  igual(tipoEfetivo({ ts: '2026-10-24T16:00', tipo: 'Lanche da tarde' }), 'Café da tarde');
+  igual(tipoEfetivo({ ts: '2026-10-24T23:00', tipo: 'Ceia' }), 'Lanchinho da madrugada');
+  igual(tipoEfetivo({ ts: '2026-10-24T13:00', tipo: 'Outro' }), 'Almoço');
+  igual(tipoEfetivo({ ts: '2026-10-24T19:00', tipo: 'Pré-treino' }), 'Pré-treino');
+});
+
 fim();

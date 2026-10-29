@@ -1,5 +1,5 @@
 // Service worker do Atlas Fitness: funciona offline. Atualize VERSAO a cada publicação para renovar o cache.
-const VERSAO = 'atlas-v1.7.1';
+const VERSAO = 'atlas-v1.8.0';
 const ARQUIVOS = [
   './',
   './css/app.css',
@@ -39,10 +39,12 @@ const ARQUIVOS = [
   './js/nova-regras.js',
   './js/nova.js',
   './js/nutrition.js',
+  './js/ocr-tabela.js',
   './js/off.js',
   './js/parser.js',
   './js/planner.js',
   './js/store.js',
+  './js/tabela-nutricional.js',
   './js/texto.js',
   './js/tips.js',
   './js/ui.js',
@@ -51,6 +53,7 @@ const ARQUIVOS = [
   './js/views/config.js',
   './js/views/corpo.js',
   './js/views/entrada.js',
+  './js/views/ler-tabela.js',
   './js/views/nova-card.js',
   './js/views/onboarding.js',
   './js/views/registro-treino.js',
@@ -59,12 +62,17 @@ const ARQUIVOS = [
   './manifest.webmanifest',
 ];
 
+// Leitor de tabela nutricional (OCR local): Tesseract.js, núcleo WASM e idioma vêm de CDN públicas só na primeira leitura; guardamos
+// aqui (cache próprio, que não é apagado a cada versão) para a leitura funcionar offline depois. Respostas opacas também valem.
+const OCR_CACHE = 'atlas-ocr-v1';
+const eOCR = u => (u.hostname === 'cdn.jsdelivr.net' && /\/npm\/(tesseract\.js|tesseract\.js-core|@tesseract\.js-data)/.test(u.pathname)) || u.hostname === 'tessdata.projectnaptha.com' || u.hostname === 'unpkg.com' && /tesseract/.test(u.pathname);
+
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSAO).then(c => c.addAll(ARQUIVOS)).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSAO).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSAO && k !== OCR_CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
 // Arquivos do próprio app: cache primeiro, atualizando em segundo plano. Firebase/CDN: sempre rede.
@@ -72,6 +80,16 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+  if (eOCR(url)) {
+    e.respondWith(caches.open(OCR_CACHE).then(async c => {
+      const emCache = await c.match(req);
+      if (emCache) return emCache;
+      const r = await fetch(req);
+      if (r && (r.ok || r.type === 'opaque')) c.put(req, r.clone());
+      return r;
+    }));
+    return;
+  }
   if (url.origin !== location.origin) return;
   e.respondWith(caches.open(VERSAO).then(async c => {
     const emCache = await c.match(req, { ignoreSearch: true });

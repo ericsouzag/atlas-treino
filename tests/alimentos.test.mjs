@@ -273,4 +273,24 @@ teste('variantesDe: a granola oferece as irmãs para trocar na confirmação', (
   ok(ids.includes('granola-sem-acucar-caseira') && ids.includes('barra-de-granola') && !ids.includes('granola-tradicional-industrializada'));
   igual(variantesDe('arroz-branco-cozido').length, 0);
 });
+console.log('\nCreamass (Integralmédica)');
+teste('Creamass: dois registros de suplemento, NOVA 4, rótulo coerente (kcal ≈ 4p+4c+9g)', () => {
+  const ch = alimentoPorId('creamass-hipercalorico-chocolate-integralmedica'), ou = alimentoPorId('creamass-hipercalorico-baunilha-morango-ou-cookies-integralmedica');
+  ok(ch && ou); ok(ch.suplemento && ou.suplemento); igual(ch.nova, 4); igual(ou.nova, 4);
+  for (const a of [ch, ou]) ok(Math.abs(a.p * 4 + a.c * 4 + a.g * 9 - a.kcal) / a.kcal < 0.05, a.nome);
+  perto(nutrientesPara(ch, 160).kcal, 607, 3); perto(nutrientesPara(ou, 160).kcal, 609, 3);   // porção de rótulo de 160 g
+  igual(ch.porcoes[0].g, 160); igual(ch.porcoes.find(p => p.nome === 'scoop').g, 40);
+  igual(alimentoPorId('hipercalorico').id, ch.id, 'id do hipercalórico genérico antigo resolve para o Creamass');
+});
+teste('parser reconhece creamass, hipercalórico e sabores', () => {
+  const um = (txt) => interpretarRefeicao(txt)[0];
+  igual(um('1 scoop de creamass').alimentoId, 'creamass-hipercalorico-chocolate-integralmedica'); igual(um('1 scoop de creamass').gramas, 40);
+  igual(um('100 g de creamass').gramas, 100); igual(um('2 scoops de creamass').gramas, 80);
+  igual(um('hipercalórico').alimentoId, 'creamass-hipercalorico-chocolate-integralmedica'); igual(um('hipercalorico creamass integralmedica').alimentoId, 'creamass-hipercalorico-chocolate-integralmedica');
+  igual(um('creamass chocolate').alimentoId, 'creamass-hipercalorico-chocolate-integralmedica');
+  for (const f of ['creamass morango', 'creamass baunilha', 'creamass cookies']) igual(um(f).alimentoId, 'creamass-hipercalorico-baunilha-morango-ou-cookies-integralmedica', f);
+  const r = interpretarRefeicao('creamass com leite');
+  ok(r.length >= 1 && r[0].alimentoId === 'creamass-hipercalorico-chocolate-integralmedica', 'creamass com leite: ' + JSON.stringify(r.map(i => i.nome)));
+  ok(r.some(i => /leite/i.test(i.nome) && !/creamass/i.test(i.nome)), 'e o leite vem junto');
+});
 fim();

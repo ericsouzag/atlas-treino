@@ -118,6 +118,7 @@ export function renderizar(raiz, ctx) {
         h('li', null, h('strong', null, 'O que guardamos: '), 'perfil (sexo, nascimento, altura, objetivo), refeições, treinos, medidas e fotos de progresso. Dados de saúde são dados pessoais sensíveis pela LGPD.'),
         h('li', null, h('strong', null, 'Onde fica: '), 'neste aparelho (armazenamento do navegador). Só vai para a nuvem (Google Firebase) se você criar uma conta e entrar. Fotos nunca vão para a nuvem.'),
         h('li', null, h('strong', null, 'Busca de produtos: '), 'só quando você toca em "Buscar produto", o texto digitado (ou o código de barras) é enviado ao Open Food Facts (openfoodfacts.org) pela internet. Nada mais é enviado e os resultados não ficam salvos, a não ser o produto que você escolher.'),
+        h('li', null, h('strong', null, 'Tabela nutricional por foto: '), 'a foto da tabela é lida (OCR) neste aparelho e nunca é enviada a servidor nenhum; ela fica só na memória, ou no aparelho se você escolher guardá-la, e não vai para a nuvem nem para o backup. Só o leitor de texto (Tesseract.js e o idioma) é baixado de uma CDN pública na primeira leitura; depois funciona offline.'),
         h('li', null, h('strong', null, 'Quem vê: '), 'só você. As regras do banco permitem que cada conta leia e escreva apenas os próprios dados. Não vendemos nem compartilhamos dados, e não há anúncios nem rastreadores.'),
         h('li', null, h('strong', null, 'Seus direitos: '), 'exportar (backup acima), corrigir (editar nas telas) e apagar tudo (botão abaixo; na nuvem, “Apagar dados da nuvem”).'),
         h('li', null, h('strong', null, 'Menores: '), 'a partir de 14 anos, com acompanhamento de responsável e profissional de saúde. Menores de 18 têm déficit calórico limitado.'))),
@@ -132,6 +133,8 @@ export function renderizar(raiz, ctx) {
       h('li', null, 'Alimentos e suplementos importados: USDA FoodData Central (fdc.nal.usda.gov), Foundation Foods e SR Legacy, domínio público (CC0 1.0). Nomes traduzidos para o português pelo Atlas Fitness. Fonte: U.S. Department of Agriculture, Agricultural Research Service.'),
       h('li', null, 'Produtos industrializados (busca opcional): Open Food Facts, openfoodfacts.org, dados sob a licença ODbL 1.0 (opendatacommons.org/licenses/odbl/1-0). Dados feitos por colaboradores, podem estar incompletos.'),
       h('li', null, 'Grau de processamento dos alimentos: classificação NOVA, conforme o Guia Alimentar para a População Brasileira (Ministério da Saúde, 2014). A classe de cada alimento é uma estimativa por regras do Atlas Fitness e pode variar conforme a marca e o preparo; em produtos do Open Food Facts vale o grupo NOVA do cadastro, quando existe.'),
+      h('li', null, 'Leitura de tabela nutricional por foto: Tesseract.js (tesseract.js.org) e Tesseract OCR, licença Apache-2.0, executados no próprio aparelho; dados de idioma tessdata (Apache-2.0).'),
+      h('li', null, 'Creamass (Integralmédica): valores da tabela nutricional do rótulo, conforme páginas de varejo consultadas em 29/10/2026. Confira sempre com a embalagem que você usa.'),
       h('li', null, 'Fontes Bricolage Grotesque e Figtree: licença SIL Open Font.'),
       h('li', null, 'Valores de MET: Compêndio de Atividades Físicas (Ainsworth et al., 2011), aproximados.'))));
 

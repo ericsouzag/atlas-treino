@@ -2,16 +2,16 @@
 
 Gerado por `node tools/unificar-banco.mjs` (regras em `js/nova-regras.js`, descrição em `tools/regras-nova.md`). É uma **estimativa por regras**: a classe real de um produto varia com a marca e o preparo.
 
-## Cobertura geral (2186 alimentos: data/*.json + embutido restante)
+## Cobertura geral (2187 alimentos: data/*.json + embutido restante)
 
 | Grupo NOVA | Itens | % |
 |---|---:|---:|
 | 1 In natura / minimamente processado | 1299 | 59,4% |
 | 2 Ingrediente culinário | 51 | 2,3% |
 | 3 Processado | 254 | 11,6% |
-| 4 Ultraprocessado | 582 | 26,6% |
+| 4 Ultraprocessado | 583 | 26,7% |
 | Sem classificação | 0 | 0,0% |
-| **Total** | 2186 | 100% |
+| **Total** | 2187 | 100% |
 
 ### Por fonte
 
@@ -19,7 +19,7 @@ Gerado por `node tools/unificar-banco.mjs` (regras em `js/nova-regras.js`, descr
 |---|---:|---:|---:|---:|---:|---:|
 | taco | 592 | 411 | 27 | 56 | 98 | 0 |
 | ibge | 735 | 383 | 5 | 93 | 254 | 0 |
-| base | 117 | 52 | 1 | 13 | 51 | 0 |
+| base | 118 | 52 | 1 | 13 | 52 | 0 |
 | usda | 742 | 453 | 18 | 92 | 179 | 0 |
 
 ### Por categoria da fonte
@@ -41,7 +41,7 @@ Gerado por `node tools/unificar-banco.mjs` (regras em `js/nova-regras.js`, descr
 | ovos | 17 | 15 | 0 | 0 | 2 | 0 |
 | peixes | 181 | 161 | 0 | 15 | 5 | 0 |
 | pratos | 130 | 105 | 0 | 2 | 23 | 0 |
-| suplementos | 14 | 0 | 0 | 0 | 14 | 0 |
+| suplementos | 15 | 0 | 0 | 0 | 15 | 0 |
 | verduras | 217 | 201 | 0 | 16 | 0 | 0 |
 
 ## Regras que mais classificaram
@@ -76,10 +76,10 @@ Gerado por `node tools/unificar-banco.mjs` (regras em `js/nova-regras.js`, descr
 | farinha-amido-culinario -> 2 | 17 |
 | cafe-cha-agua -> 1 | 17 |
 | queijo-ultra -> 4 | 16 |
+| suplemento -> 4 | 16 |
 | pao-de-forma-industrial -> 4 | 15 |
 | peixe-conserva-salga -> 3 | 15 |
 | grupo-ovos -> 1 | 15 |
-| suplemento -> 4 | 15 |
 | salgadinho-snack -> 4 | 14 |
 | conserva-doce-fruta -> 3 | 14 |
 | confeitaria -> 3 | 14 |
@@ -159,7 +159,7 @@ A flag antiga é uma dica imprecisa (ex.: "batata doce" marcada por conter "doce
 - Presunto cru (ham curado) -> 3 (presunto-cru-curado)
 - Presunto cru (ham curado) (só carne magra) -> 3 (presunto-cru-curado)
 
-### NOVA 4 sem a flag ultra (201)
+### NOVA 4 sem a flag ultra (202)
 
 - Mistura para vitamina (trigo, cevada e aveia) (preparos-infantis-instantaneos)
 - Pão aveia forma (pao-de-forma-industrial)
@@ -309,7 +309,8 @@ A flag antiga é uma dica imprecisa (ex.: "batata doce" marcada por conter "doce
 - Colágeno hidrolisado (suplemento)
 - Creatina (suplemento)
 - Maltodextrina (suplemento)
-- Hipercalórico (suplemento)
+- Creamass hipercalórico chocolate (Integralmédica) (suplemento)
+- Creamass hipercalórico baunilha, morango ou cookies (Integralmédica) (suplemento)
 - Açaí na tigela (acai-tigela)
 - Pudim (sorvete-gelatina-pudim)
 - Gelatina (sorvete-gelatina-pudim)
@@ -497,203 +498,203 @@ Revisada à mão a cada mudança de regras; as correções feitas estão em `too
 
 | Alimento | Fonte | Categoria | NOVA | Regra |
 |---|---|---|---:|---|
+| Ensure (suplemento nutricional pronto) | usda | suplementos | 4 | suplemento |
+| Quebra quebra | ibge | cereais | 3 | biscoito-artesanal |
+| Lagostim de água doce (cozido) | usda | peixes | 1 | grupo-peixes |
+| Iogurte proteico (tipo skyr) | base | laticinios | 4 | iogurte-com-sabor |
+| Frango, coxa e sobrecoxa (sem pele, cru) | usda | carnes | 1 | grupo-carnes |
+| Barra de proteína | base | suplementos | 4 | suplemento |
+| Peru (com pele, cru) | usda | carnes | 1 | grupo-carnes |
+| Concentrado alimentar diet shake | ibge | doces | 4 | bebida-industrial |
+| Laranja lima (crua) | taco | frutas | 1 | grupo-frutas |
+| Barreado | taco | pratos | 1 | prato-caseiro |
+| Painço (milheto) (cru) | usda | cereais | 1 | cereal-base |
+| Misto quente ou frio | ibge | fastfood | 4 | pizza-lanche-pronto |
+| Pão diet (de forma industrializado) | ibge | cereais | 4 | pao-de-forma-industrial |
+| Arroz frito chinês (sem carne) | usda | pratos | 1 | prato-caseiro |
+| Vinagre balsâmico | usda | outros | 2 | sal-vinagre-fermento |
+| Quinoa (cozida) | ibge | cereais | 1 | cereal-base |
+| Couve-de-bruxelas (cozida) | usda | verduras | 1 | grupo-verduras |
+| Enguia (crua) | usda | peixes | 1 | grupo-peixes |
+| Pato (com pele, assado) | usda | carnes | 1 | grupo-carnes |
+| Biscoito doce wafer recheado de chocolate | taco | cereais | 4 | biscoito |
+| Pão de forma | base | cereais | 4 | pao-de-forma-industrial |
+| Azeite de dendê | taco | gorduras | 2 | gordura-oleo |
+| Maxixe (cozido) | ibge | verduras | 1 | grupo-verduras |
+| Milho verde com ervilha em conserva | ibge | verduras | 3 | conserva-vegetal-fruta |
+| Carne bovina peito (sem gordura, cru) | taco | carnes | 1 | grupo-carnes |
 | Couve manteiga (refogada) | taco | verduras | 1 | grupo-verduras |
 | Tomate (cozido) | usda | verduras | 1 | grupo-verduras |
-| Laranja da terra (suco) | taco | frutas | 1 | suco-natural |
-| Robalo (assado) | usda | peixes | 1 | grupo-peixes |
-| Alface roxa (crua) | taco | verduras | 1 | grupo-verduras |
-| Salmão do Atlântico (selvagem) (cru) | usda | peixes | 1 | grupo-peixes |
-| Leite fermentado | taco | laticinios | 4 | bebida-industrial |
-| Biscoito doce wafer recheado de chocolate | taco | cereais | 4 | biscoito |
-| Abacate (cru) | taco | frutas | 1 | grupo-frutas |
-| Carne bovina peito (sem gordura, cozido) | taco | carnes | 1 | grupo-carnes |
-| Peru (congelado, cru) | taco | carnes | 1 | grupo-carnes |
-| Frango, coxa (sem pele, frito) | usda | carnes | 1 | grupo-carnes |
-| Presunto cru (ham curado) (só carne magra) | usda | carnes | 3 | presunto-cru-curado |
-| Atemóia | ibge | frutas | 1 | grupo-frutas |
-| Óleo de coco | usda | gorduras | 2 | gordura-oleo |
-| Mandioca (crua) | taco | feculentos | 1 | grupo-feculentos |
-| Leite em pó com sabor | ibge | laticinios | 4 | bebida-industrial |
-| Queijo camembert | usda | laticinios | 3 | queijo |
-| Farinha de milho | ibge | cereais | 1 | farinha-base |
-| Sarrabulho | ibge | carnes | 1 | grupo-carnes |
-| Suco de pêssego em calda | ibge | bebidas | 1 | suco-natural |
-| Germe de trigo (USDA) | usda | cereais | 1 | farinha-base |
-| Sopa de tomate (lata) | usda | pratos | 4 | sopa-lata-desidratada |
-| Hambúrguer de carne 90% magra (grelhado) | usda | carnes | 1 | hamburguer-carne-usda |
-| Abacaxi (polpa, congelada) | taco | frutas | 1 | grupo-frutas |
-| Tubaina light | ibge | bebidas | 4 | bebida-industrial |
-| Repolho branco (cru) | taco | verduras | 1 | grupo-verduras |
-| Amendoim (torrado, salgado) | taco | leguminosas | 3 | oleaginosa-salgada |
-| Castanha de caju | base | oleaginosas | 1 | grupo-oleaginosas |
-| Faisão (cru) | usda | carnes | 1 | grupo-carnes |
-| Blanquet de peru | ibge | carnes | 4 | embutido |
-| Farinha de centeio | usda | cereais | 2 | farinha-amido-culinario |
-| Quibe (frito) | taco | fastfood | 4 | pizza-lanche-pronto |
-| Óleo de girassol | taco | gorduras | 2 | gordura-oleo |
-| Caramelo (bala mole) | usda | doces | 4 | bala-chocolate |
-| Hambúrguer de carne 95% magra (grelhado) | usda | carnes | 1 | hamburguer-carne-usda |
-| Empadao | ibge | fastfood | 4 | pizza-lanche-pronto |
-| Suco de caju | base | bebidas | 1 | suco-natural |
-| Macaúba (crua) | taco | frutas | 1 | grupo-frutas |
-| Frango, asa (sem pele, assado) | usda | carnes | 1 | grupo-carnes |
-| Feijão (cozido) | ibge | leguminosas | 1 | grupo-leguminosas |
+| Carne bovina seca (crua) | taco | carnes | 3 | carne-salgada-curada |
+| Macaxeira (frita) | ibge | feculentos | 1 | grupo-feculentos |
+| Porco pernil (cru) | taco | carnes | 1 | grupo-carnes |
+| Amora-preta (crua) | usda | frutas | 1 | grupo-frutas |
+| Cheeseburger (fast food) | usda | fastfood | 4 | grupo-fastfood |
+| Bagre (catfish) (cru) | usda | peixes | 1 | grupo-peixes |
+| Peru moído 85% magro (cru) | usda | carnes | 1 | grupo-carnes |
+| Bacalhau fresco (cod do Pacífico) (cru) | usda | peixes | 1 | grupo-peixes |
+| Abadejo filé (congelado, cozido) | taco | peixes | 1 | grupo-peixes |
+| Arrasto suino | ibge | carnes | 1 | grupo-carnes |
+| Jiló (cru) | taco | verduras | 1 | grupo-verduras |
+| Radite (refogado) | ibge | verduras | 1 | grupo-verduras |
+| Requeijão light | ibge | laticinios | 4 | queijo-ultra |
+| Toddynho | ibge | doces | 4 | bebida-industrial |
+| Ganso (cru) | usda | carnes | 1 | grupo-carnes |
 | Arroz tipo 2 (cru) | taco | cereais | 1 | cereal-base |
-| Abadejo filé (congelado, assado) | taco | peixes | 1 | grupo-peixes |
-| Dourada de água doce fresca | taco | peixes | 1 | grupo-peixes |
-| Amêndoa (assada) | ibge | oleaginosas | 1 | grupo-oleaginosas |
-| Ovo de galinha inteiro (cru) | taco | ovos | 1 | grupo-ovos |
-| Farinha de mandioca (crua) | taco | cereais | 1 | farinha-base |
-| Feijão soja (cozido) | ibge | leguminosas | 1 | grupo-leguminosas |
-| Jaca (crua) | taco | frutas | 1 | grupo-frutas |
-| Bisteca suína (cozida) | usda | carnes | 1 | grupo-carnes |
-| Frango Kung Pao | usda | pratos | 1 | prato-caseiro |
-| Pistache (torrada, com sal) | usda | oleaginosas | 3 | oleaginosa-salgada |
-| Uxi | ibge | frutas | 1 | grupo-frutas |
-| Hambúrguer (sanduiche completo) | base | fastfood | 4 | carne-industrial |
-| Carne bovina capa de contra-filé (sem gordura, grelhada) | taco | carnes | 1 | grupo-carnes |
-| Miudo de bode (cozido) | ibge | carnes | 1 | grupo-carnes |
-| Garoupa (crua) | usda | peixes | 1 | grupo-peixes |
-| Hambúrguer de frango | ibge | carnes | 4 | carne-industrial |
+| Manteiga clarificada (ghee) | usda | gorduras | 2 | gordura-oleo |
+| Lambari (congelado, cru) | taco | peixes | 1 | grupo-peixes |
+| Frango com batata, inhame batata baroa ou aipim | ibge | pratos | 1 | prato-caseiro |
+| Polenta (pré-cozida) | taco | cereais | 1 | cereal-base |
+| Queijo de minas | ibge | laticinios | 3 | queijo |
+| Framboesa (crua) | usda | frutas | 1 | grupo-frutas |
+| Suco de uva (sem açúcar) | usda | bebidas | 1 | suco-natural |
+| Abacaxi (polpa, congelada) | taco | frutas | 1 | grupo-frutas |
+| Fruta de conde | ibge | frutas | 1 | grupo-frutas |
+| Levedo de cerveja | ibge | bebidas | 1 | levedo-cevada |
+| Bolinho de coco | ibge | pratos | 1 | prato-caseiro |
+| Nozes | usda | oleaginosas | 1 | grupo-oleaginosas |
+| Pescada filé molho escabeche | taco | peixes | 3 | peixe-conserva-salga |
+| Salpicão | ibge | pratos | 1 | prato-caseiro |
+| Feijão-branco pequeno (navy) (cozido) | usda | leguminosas | 1 | grupo-leguminosas |
+| Pastinaca (cozida) | usda | verduras | 1 | grupo-verduras |
 | Robalo listrado (assado) | usda | peixes | 1 | grupo-peixes |
-| Chucrute | ibge | outros | 3 | conserva-vegetal-fruta |
+| Caruru | ibge | pratos | 1 | prato-caseiro |
 | Mistura para bolo | taco | cereais | 4 | preparos-infantis-instantaneos |
-| Cenoura | ibge | verduras | 1 | grupo-verduras |
-| Marmelada | taco | doces | 3 | conserva-doce-fruta |
-| Alface | ibge | verduras | 1 | grupo-verduras |
-| Queijo polenguinho light | ibge | laticinios | 4 | queijo-ultra |
-| Pacoquinha de amendoim | ibge | doces | 4 | grupo-doces |
-| Vieira (cozida) | usda | peixes | 1 | grupo-peixes |
-| Bolo de chocolate light | ibge | doces | 4 | bala-chocolate |
-| Hambúrguer de peru | ibge | carnes | 4 | carne-industrial |
-| Crepe | ibge | cereais | 1 | cereal-base |
-| Queijo polenguinho | ibge | laticinios | 4 | queijo-ultra |
-| Linguiça | ibge | carnes | 4 | embutido |
-| Alface romana (crua) | usda | verduras | 1 | grupo-verduras |
-| Pão de hambúrguer | ibge | cereais | 4 | pao-de-forma-industrial |
-| Bolo de milho | ibge | doces | 4 | confeitaria |
-| Frango coxa (com pele, crua) | taco | carnes | 1 | grupo-carnes |
-| Leite de soja (bebida) (sem açúcar) | usda | bebidas | 4 | bebida-industrial |
-| Bobó de camarão | ibge | pratos | 1 | prato-caseiro |
+| Frango, coxa (sem pele, frito) | usda | carnes | 1 | grupo-carnes |
+| Toucinho | ibge | carnes | 3 | carne-salgada-curada |
+| Canjiquinha de milho em grão (cozida) | ibge | cereais | 1 | cereal-base |
+| Ovo de pata | usda | ovos | 1 | grupo-ovos |
+| Carne bovina capa de contra-filé (com gordura, grelhada) | taco | carnes | 1 | grupo-carnes |
+| Goiaba | ibge | frutas | 1 | grupo-frutas |
+| Maçã (seca) | usda | frutas | 1 | fruta-seca |
+| Bolo de coco | ibge | doces | 4 | confeitaria |
+| Suco de caju | base | bebidas | 1 | suco-natural |
+| Farofa pronta | ibge | pratos | 4 | pronto-industrial |
+| Chá preto preparado | usda | bebidas | 1 | cafe-cha-agua |
+| Semente de girassol (torrada no óleo, com sal) | usda | oleaginosas | 3 | oleaginosa-salgada |
+| Carne de veado (grelhada) | usda | carnes | 1 | grupo-carnes |
+| Soja em grão (cozida) | ibge | leguminosas | 1 | grupo-leguminosas |
+| Pizza de calabresa (sausage) Pizza Hut (massa pan) | usda | fastfood | 4 | embutido |
+| Corvina grande (assada) | taco | peixes | 1 | grupo-peixes |
+| Peito bovino (cozido) | usda | carnes | 1 | grupo-carnes |
 | Atum branco em lata ao natural | usda | peixes | 3 | peixe-conserva-salga |
 | Vitamina de banana com leite | base | bebidas | 1 | suco-natural |
-| Salmão do Atlântico (de cativeiro) (assado) | usda | peixes | 1 | grupo-peixes |
-| Mostarda molho | ibge | outros | 3 | mostarda-pimenta-pesto |
-| Halibute (assado) | usda | peixes | 1 | grupo-peixes |
-| Tucumã | ibge | oleaginosas | 1 | grupo-oleaginosas |
-| Frango inteiro (cozido) | usda | carnes | 1 | grupo-carnes |
-| Repolho (cru) | ibge | verduras | 1 | grupo-verduras |
-| Caju envasado (suco concentrado) | taco | frutas | 4 | bebida-industrial |
-| Arenque do Atlântico (cru) | usda | peixes | 1 | grupo-peixes |
-| Limão-siciliano (cru) | usda | frutas | 1 | grupo-frutas |
-| Erva doce | ibge | verduras | 1 | grupo-verduras |
-| Pão aveia forma | taco | cereais | 4 | pao-de-forma-industrial |
-| Broto de feijão (cozido) | ibge | leguminosas | 1 | grupo-leguminosas |
-| Couve kale (crua) | usda | verduras | 1 | grupo-verduras |
-| Chocomilk | ibge | bebidas | 4 | bebida-industrial |
-| Farinha de arroz enriquecida | taco | cereais | 2 | farinha-amido-culinario |
-| Chá gelado adoçado (preto) | usda | bebidas | 4 | bebida-industrial |
-| Frango coração (grelhado) | taco | carnes | 1 | grupo-carnes |
-| Sucrilhos de milho | ibge | cereais | 4 | cereal-matinal-barra |
-| Mandioquinha salsa (batata baroa) (cozida) | ibge | feculentos | 1 | grupo-feculentos |
-| Nozes | usda | oleaginosas | 1 | grupo-oleaginosas |
-| Polenta (pré-cozida) | taco | cereais | 1 | cereal-base |
-| Framboesa (crua) | usda | frutas | 1 | grupo-frutas |
-| Ganso (assado) | usda | carnes | 1 | grupo-carnes |
+| Frango, costas (sem pele, cru) | usda | carnes | 1 | grupo-carnes |
+| Vitamilho | ibge | cereais | 4 | preparos-infantis-instantaneos |
+| Queijo tipo americano (fatiado) | usda | laticinios | 4 | queijo-ultra |
+| Lombo suíno (grelhado) | usda | carnes | 1 | grupo-carnes |
+| Frango, coxa e sobrecoxa (com pele, frito) | usda | carnes | 1 | grupo-carnes |
+| Brioche | ibge | cereais | 3 | pao |
+| Laranja valência (crua) | taco | frutas | 1 | grupo-frutas |
+| Quiche | ibge | pratos | 1 | prato-caseiro |
 | Lagosta (cozida) | usda | peixes | 1 | grupo-peixes |
-| Amêndoas | base | oleaginosas | 1 | grupo-oleaginosas |
-| Nachos com queijo | usda | fastfood | 4 | salgadinho-snack |
-| Ovo de galinha inteiro (cozido) | taco | ovos | 1 | grupo-ovos |
-| Paçoca | ibge | doces | 4 | bala-chocolate |
-| Flank steak (grelhado) | usda | carnes | 1 | grupo-carnes |
-| Torta de noz-pecã | usda | doces | 4 | confeitaria |
-| Arroz carreteiro | taco | pratos | 1 | prato-caseiro |
-| Castanha de caju (torrada no óleo) | usda | oleaginosas | 3 | oleaginosa-salgada |
-| Mussarela | ibge | laticinios | 3 | queijo |
-| Painço (milheto) (cozido) | usda | cereais | 1 | cereal-base |
-| Moranga (refogada) | ibge | verduras | 1 | grupo-verduras |
-| Burger King sanduíche de peixe | usda | fastfood | 4 | pizza-lanche-pronto |
-| Macarrão molho bolognesa | taco | pratos | 1 | prato-caseiro |
-| Big Mac (McDonald's, USDA) | usda | fastfood | 4 | pizza-lanche-pronto |
-| Iogurte grego com fruta (semidesnatado) | usda | laticinios | 4 | iogurte-com-sabor |
-| Cheeseburger (fast food) | usda | fastfood | 4 | grupo-fastfood |
-| Queijo de reino | ibge | laticinios | 3 | queijo |
-| Pasta de amendoim | ibge | doces | 3 | pasta-oleaginosa |
-| Corimbatá (cru) | taco | peixes | 1 | grupo-peixes |
-| Lagostim de água doce (cozido) | usda | peixes | 1 | grupo-peixes |
-| Fato caprino (cozido) | ibge | carnes | 1 | grupo-carnes |
-| Suco em pó preparado | base | bebidas | 4 | bebida-industrial |
-| Camarão Sete Barbas (sem cabeça, com casca, frito) | taco | peixes | 1 | grupo-peixes |
-| Azeitona | ibge | verduras | 3 | conserva-vegetal-fruta |
-| Pastel de queijo (cru) | taco | fastfood | 4 | pizza-lanche-pronto |
-| Quindim | taco | doces | 3 | confeitaria |
-| Frango com açafrão | taco | pratos | 1 | prato-caseiro |
-| Marisco (amêijoa) (cru) | usda | peixes | 1 | grupo-peixes |
-| Corimbatá (cozido) | taco | peixes | 1 | grupo-peixes |
-| Bacon cru | usda | carnes | 4 | embutido |
-| Cuscuz marroquino (cozido) | usda | cereais | 1 | cereal-base |
-| Germe de trigo | ibge | cereais | 1 | farinha-base |
-| Mostarda (verdura) (crua) | ibge | verduras | 1 | grupo-verduras |
-| Açafrão | ibge | verduras | 1 | grupo-verduras |
-| Biscoito doce wafer recheado de morango | taco | cereais | 4 | biscoito |
+| Café solúvel cappuccino | ibge | bebidas | 4 | bebida-industrial |
+| Pão aveia forma | taco | cereais | 4 | pao-de-forma-industrial |
+| Biscoito salgado light | ibge | doces | 4 | biscoito |
+| Pão pumpernickel | usda | cereais | 3 | pao |
+| Arroz de cuxá | ibge | pratos | 1 | prato-caseiro |
+| Farinha de arroz enriquecida | taco | cereais | 2 | farinha-amido-culinario |
+| Iogurte com sabor (semidesnatado) | usda | laticinios | 4 | iogurte-com-sabor |
+| Carne moída suína (grelhada) | usda | carnes | 1 | grupo-carnes |
+| Salmão do Atlântico (selvagem) (cru) | usda | peixes | 1 | grupo-peixes |
+| Anéis de cebola empanados (onion rings) | usda | fastfood | 4 | empanado-industrial |
 | Bertalha (refogada) | ibge | verduras | 1 | grupo-verduras |
-| Doce de leite cremoso | taco | doces | 4 | leite-condensado-doce-leite |
-| Salgadinho de milho extrusado | usda | fastfood | 4 | salgadinho-snack |
-| Leite aromatizado | ibge | laticinios | 4 | bebida-industrial |
-| Farinha de soja | usda | cereais | 2 | farinha-amido-culinario |
-| Canjica branca (crua) | taco | cereais | 1 | cereal-base |
-| Hadoque (cru) | usda | peixes | 1 | grupo-peixes |
-| Atum fresco (cru) | taco | peixes | 1 | grupo-peixes |
-| Carne bovina picanha (sem gordura, grelhada) | taco | carnes | 1 | grupo-carnes |
-| Molho francês (salada) | usda | gorduras | 4 | maionese-molhos-ultra |
-| Peru moído 93% magro (cru) | usda | carnes | 1 | grupo-carnes |
-| Manteiga de garrafa | ibge | laticinios | 2 | gordura-oleo |
-| Jiló (cru) | taco | verduras | 1 | grupo-verduras |
-| Caju (polpa, congelada) | taco | frutas | 1 | grupo-frutas |
-| Carne bovina contra-filé (com gordura, cru) | taco | carnes | 1 | grupo-carnes |
-| Carne vegetal (frita) | ibge | cereais | 4 | proteina-texturizada |
-| Pizza de queijo Pizza Hut (massa fina) | usda | fastfood | 4 | pizza-lanche-pronto |
-| Pé de moleque | ibge | doces | 4 | bala-chocolate |
-| Carne com legumes | ibge | pratos | 1 | prato-caseiro |
-| Ades light | ibge | laticinios | 4 | bebida-industrial |
-| Hambúrguer de carne 93% magra (grelhado) | usda | carnes | 1 | hamburguer-carne-usda |
-| Hambúrguer de carne 80% magra (grelhado) | usda | carnes | 1 | hamburguer-carne-usda |
-| Queijo gouda | usda | laticinios | 3 | queijo |
-| Queijo cottage | base | laticinios | 3 | queijo |
-| Peixe de água doce (empanado) | ibge | peixes | 4 | empanado-industrial |
-| Virado à paulista | taco | pratos | 1 | prato-caseiro |
-| Pão de milho | ibge | cereais | 3 | pao |
-| Chuchu (cozido) | taco | verduras | 1 | grupo-verduras |
-| Maçã (seca) | usda | frutas | 1 | fruta-seca |
-| Carne de porco lombo assado | base | carnes | 1 | grupo-carnes |
-| Fígado bovino (empanado) | ibge | carnes | 1 | grupo-carnes |
-| Pimentão verde (cru) | taco | verduras | 1 | grupo-verduras |
-| Farinha de rosca | taco | cereais | 3 | farinha-de-rosca |
-| Coração de frango (frita) | ibge | carnes | 1 | grupo-carnes |
-| Amendoim apimentado | ibge | doces | 3 | oleaginosa-salgada |
-| Língua bovina (cozida) | usda | carnes | 1 | grupo-carnes |
-| Caldo verde | ibge | pratos | 1 | prato-caseiro |
-| Açúcar refinado | taco | doces | 2 | acucar-mel |
-| Strogonoff de frango | base | pratos | 1 | prato-caseiro |
+| Repolho (cru) | ibge | verduras | 1 | grupo-verduras |
+| Abacate (cru) | taco | frutas | 1 | grupo-frutas |
+| Ganso (assado) | usda | carnes | 1 | grupo-carnes |
+| Iogurte grego com fruta (semidesnatado) | usda | laticinios | 4 | iogurte-com-sabor |
+| Margarina light | ibge | laticinios | 4 | pao-com-margarina |
+| Nachos com queijo | usda | fastfood | 4 | salgadinho-snack |
+| Ovo de galinha inteiro (cru) | taco | ovos | 1 | grupo-ovos |
+| Pasteis de santa clara | ibge | doces | 3 | confeitaria |
+| Nabo (cozido) | ibge | verduras | 1 | grupo-verduras |
+| Asa de galinha ou frango (empanada) | ibge | carnes | 1 | grupo-carnes |
+| Tacacá | taco | pratos | 1 | prato-caseiro |
+| Atum azul (assado) | usda | peixes | 1 | grupo-peixes |
+| Mussarela de bufala | ibge | laticinios | 3 | queijo |
+| Hambúrguer bovino (cru) | taco | fastfood | 4 | carne-industrial |
+| Bife à cavalo com contra filé | taco | pratos | 1 | prato-caseiro |
+| Carne bovina coxão duro (sem gordura, cozido) | taco | carnes | 1 | grupo-carnes |
+| Maria izabel | ibge | pratos | 1 | prato-caseiro |
+| Cookie de pasta de amendoim | usda | doces | 4 | biscoito |
+| Pimentão verde (cozido) | usda | verduras | 1 | grupo-verduras |
+| Chourico | ibge | carnes | 4 | embutido |
+| Castanha de caju (torrada no óleo) | usda | oleaginosas | 3 | oleaginosa-salgada |
+| Batata doce (frita) | ibge | feculentos | 1 | grupo-feculentos |
+| Macarrão molho bolognesa | taco | pratos | 1 | prato-caseiro |
+| Miudo suino (cozido) | ibge | carnes | 1 | grupo-carnes |
+| Suco de ameixa seca | usda | bebidas | 1 | suco-natural |
+| Queijo de reino | ibge | laticinios | 3 | queijo |
+| Suco de limão (lima) | usda | bebidas | 1 | suco-natural |
+| Ervilha em conserva | ibge | verduras | 3 | conserva-vegetal-fruta |
+| Hambúrguer de carne 95% magra (grelhado) | usda | carnes | 1 | hamburguer-carne-usda |
 | Frango inteiro (assado) | usda | carnes | 1 | grupo-carnes |
-| Tilápia (crua) | usda | peixes | 1 | grupo-peixes |
-| Pastel | ibge | fastfood | 4 | pizza-lanche-pronto |
-| Pimentão amarelo (cru) | taco | verduras | 1 | grupo-verduras |
-| Homus (pasta de grão-de-bico) | usda | leguminosas | 1 | grupo-leguminosas |
-| Filé mignon bovino (só carne magra, grelhado) | usda | carnes | 1 | grupo-carnes |
-| Queijo de minas | ibge | laticinios | 3 | queijo |
-| Salada de frutas | ibge | pratos | 1 | prato-caseiro |
-| Lambari (congelado, cru) | taco | peixes | 1 | grupo-peixes |
-| Hambúrguer de carne 85% magra (grelhado) | usda | carnes | 1 | hamburguer-carne-usda |
+| Repolho branco (cru) | taco | verduras | 1 | grupo-verduras |
+| Queijo provolone | ibge | laticinios | 3 | queijo |
+| Strogonoff de frango | base | pratos | 1 | prato-caseiro |
+| Frango coxa (com pele, crua) | taco | carnes | 1 | grupo-carnes |
+| Cação posta (cozida) | taco | peixes | 1 | grupo-peixes |
+| Suco de limão (lima) (sem açúcar) | usda | bebidas | 1 | suco-natural |
+| Maria maluca (bolacha doce) | ibge | doces | 4 | biscoito |
+| Iogurte grego natural (semidesnatado) | usda | laticinios | 1 | iogurte-natural |
+| Biscoito doce wafer recheado de morango | taco | cereais | 4 | biscoito |
+| Creme de legumes (sopa desidratada) | ibge | outros | 4 | sopa-lata-desidratada |
+| Geleia mocotó natural | taco | doces | 3 | conserva-doce-fruta |
+| Figo (enlatado, em calda) | taco | frutas | 3 | conserva-vegetal-fruta |
+| Lombo suíno (só carne magra, frito) | usda | carnes | 1 | grupo-carnes |
+| Empadao | ibge | fastfood | 4 | pizza-lanche-pronto |
+| Canjica branca (crua) | taco | cereais | 1 | cereal-base |
+| Chá gelado adoçado (preto) | usda | bebidas | 4 | bebida-industrial |
+| Bacalhau (salgado, cru) | taco | peixes | 3 | peixe-conserva-salga |
+| Iogurte grego natural | base | laticinios | 1 | iogurte-natural |
+| Coco mucaja | ibge | oleaginosas | 1 | grupo-oleaginosas |
+| Mix de castanhas e nozes (torrada no óleo, com sal) | usda | oleaginosas | 3 | oleaginosa-salgada |
+| Linguiça frango (frita) | taco | carnes | 4 | embutido |
+| Lima | ibge | frutas | 1 | grupo-frutas |
+| Farinha de mandioca (crua) | taco | cereais | 1 | farinha-base |
+| Queijo suíço (semidesnatado) | usda | laticinios | 3 | queijo |
 | Ovo mexido (fast food) | usda | fastfood | 4 | grupo-fastfood |
-| Amendoim cozido | ibge | doces | 1 | cereal-base |
+| Bebida energetica | ibge | bebidas | 4 | bebida-industrial |
+| Farinha de centeio | usda | cereais | 2 | farinha-amido-culinario |
+| Frango inteiro (cozido) | usda | carnes | 1 | grupo-carnes |
+| Creme azedo (sour cream) | usda | laticinios | 3 | creme-de-leite-nata |
+| Óleo de linhaça | usda | gorduras | 2 | gordura-oleo |
+| Mostarda molho | ibge | outros | 3 | mostarda-pimenta-pesto |
+| Batata chips salgada | usda | fastfood | 4 | salgadinho-snack |
+| Queijo coalho | base | laticinios | 3 | queijo |
+| Couve flor | ibge | verduras | 1 | grupo-verduras |
+| Vinho branco | usda | bebidas | 3 | alcool-fermentado |
+| Soja extrato solúvel pó | taco | leguminosas | 4 | proteina-texturizada |
+| Chuchu (cozido) | taco | verduras | 1 | grupo-verduras |
+| Porco lombo (cru) | taco | carnes | 1 | grupo-carnes |
+| Pescada branca (crua) | taco | peixes | 1 | grupo-peixes |
+| Peixe-espada (cru) | usda | peixes | 1 | grupo-peixes |
+| Pimentão vermelho (cru) | taco | verduras | 1 | grupo-verduras |
+| Farinha de rosca | taco | cereais | 3 | farinha-de-rosca |
+| Feijão jalo (cozido) | taco | leguminosas | 1 | grupo-leguminosas |
+| Soja farinha | taco | leguminosas | 2 | farinha-amido-culinario |
+| Camarão Sete Barbas (sem cabeça, com casca, frito) | taco | peixes | 1 | grupo-peixes |
+| Refrigerante de uva | usda | bebidas | 4 | bebida-industrial |
+| Hambúrguer de carne 90% magra (grelhado) | usda | carnes | 1 | hamburguer-carne-usda |
+| Repolho | ibge | verduras | 1 | grupo-verduras |
+| Mandioquinha salsa (batata baroa) (refogada) | ibge | feculentos | 1 | grupo-feculentos |
+| Paleta suína (só carne magra, assada) | usda | carnes | 1 | grupo-carnes |
+| Macaúba (crua) | taco | frutas | 1 | grupo-frutas |
+| Pimentão verde (cru) | taco | verduras | 1 | grupo-verduras |
+| Homus (pasta de grão-de-bico) | usda | leguminosas | 1 | grupo-leguminosas |
+| Caju envasado (suco concentrado) | taco | frutas | 4 | bebida-industrial |
 | Glicose de milho | taco | doces | 2 | acucar-mel |
-| Iogurte com sabor | usda | laticinios | 4 | iogurte-com-sabor |
-| Macarrão de ovos (cozido) | usda | cereais | 1 | cereal-base |
-| Mimosa | ibge | frutas | 1 | grupo-frutas |
-| Barreado | taco | pratos | 1 | prato-caseiro |
-| Subway sanduíche de bacon, alface e tomate | usda | fastfood | 4 | embutido |
-| Vitela (só carne magra, crua) | usda | carnes | 1 | grupo-carnes |
-| Figada | ibge | doces | 3 | conserva-doce-fruta |
-| Couve flor (empanada) | ibge | verduras | 1 | grupo-verduras |
-| Rabanada | ibge | doces | 3 | confeitaria |
+| Sopa | ibge | pratos | 1 | prato-caseiro |
+| Ervilha em vagem | taco | leguminosas | 1 | grupo-leguminosas |
+| Frango inteiro (com pele, cru) | taco | carnes | 1 | grupo-carnes |
+| Língua bovina (cozida) | usda | carnes | 1 | grupo-carnes |
+| Cogumelo in natura (cozido) | ibge | verduras | 1 | grupo-verduras |
+| Espinafre | usda | verduras | 1 | grupo-verduras |
+| Frango com legumes | ibge | pratos | 1 | prato-caseiro |
+| Cheesburguer | ibge | pratos | 4 | pizza-lanche-pronto |
+| Queijo parmesão (semidesnatado) | usda | laticinios | 3 | queijo |
+| Suco de pêssego em calda | ibge | bebidas | 1 | suco-natural |
+| Contrafilé (empanado) | ibge | carnes | 1 | grupo-carnes |
+| Leite de soja (bebida) | usda | bebidas | 4 | bebida-industrial |
+| Goiabada | ibge | doces | 3 | conserva-doce-fruta |
+| Mandioca (crua) | taco | feculentos | 1 | grupo-feculentos |

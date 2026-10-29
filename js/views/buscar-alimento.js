@@ -3,6 +3,9 @@
 import { h, limpar, icone, campo, entradaNum, lerNumero, aviso, folha, confirmar, caixaAviso, debounce, selecao } from '../ui.js';
 import { buscarAlimentos, alimentoPorId } from '../foods.js';
 import { montarDocAlimento, validarNutrientes, salvarAlimentoPersonalizado, removerAlimentoPersonalizado, listarMeusAlimentos, listarProdutosSalvos } from '../banco.js';
+import { abrirLerTabela } from './ler-tabela.js';
+import { ROTULO_CAMPO } from '../tabela-nutricional.js';
+import { salvarFoto, urlFoto } from '../images.js';
 import { buscarPorCodigo, buscarPorTexto, codigoValido, mensagemErro, leitorDisponivel, lerCodigoPelaCamera, AVISO_OFF } from '../off.js';
 
 const n0 = x => (x == null || isNaN(x) ? '–' : Math.round(x).toLocaleString('pt-BR'));
@@ -12,7 +15,7 @@ const online = () => typeof navigator === 'undefined' || navigator.onLine !== fa
 // ---------------------------------------------------------------------------------------------
 // Formulário comum (alimento próprio ou produto do Open Food Facts)
 
-function formularioAlimento({ doc = null, inicial = {}, modo = 'meu', aoSalvar, aoCancelar }) {
+function formularioAlimento({ doc = null, inicial = {}, modo = 'meu', aoSalvar, aoCancelar, lerFoto = false }) {
   const d = doc || {};
   const nome = h('input', { type: 'text', value: d.nome ?? inicial.nome ?? '', maxlength: 80, autocomplete: 'off', placeholder: 'Ex.: Pão da padaria do bairro' });
   const marca = h('input', { type: 'text', value: d.marca ?? inicial.marca ?? '', maxlength: 60, autocomplete: 'off', placeholder: 'Opcional' });
@@ -42,7 +45,56 @@ function formularioAlimento({ doc = null, inicial = {}, modo = 'meu', aoSalvar, 
   }
   liquido.addEventListener('change', atualizar);
 
-  const grade = h('div', { class: 'grade-2' }, campo('Calorias (kcal)', kcal), campo('Proteína (g)', p), campo('Carboidrato (g)', c), campo('Gordura (g)', g), campo('Fibra (g, opcional)', f), campo('Açúcar (g, opcional)', acucar));
+  // leitura da tabela nutricional por foto (OCR local): campos duvidosos ficam destacados, com a foto à vista para conferir
+  let duvidosos = new Set(), fotoTabela = null;
+  const leituraBox = h('div', { class: 'pilha', 'aria-live': 'polite' });
+  const guardarFoto = h('input', { type: 'checkbox', id: 'f-guardar-foto' });
+  const grade = h('div', { class: 'grade-2' });
+  const rot = (t, k) => (duvidosos.has(k) ? t + ' · conferir' : t);
+  const cls = k => (duvidosos.has(k) ? 'campo-duvidoso' : '');
+  function desenharGrade() {
+    limpar(grade).append(
+      campo(rot('Calorias (kcal)', 'kcal'), kcal, null, { classe: cls('kcal') }), campo(rot('Proteína (g)', 'p'), p, null, { classe: cls('p') }),
+      campo(rot('Carboidrato (g)', 'c'), c, null, { classe: cls('c') }), campo(rot('Gordura (g)', 'g'), g, null, { classe: cls('g') }),
+      campo(rot('Fibra (g, opcional)', 'f'), f, null, { classe: cls('f') }), campo(rot('Açúcar (g, opcional)', 'acucar'), acucar, null, { classe: cls('acucar') }));
+  }
+  desenharGrade();
+  const fmt = v => (v == null ? '' : String(v).replace('.', ','));
+  function mostrarFoto(blobOuUrl) {
+    const src = typeof blobOuUrl === 'string' ? blobOuUrl : URL.createObjectURL(blobOuUrl);
+    leituraBox.append(h('figure', { class: 'foto-tabela-fig' }, h('img', { src, alt: 'Foto da tabela nutricional, para conferir os valores', class: 'foto-tabela' }), h('figcaption', { class: 'ajuda' }, 'A foto fica só na memória deste aparelho; nada é enviado.')));
+  }
+  function aplicarLeitura(res) {
+    if (!res) return;
+    limpar(leituraBox); duvidosos = new Set(); fotoTabela = res.foto || null;
+    if (res.foto) {
+      mostrarFoto(res.foto);
+      leituraBox.append(h('label', { class: 'opcao', for: 'f-guardar-foto' }, guardarFoto, h('span', null, h('strong', null, 'Guardar a foto neste aparelho com o alimento'), h('span', { class: 'd' }, 'Opcional. Não vai para a nuvem nem para o backup.'))));
+    }
+    if (res.erro) { leituraBox.append(caixaAviso('medio', 'Leitura não concluída', res.erro)); desenharGrade(); return; }
+    const r = res.parsed;
+    const por100 = r.origem !== '';
+    const src = por100 ? r.por100 : (r.extras && r.extras.porPorcao) || {};
+    if (!por100 && !Object.values(src).some(x => x != null)) {
+      leituraBox.append(caixaAvisoLista('medio', 'Não reconheci a tabela', r.avisos, 'Digite os valores olhando a foto.')); desenharGrade(); return;
+    }
+    kcal.value = fmt(src.kcal); p.value = fmt(src.p); c.value = fmt(src.c); g.value = fmt(src.g); f.value = fmt(src.f); acucar.value = fmt(src.acucar);
+    if (por100) {
+      base = '100'; radios[0].checked = true;
+    } else { base = 'porcao'; radios[1].checked = true; }   // sem tamanho de porção legível: valores por porção, a pessoa informa o tamanho
+    liquido.checked = !!r.liquido;
+    if (r.porcao) { porcNome.value = r.porcao.nome; porcG.value = fmt(r.porcao.g); }
+    duvidosos = new Set(r.duvidosos);
+    if (!por100) for (const k of ['kcal', 'p', 'c', 'g']) duvidosos.add(k);
+    desenharGrade(); atualizar();
+    const lista = [...duvidosos].map(k => ROTULO_CAMPO[k]).filter(Boolean);
+    leituraBox.append(caixaAvisoLista(r.ok && !lista.length ? 'info' : 'medio', 'Valores lidos pela foto', r.avisos,
+      'Confira cada número com a foto antes de salvar.' + (lista.length ? ' Campos para conferir: ' + lista.join(', ') + '.' : '')));
+  }
+  function caixaAvisoLista(nivel, titulo, avisos, fim) { return caixaAviso(nivel, titulo, [...avisos, fim].filter(Boolean).join(' ')); }
+  const lerPelaFoto = async () => aplicarLeitura(await abrirLerTabela());
+  if (d.fotoTabelaId) urlFoto(d.fotoTabelaId).then(u => { if (u) mostrarFoto(u); }).catch(() => {});
+  if (lerFoto && !doc) setTimeout(lerPelaFoto, 150);
   const porcBloco = h('div', { class: 'grade-2' }, campo('Nome da porção', porcNome, 'Ex.: fatia, unidade, pote.'), campo('Tamanho da porção (g ou ml)', porcG, 'Obrigatório se os valores forem por porção. Se for por 100 g, é opcional e facilita registrar "1 fatia".'));
 
   function ler() {
@@ -59,16 +111,20 @@ function formularioAlimento({ doc = null, inicial = {}, modo = 'meu', aoSalvar, 
     try {
       if (!nome.value.trim()) throw new Error('Dê um nome ao alimento.');
       doc2 = ler();
+      if (d.fotoTabelaId) doc2.fotoTabelaId = d.fotoTabelaId;
     } catch (e) { errosBox.append(caixaAviso('alto', null, e.message)); return; }
     const { erros, avisos } = validarNutrientes(doc2);
     if (erros.length) { errosBox.append(caixaAviso('alto', 'Confira os números', erros.join(' '))); return; }
     if (avisos.length && !(await confirmar('Os números parecem estranhos', avisos.join(' '), { sim: 'Salvar mesmo assim', nao: 'Voltar e corrigir' }))) return;
+    if (guardarFoto.checked && fotoTabela) { try { doc2.fotoTabelaId = await salvarFoto(fotoTabela, { tipo: 'tabela-nutricional' }); } catch { aviso('Não consegui guardar a foto, mas o alimento foi salvo.'); } }
     aoSalvar(salvarAlimentoPersonalizado(doc2));
   }
   atualizar();
   return h('div', { class: 'pilha' },
     ehOff ? caixaAviso('medio', AVISO_OFF, 'Confira o rótulo do produto e corrija o que estiver errado antes de usar. Os valores abaixo são por 100 g (ou 100 ml).') : null,
     inicial.avisos && inicial.avisos.length ? caixaAviso('medio', null, inicial.avisos.join(' ')) : null,
+    ehOff || doc ? null : h('div', { class: 'pilha' }, h('button', { class: 'btn btn-escuro', type: 'button', id: 'btn-ler-tabela', onclick: lerPelaFoto }, icone('camera', 20), 'Ler tabela nutricional por foto'), h('p', { class: 'ajuda' }, 'Abre a câmera do celular, lê a tabela no próprio aparelho e preenche o formulário. Você confere antes de salvar.')),
+    leituraBox,
     campo('Nome', nome), campo('Marca', marca), ehOff ? null : campo('Outros nomes (separados por vírgula)', apelidos, 'O texto livre da refeição passa a reconhecer esses nomes.'),
     ehOff ? null : h('fieldset', { class: 'pilha', style: { border: 'none', padding: 0, margin: 0 } },
       h('legend', { class: 'rotulo-grupo' }, 'Os valores nutricionais são'),
@@ -82,9 +138,9 @@ function formularioAlimento({ doc = null, inicial = {}, modo = 'meu', aoSalvar, 
 }
 
 /** "Criar meu alimento" (ou editar um existente). Retorna o alimento salvo ou undefined. */
-export function abrirCriarAlimento({ doc = null, nomeInicial = '' } = {}) {
+export function abrirCriarAlimento({ doc = null, nomeInicial = '', lerFoto = false } = {}) {
   return folha(doc ? 'Editar meu alimento' : 'Criar meu alimento', fechar =>
-    formularioAlimento({ doc, inicial: { nome: nomeInicial }, modo: 'meu', aoSalvar: a => { aviso(doc ? 'Alimento atualizado.' : 'Alimento criado. O texto livre já reconhece esse nome.'); fechar(a); }, aoCancelar: () => fechar(undefined) }), { larga: true });
+    formularioAlimento({ doc, inicial: { nome: nomeInicial }, modo: 'meu', lerFoto, aoSalvar: a => { aviso(doc ? 'Alimento atualizado.' : 'Alimento criado. O texto livre já reconhece esse nome.'); fechar(a); }, aoCancelar: () => fechar(undefined) }), { larga: true });
 }
 
 /** Confirma/edita um produto do Open Food Facts antes de usar. Retorna o alimento salvo (cache local) ou undefined. */
@@ -190,7 +246,8 @@ export function escolherAlimento({ titulo = 'Buscar alimento', consulta = '', ca
         h('div', { class: 'linha-botoes' },
           h('button', { class: 'btn', type: 'button', onclick: buscarProduto }, icone('busca', 18), 'Buscar produto'),
           botaoLer,
-          h('button', { class: 'btn', type: 'button', onclick: async () => { const a = await abrirCriarAlimento({ nomeInicial: entrada.value.trim() }); if (a) fechar(a); } }, icone('mais', 18), 'Criar meu alimento')),
+          h('button', { class: 'btn', type: 'button', onclick: async () => { const a = await abrirCriarAlimento({ nomeInicial: entrada.value.trim() }); if (a) fechar(a); } }, icone('mais', 18), 'Criar meu alimento'),
+          h('button', { class: 'btn', type: 'button', id: 'btn-busca-ler-tabela', onclick: async () => { const a = await abrirCriarAlimento({ nomeInicial: entrada.value.trim(), lerFoto: true }); if (a) fechar(a); } }, icone('camera', 18), 'Ler tabela nutricional por foto')),
         h('p', { class: 'ajuda' }, 'Buscar produto consulta o Open Food Facts pela internet (só quando você toca). Aceita o nome ou o código de barras.')),
       caixaProdutos);
   }, { larga: true });
@@ -212,5 +269,6 @@ export function cartaoMeusAlimentos(redesenhar) {
     h('p', { class: 'mudo' }, 'Alimentos que você criou e produtos que escolheu no Open Food Facts. Entram no backup e na sincronização.'),
     meus.length ? h('ul', { class: 'lista-simples' }, meus.map(d => linha(d, true))) : h('p', { class: 'ajuda' }, 'Você ainda não criou nenhum alimento.'),
     produtos.length ? h('div', null, h('h3', { style: { fontSize: '1rem' } }, 'Produtos guardados'), h('ul', { class: 'lista-simples' }, produtos.map(d => linha(d, true)))) : null,
-    h('div', { class: 'linha-botoes' }, h('button', { class: 'btn', type: 'button', onclick: async () => { const a = await abrirCriarAlimento(); if (a) redesenhar(); } }, icone('mais', 18), 'Criar meu alimento')));
+    h('div', { class: 'linha-botoes' }, h('button', { class: 'btn', type: 'button', onclick: async () => { const a = await abrirCriarAlimento(); if (a) redesenhar(); } }, icone('mais', 18), 'Criar meu alimento'),
+      h('button', { class: 'btn', type: 'button', onclick: async () => { const a = await abrirCriarAlimento({ lerFoto: true }); if (a) redesenhar(); } }, icone('camera', 18), 'Ler tabela por foto')));
 }

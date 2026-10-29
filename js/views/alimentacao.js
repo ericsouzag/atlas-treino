@@ -5,7 +5,7 @@ import { estimarRefeicao } from '../estimador.js';
 import { alimentoPorId, variantesDe, buscarAlimentos, nutrientesPara, porcaoPadrao, bancoCompletoPronto } from '../foods.js';
 import { dataISO, horaHM, somarDias, rotuloDia, tsLocal, diaDoTs, horaDoTs } from '../datas.js';
 import { refeicoesDoDia, metas, aguaDoDia, setAgua, montarItemRefeicao, resumoItens, onboardingFeito, atividadesDoDia, gastoAtivoDoDia, treinosConcluidos } from '../dados.js';
-import { escolherAlimento } from './buscar-alimento.js';
+import { escolherAlimento, abrirCriarAlimento } from './buscar-alimento.js';
 import { abrirRegistroTreino } from './registro-treino.js';
 import { descricaoAtividade } from '../atividades.js';
 import { totaisDoDia, alertasAlimentares, intervalos, avaliarIntervalo, tipoRefeicaoPorHora, TIPOS_REFEICAO } from '../nutrition.js';
@@ -171,7 +171,8 @@ export function renderizar(raiz, ctx) {
       h('button', { class: 'btn', type: 'button', onclick: () => arquivo.click() }, icone('camera', 20), rascunho.foto ? 'Trocar foto' : 'Foto'),
       arquivo,
       h('button', { class: 'btn btn-primario', type: 'button', onclick: estimar }, icone('busca', 20), 'Estimar calorias')),
-    h('div', { style: { marginTop: '8px' } }, h('span', { class: 'estimativa' }, 'Valores estimados pelo banco local')));
+    h('div', { style: { marginTop: '8px' } }, h('span', { class: 'estimativa' }, 'Valores estimados pelo banco local')),
+    h('button', { class: 'btn btn-fantasma btn-peq', type: 'button', id: 'btn-cadastrar-tabela', style: { marginTop: '6px' }, onclick: async () => { await abrirCriarAlimento({ lerFoto: true }); } }, icone('camera', 18), 'Cadastrar produto pela tabela nutricional (foto)'));
   ta.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) estimar(); });
 
   // ---------- favoritos / repetir

@@ -8,11 +8,11 @@ Gerado por `node tools/unificar-banco.mjs`. Prioridade ao desduplicar: **TACO > 
 |---|---:|---:|---:|---:|
 | TACO (4ª ed.) | 593 | 0 | 1 | 592 |
 | IBGE (POF 2008-2009) | 855 | 92 | 28 | 735 |
-| Embutido (js/foods.js) | 207 | 76 | 14 | 117 |
+| Embutido (js/foods.js) | 208 | 76 | 14 | 118 |
 | USDA (FDC) | 902 | 134 | 26 | 742 |
-| **Total** | 2557 | 302 | 69 | **2186** |
+| **Total** | 2558 | 302 | 69 | **2187** |
 
-No app, o embutido (207 itens) carrega junto com o código; 90 deles foram absorvidos por registros de maior prioridade (TACO/IBGE) e saem do banco quando a camada carrega.
+No app, o embutido (208 itens) carrega junto com o código; 90 deles foram absorvidos por registros de maior prioridade (TACO/IBGE) e saem do banco quando a camada carrega.
 37 das fusões embutido->TACO vieram da lista revisada à mão (itens da TACO marcados como já existentes no embutido, casando também por apelido). 109 apelidos repetidos entre registros foram retirados (cada apelido tem um dono: o item curado à mão ou a fonte de maior prioridade).
 Os candidatos da USDA já vêm filtrados por regras de seleção/tradução (tools/gerar-usda.mjs): de ~8 mil itens do FDC só entram os que têm tradução de qualidade.
 
@@ -364,6 +364,13 @@ Registros substituídos (somem da busca; os ids antigos continuam resolvendo par
 - usda-s167542 -> barra-de-granola: barra dura dos EUA (471 kcal) distante dos rótulos brasileiros; a barra de granola curada (410 kcal) a substitui
 
 "Açaí com granola" (IBGE, 110 kcal) segue como está e em NOVA 4 (açaí na tigela costuma levar xarope de guaraná). Aveia em flocos (TACO) segue em 1.
+
+## Suplemento: Creamass (Integralmédica)
+
+Consulta em 29/10/2026 a páginas de varejo (Hub Suplementos, Corpo e Vida Suplementos; Drogasil/Centauro bloquearam o acesso automático; Fitia confirma 609 kcal para 160 g). O site oficial da marca não foi localizado pela busca, então os valores são os do rótulo reproduzido pelo varejo, e não de uma página oficial. Porção de rótulo: 160 g (4 dosadores, ~40 g cada; uma loja antiga falava em 120 g/3 medidas, divergente e descartada). Por porção de 160 g: chocolate 607 kcal, 131 g carboidratos (24 g açúcares), 15 g proteínas, 2,2 g gorduras, 2 g fibra, 204 mg sódio; baunilha 609 kcal, 134 g, 27 g, 15 g, 1,5 g, 0 g, 221 mg; morango 609/134/27/15/1,5/0/223; cookies 610/134/28/15/1,6/0/225. Creatina: 3 g por porção.
+
+Cadastro por 100 g (rótulo / 1,6; kcal bate com 4p+4c+9g em ±1%): **chocolate** 379 kcal, 9,4 P, 81,9 C, 1,4 G, 1,3 fibra, 15 açúcar; **baunilha/morango/cookies** (praticamente iguais, um registro) 381 kcal, 9,4 P, 83,8 C, 0,9 G, 0 fibra, 16,9 açúcar. Suplemento, NOVA 4. "creamass" e "hipercalórico" sem qualificação caem no de chocolate (ids antigos do hipercalórico genérico resolvem para ele). Os valores variam entre lotes e sabores (fibra, gordura e sódio divergem entre páginas): **confira com a embalagem de quem usa**; a leitura da tabela por foto serve para corrigir.
+
 
 ## Descartados
 

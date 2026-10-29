@@ -9,6 +9,8 @@
 import { normalizar, tokens } from './texto.js';
 import { classificarNova } from './nova-regras.js';
 
+// Creamass (Integralmédica): valores do rótulo (varejo, consulta em 29/10/2026), porção de 160 g = 4 dosadores de 40 g; por 100 g = rótulo / 1,6.
+// Fonte e conferência em tools/relatorio-banco.md. Sabor chocolate = valor principal ("creamass"); baunilha/morango/cookies = segundo registro.
 const LINHAS = `
 arroz branco cozido|arroz;arroz branco;arroz soltinho|cereais|128 2.5 28.1 0.2 1.6|escumadeira:100;colher de sopa:25;concha:90;xicara:160;prato:220|
 arroz integral cozido|arroz integral|cereais|124 2.6 25.8 1.0 2.7|escumadeira:100;colher de sopa:25;concha:90;xicara:160;prato:220|
@@ -103,7 +105,8 @@ albumina|albumina;proteina de ovo|suplementos|370 80 5 1 0|scoop:30;colher de so
 colageno hidrolisado|colageno;collagen|suplementos|360 90 0 0 0|scoop:10;colher de sopa:10|t
 creatina|creatina;creatina monohidratada|suplementos|0 0 0 0 0|dose:5;colher de cha:5|t
 maltodextrina|maltodextrina;dextrose;carbo em po|suplementos|380 0 95 0 0|scoop:30;colher de sopa:15|t
-hipercalorico|hipercalorico;mass gainer;hipercalórico|suplementos|380 15 75 3 1|scoop:100;dose:100|t
+creamass hipercalorico chocolate (integralmedica)|creamass;creamass chocolate;creamass integralmedica;creamass integralmedica chocolate;hipercalorico;hipercalorico creamass;hipercalorico chocolate;hipercalorico integralmedica;mass gainer;hiper calorico|suplementos|379 9.4 81.9 1.4 1.3|porcao:160;dosador:40;scoop:40;dose:40;medida:40;colher de sopa:20|t;a=15
+creamass hipercalorico baunilha, morango ou cookies (integralmedica)|creamass baunilha;creamass morango;creamass cookies;creamass integralmedica baunilha;creamass integralmedica morango;creamass integralmedica cookies;hipercalorico baunilha;hipercalorico morango;hipercalorico cookies|suplementos|381 9.4 83.8 0.9 0|porcao:160;dosador:40;scoop:40;dose:40;medida:40;colher de sopa:20|t;a=16.9
 barra de proteina|barra de proteina;protein bar;barrinha de proteina;bolinho proteico|suplementos|360 30 35 11 5|unidade:45|t;u;a=8
 pasta de amendoim|pasta de amendoim;pasta de amendoin;amendoim pasta;manteiga de amendoim|oleaginosas|588 25 20 50 6|colher de sopa:15;colher de cha:5|
 banana prata|banana;banana prata;banana nanica;banana-prata|frutas|98 1.3 26 0.1 2|unidade:70;grande:90|
@@ -233,7 +236,7 @@ function parseFlags(s = '') {
 }
 
 // Os nomes das linhas acima são escritos sem acento (facilita a busca); aqui voltam a ser exibidos com acento.
-const ACENTOS = { pao: 'pão', paes: 'pães', frances: 'francês', feijao: 'feijão', macarrao: 'macarrão', acucar: 'açúcar', acucarado: 'açucarado', cafe: 'café', grao: 'grão', cha: 'chá', agua: 'água', mamao: 'mamão', melao: 'melão', maca: 'maçã', limao: 'limão', acai: 'açaí', pacoca: 'paçoca', linguica: 'linguiça', tilapia: 'tilápia', salmao: 'salmão', camarao: 'camarão', hamburguer: 'hambúrguer', abobora: 'abóbora', brocolis: 'brócolis', pure: 'purê', proteina: 'proteína', hipercalorico: 'hipercalórico', colageno: 'colágeno', isotonico: 'isotônico', energetico: 'energético', amendoas: 'amêndoas', para: 'pará', nectar: 'néctar', acaraje: 'acarajé', requeijao: 'requeijão', parmesao: 'parmesão', contrafile: 'contrafilé', moida: 'moída', po: 'pó', file: 'filé', ate: 'até', caju: 'caju', 'avela': 'avelã', 'caipirinha': 'caipirinha', mussarela: 'mussarela', 'barrinha': 'barrinha', coalho: 'coalho', 'ovos': 'ovos', 'cacau': 'cacau', 'doce': 'doce', 'tangerina': 'tangerina', 'grande': 'grande', 'sobremesa': 'sobremesa', 'ervilha': 'ervilha', 'kiwi': 'kiwi', 'sardinha': 'sardinha', 'inhame': 'inhame', 'cuscuz': 'cuscuz', 'proteico': 'proteico', 'zero': 'zero', 'lasanha': 'lasanha', 'bolonhesa': 'bolonhesa', 'feijoada': 'feijoada', 'sushi': 'sushi', 'uramaki': 'uramaki', 'refrigerante': 'refrigerante', 'queijo': 'queijo', 'manteiga': 'manteiga', 'margarina': 'margarina', 'granola': 'granola', 'torrada': 'torrada', 'pizza': 'pizza', 'esfiha': 'esfiha' };
+const ACENTOS = { hipercalorico: 'hipercalórico', integralmedica: 'Integralmédica', pao: 'pão', paes: 'pães', frances: 'francês', feijao: 'feijão', macarrao: 'macarrão', acucar: 'açúcar', acucarado: 'açucarado', cafe: 'café', grao: 'grão', cha: 'chá', agua: 'água', mamao: 'mamão', melao: 'melão', maca: 'maçã', limao: 'limão', acai: 'açaí', pacoca: 'paçoca', linguica: 'linguiça', tilapia: 'tilápia', salmao: 'salmão', camarao: 'camarão', hamburguer: 'hambúrguer', abobora: 'abóbora', brocolis: 'brócolis', pure: 'purê', proteina: 'proteína', hipercalorico: 'hipercalórico', colageno: 'colágeno', isotonico: 'isotônico', energetico: 'energético', amendoas: 'amêndoas', para: 'pará', nectar: 'néctar', acaraje: 'acarajé', requeijao: 'requeijão', parmesao: 'parmesão', contrafile: 'contrafilé', moida: 'moída', po: 'pó', file: 'filé', ate: 'até', caju: 'caju', 'avela': 'avelã', 'caipirinha': 'caipirinha', mussarela: 'mussarela', 'barrinha': 'barrinha', coalho: 'coalho', 'ovos': 'ovos', 'cacau': 'cacau', 'doce': 'doce', 'tangerina': 'tangerina', 'grande': 'grande', 'sobremesa': 'sobremesa', 'ervilha': 'ervilha', 'kiwi': 'kiwi', 'sardinha': 'sardinha', 'inhame': 'inhame', 'cuscuz': 'cuscuz', 'proteico': 'proteico', 'zero': 'zero', 'lasanha': 'lasanha', 'bolonhesa': 'bolonhesa', 'feijoada': 'feijoada', 'sushi': 'sushi', 'uramaki': 'uramaki', 'refrigerante': 'refrigerante', 'queijo': 'queijo', 'manteiga': 'manteiga', 'margarina': 'margarina', 'granola': 'granola', 'torrada': 'torrada', 'pizza': 'pizza', 'esfiha': 'esfiha' };
 const acentuar = txt => txt.replace(/[a-z]+/g, w => ACENTOS[w] || w);
 const capitalizar = t => t.charAt(0).toUpperCase() + t.slice(1);
 
@@ -307,7 +310,7 @@ export function removerAlimentoDoBanco(id) {
 // Prioridade (desempate na busca): TACO > IBGE > embutido > USDA. Os arquivos já vêm desduplicados entre si e contra o embutido:
 // um alimento do embutido que a TACO/IBGE também tem é substituído pelo registro da camada (que herda apelidos e porções caseiras),
 // e o id antigo continua valendo (LEGADO), para não quebrar refeições e favoritos já salvos.
-const LEGADO = new Map([['granola', 'granola-tradicional-industrializada']]);   // 'granola' era um item só; agora são variantes (ver FAMILIAS_VARIANTES)
+const LEGADO = new Map([['granola', 'granola-tradicional-industrializada'], ['hipercalorico', 'creamass-hipercalorico-chocolate-integralmedica']]);   // 'granola' era um item só; agora são variantes (ver FAMILIAS_VARIANTES)
 
 /**
  * Famílias de variantes: o mesmo alimento falado de jeitos diferentes, com valores e grau NOVA distintos.
@@ -315,6 +318,7 @@ const LEGADO = new Map([['granola', 'granola-tradicional-industrializada']]);   
  * A primeira da lista é a que o texto sem qualificação ("granola") escolhe.
  */
 export const FAMILIAS_VARIANTES = [
+  { nome: 'Creamass (sabores)', ids: ['creamass-hipercalorico-chocolate-integralmedica', 'creamass-hipercalorico-baunilha-morango-ou-cookies-integralmedica'] },
   { nome: 'granola e afins', ids: ['granola-tradicional-industrializada', 'granola-sem-acucar-caseira', 'barra-de-granola', 'muesli-sem-acucar-adicionado'] },
 ];
 /** Alimentos irmãos (variantes) de um alimento, já presentes no banco; [] se ele não pertence a uma família */

@@ -11,6 +11,8 @@ import { descricaoAtividade } from '../atividades.js';
 import { totaisDoDia, alertasAlimentares, intervalos, avaliarIntervalo, tipoRefeicaoPorHora, TIPOS_REFEICAO } from '../nutrition.js';
 import { salvarFoto, urlFoto } from '../images.js';
 import { cartaoNova } from './nova-card.js';
+import { abrirFavoritos } from './favoritos.js';
+import { ordenarFavoritos, migrarFavorito } from '../favoritos.js';
 import { agruparRefeicoes, tipoEfetivo, faixaHorario } from '../grupos-refeicao.js';
 import { garantirBanco } from '../banco.js';
 
@@ -176,7 +178,7 @@ export function renderizar(raiz, ctx) {
   ta.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) estimar(); });
 
   // ---------- favoritos / repetir
-  const favoritos = store.listar('favoritos').sort((a, b) => (b._u || 0) - (a._u || 0));
+  const favoritos = ordenarFavoritos(store.listar('favoritos').map(migrarFavorito));
   const todas = store.listar('refeicoes').sort((a, b) => b.ts.localeCompare(a.ts));
   const recentes = []; const vistos = new Set(favoritos.map(f => f.nome));
   for (const r of todas) { const k = resumoItens(r.itens).slice(0, 60); if (!vistos.has(k) && r.itens.length) { vistos.add(k); recentes.push({ id: 'r' + r.id, nome: k, itens: r.itens, tipo: r.tipo, recente: true }); } if (recentes.length >= 4) break; }
@@ -187,9 +189,12 @@ export function renderizar(raiz, ctx) {
     aviso(`Adicionado: ${n0(k)} kcal.`, { acao: 'Desfazer', aoAcao: () => { store.remover('refeicoes', r.id); redesenhar(); } });
     redesenhar();
   }
-  const barraFavs = (favoritos.length || recentes.length) ? h('div', { class: 'pilha o5', style: { gap: '6px' } },
-    h('h2', { class: 'titulo-sec', style: { fontSize: '18px' } }, 'Repetir com 1 toque'),
-    h('div', { class: 'favs', role: 'list' }, [...favoritos.map(f => ({ ...f, fav: true })), ...recentes].map(f => h('button', { class: 'chip', type: 'button', role: 'listitem', title: resumoItens(f.itens), onclick: () => repetir(f) }, f.fav ? iconeCheio('estrela', 16) : icone('repetir', 16), f.nome.length > 34 ? f.nome.slice(0, 33) + '…' : f.nome)))) : null;
+  const botaoFavs = h('button', { class: 'btn btn-peq', type: 'button', id: 'btn-favoritos', 'aria-label': `Favoritos: ver, editar e registrar (${favoritos.length})`, onclick: () => abrirFavoritos({ dia: diaSel, aoMudar: redesenhar }) }, iconeCheio('estrela', 18), favoritos.length ? `Favoritos (${favoritos.length})` : 'Favoritos');
+  const barraFavs = h('div', { class: 'pilha o5', style: { gap: '6px' } },
+    h('div', { class: 'cab-lista', style: { margin: 0 } }, h('h2', { class: 'titulo-sec', style: { fontSize: '18px', marginBottom: 0 } }, 'Repetir com 1 toque'), botaoFavs),
+    (favoritos.length || recentes.length)
+      ? h('div', { class: 'favs', role: 'list' }, [...favoritos.map(f => ({ ...f, fav: true })), ...recentes].map(f => h('button', { class: 'chip', type: 'button', role: 'listitem', title: resumoItens(f.itens), onclick: () => repetir(f) }, f.fav ? iconeCheio('estrela', 16) : icone('repetir', 16), f.nome.length > 34 ? f.nome.slice(0, 33) + '…' : f.nome)))
+      : h('p', { class: 'ajuda' }, 'Toque na estrela de uma refeição para guardá-la aqui e repetir com 1 toque.'));
 
   // ---------- comanda
   const kcalDe = r => r.itens.reduce((s, i) => s + (i.kcal || 0), 0);

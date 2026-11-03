@@ -10,6 +10,7 @@ import { exportarFotos, importarFotos, apagarTodasFotos } from '../images.js';
 import { dataISO } from '../datas.js';
 import { gravarEscolha } from '../entrada.js';
 import { cartaoMeusAlimentos } from './buscar-alimento.js';
+import { abrirFavoritos } from './favoritos.js';
 
 export function renderizar(raiz, ctx) {
   ctx.faixa('Ajustes');
@@ -105,6 +106,9 @@ export function renderizar(raiz, ctx) {
     h('div', { class: 'linha-botoes' }, h('button', { class: 'btn', type: 'button', onclick: () => exportar(false) }, icone('baixar', 18), 'Exportar dados'), h('button', { class: 'btn', type: 'button', onclick: () => exportar(true) }, icone('baixar', 18), 'Exportar com fotos'), h('button', { class: 'btn', type: 'button', onclick: () => arquivo.click() }, icone('subir', 18), 'Importar backup')), arquivo));
 
   // ---------------- meus alimentos
+  secs.push(h('section', { class: 'cartao pilha' }, h('h2', { style: { marginBottom: 0 } }, 'Meus favoritos'),
+    h('p', { class: 'mudo' }, `${store.listar('favoritos').length} favorito(s). Refeições ou alimentos marcados com a estrela: veja, edite itens e quantidades, registre ou remova.`),
+    h('div', { class: 'linha-botoes' }, h('button', { class: 'btn', type: 'button', id: 'btn-favoritos-ajustes', onclick: () => abrirFavoritos({ aoMudar: redesenhar }) }, icone('estrela', 18), 'Ver e editar favoritos'))));
   secs.push(cartaoMeusAlimentos(redesenhar));
 
   // ---------------- aparência

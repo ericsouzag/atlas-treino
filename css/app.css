@@ -542,3 +542,9 @@ table.tab-proj { width: 100%; border-collapse: collapse; font-size: 14px; }
 .lista-dicas { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
 .campo-duvidoso input, .campo-duvidoso select { border-color: var(--alerta); box-shadow: 0 0 0 2px var(--alerta); }
 .campo-duvidoso label { color: var(--alerta); font-weight: 800; }
+
+/* ---- v1.9: Meus favoritos ---- */
+.fav-card .fav-itens { margin: 0 0 4px; font-size: 14px; color: var(--tinta2); line-height: 1.35; overflow-wrap: anywhere; }
+.fav-card .fav-mais { justify-content: flex-end; flex-wrap: wrap; }
+.fav-card .fav-mais .btn-icone:disabled { opacity: .35; }
+.fav-card .acoes-grupo { margin-bottom: 2px !important; }

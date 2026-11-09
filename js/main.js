@@ -101,7 +101,21 @@ async function iniciar() {
   // Em localhost o service worker só liga com ?sw (evita cache velho durante o desenvolvimento)
   const local = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
   if ('serviceWorker' in navigator && ((location.protocol === 'https:' && !local) || (local && location.search.includes('sw')))) {
-    navigator.serviceWorker.register('sw.js').catch(e => console.warn('Service worker não registrado', e));
+    // Se já havia um service worker controlando a página, a troca significa que saiu versão nova:
+    // avisa e deixa a pessoa atualizar quando quiser (recarregar na hora poderia perder o que ela está digitando).
+    const tinhaControle = !!navigator.serviceWorker.controller;
+    let avisou = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!tinhaControle || avisou) return;
+      avisou = true;
+      aviso('Nova versão do Atlas instalada.', { acao: 'Atualizar agora', aoAcao: () => location.reload(), duracao: 600000 });
+    });
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      // procura versão nova ao abrir e sempre que o app volta ao primeiro plano (app instalado pode ficar dias aberto)
+      const checar = () => reg.update().catch(() => {});
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checar(); });
+      setInterval(checar, 30 * 60 * 1000);
+    }).catch(e => console.warn('Service worker não registrado', e));
   }
 }
 

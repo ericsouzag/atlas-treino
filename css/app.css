@@ -557,3 +557,6 @@ table.tab-proj { width: 100%; border-collapse: collapse; font-size: 14px; }
 .lista-previa strong { font-variant-numeric: tabular-nums; }
 .regras-dia ul { margin: 0; }
 .cab-lista { flex-wrap: wrap; gap: 2px 10px; }
+
+.resumo-alvo { margin: 0; font: 700 15px/1.4 'Figtree', sans-serif; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.opcao-dia .d { display: block; }

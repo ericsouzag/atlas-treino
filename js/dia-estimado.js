@@ -11,7 +11,18 @@
 //     para a média, arredondando as gramas (<20 g: 1 g; <100 g: 5 g; demais: 10 g), mantendo a composição.
 //  5. Destino com lançamentos: "adicionar" (padrão) ou "substituir só os gerados"; lançamentos reais nunca são apagados por aqui.
 //  6. Desfazer apaga só o que foi gerado na operação (e restaura o que ela substituiu).
+//  7. Destino JÁ com lançamentos: o alvo (kcal do dia escolhido pela opção; na "normal", a média) é do DIA INTEIRO. Subtrai-se o que fica no
+//     destino (adicionar: tudo, reais e estimados; substituir estimados: só os reais) e gera-se só o que falta, sem passar do alvo:
+//     tipos de refeição já lançados no destino são pulados; o restante é escalado para o que falta (gramas limpas, nunca acima do alvo).
+//     Falta < 50 kcal: não gera nada. Se não sobrar refeição de outro tipo ou a escala ficar extrema (> 2,5× ou < 0,25×), gera um único
+//     lançamento "Complemento do dia" com o dia de origem inteiro, proporcional ao que falta.
+import { tipoEfetivo } from './grupos-refeicao.js';
+import { normalizar } from './texto.js';
+
 export const ORIGEM_ESTIMADO = 'dia-estimado';
+export const MIN_RESTANTE_KCAL = 50;
+export const ESCALA_MAX = 2.5;
+export const ESCALA_MIN = 0.25;
 export const JANELA_DIAS = 60;
 export const MIN_DIAS = 5;
 export const KCAL_MIN_COMPLETO = 800;
@@ -120,16 +131,68 @@ export function gerarLancamentos({ refeicoesOrigem, dia, fator = 1, lote, dataOr
   }));
 }
 
+/** Lançamentos que permanecem no destino: "adicionar" mantém todos; "substituir-gerados" mantém só os reais */
+export function mantidosNoDestino(refeicoes, dia, politica = 'adicionar') {
+  const s = situacaoDestino(refeicoes, dia);
+  return politica === 'substituir-gerados' ? s.reais : [...s.reais, ...s.geradas];
+}
+
+/**
+ * Gera só o que falta para o dia chegar no alvo, sem ultrapassá-lo (total do dia = já lançado + gerado <= alvo).
+ * @returns {{semGeracao:boolean, alvo, jaLancado, restante, estrategia:string, pulados:string[], fator:number, lancamentos:object[], totaisGerados, totalDia}}
+ */
+export function completarDia({ refeicoesOrigem, mantidos, alvo, dia, lote, dataOrigem, modo }) {
+  const tot0 = totaisDeRefeicoes(mantidos), jaLancado = tot0.kcal, restante = alvo - jaLancado;
+  const base = { alvo, jaLancado, restante, pulados: [], fator: 0, lancamentos: [], totaisGerados: totaisDeRefeicoes([]), totalDia: tot0 };
+  if (restante < MIN_RESTANTE_KCAL) return { ...base, semGeracao: true, estrategia: 'nada' };
+
+  const tiposMantidos = new Set(mantidos.map(r => normalizar(tipoEfetivo(r))));
+  const restantes = refeicoesOrigem.filter(r => !tiposMantidos.has(normalizar(tipoEfetivo(r))));
+  const pulados = [...new Set(refeicoesOrigem.filter(r => tiposMantidos.has(normalizar(tipoEfetivo(r)))).map(r => tipoEfetivo(r)))];
+  const kcalRest = restantes.reduce((s, r) => s + kcalDaRefeicao(r), 0);
+  const kcalDia = refeicoesOrigem.reduce((s, r) => s + kcalDaRefeicao(r), 0);
+  let fator = kcalRest > 0 ? restante / kcalRest : Infinity, estrategia = pulados.length ? 'pulando-tipos' : 'completa', fonte = restantes;
+  if (!restantes.length || !(fator <= ESCALA_MAX && fator >= ESCALA_MIN)) {
+    // complemento: o dia de origem inteiro num único lançamento, proporcional ao que falta
+    estrategia = 'complemento'; fonte = refeicoesOrigem; fator = kcalDia > 0 ? restante / kcalDia : 0;
+  }
+  const montar = fa => {
+    if (estrategia !== 'complemento') return gerarLancamentos({ refeicoesOrigem: fonte, dia, fator: fa, lote, dataOrigem, modo });
+    const ult = fonte[fonte.length - 1];
+    return [{ ts: `${dia}T${String(ult.ts).slice(11, 16) || '12:00'}:00`, tipo: tipoEfetivo(ult), texto: 'Complemento do dia', itens: fonte.flatMap(r => r.itens || []).map(i => escalarItem(i, fa)),
+      origem: ORIGEM_ESTIMADO, estimadoLote: lote, estimadoDe: dataOrigem, estimadoModo: modo }];
+  };
+  // arredondar gramas pode passar do alvo: reduz a escala aos poucos até o total caber no que falta
+  let lanc = montar(fator);
+  for (let i = 0; i < 120 && totaisDeRefeicoes(lanc).kcal > restante; i++) { fator *= 0.985; lanc = montar(fator); }
+  const tg = totaisDeRefeicoes(lanc);
+  if (tg.kcal > restante || tg.kcal <= 0) return { ...base, semGeracao: true, estrategia: 'nada', pulados };
+  const totalDia = { kcal: tot0.kcal + tg.kcal, p: tot0.p + tg.p, c: tot0.c + tg.c, g: tot0.g + tg.g, f: tot0.f + tg.f };
+  return { alvo, jaLancado, restante, semGeracao: false, estrategia, pulados, fator, lancamentos: lanc, totaisGerados: tg, totalDia };
+}
+
 /** Prévia completa de uma opção: tudo que a tela mostra e o que será gravado */
-export function preverDia({ refeicoes, dia, modo, lote = 'previa', janela = JANELA_DIAS }) {
+export function preverDia({ refeicoes, dia, modo, lote = 'previa', janela = JANELA_DIAS, mantidos = [] }) {
   const hist = diasDoHistorico(refeicoes, { dia, janela });
   if (hist.length < MIN_DIAS) return { ok: false, motivo: 'poucos-dias', diasComRegistro: hist.length, faltam: MIN_DIAS - hist.length, modo };
   const cl = classificarDias(hist);
   const esc = escolherDia(cl.elegiveis, modo, cl.mediaElegiveis);
   if (!esc) return { ok: false, motivo: 'sem-dia-elegivel', diasComRegistro: hist.length, faltam: 0, modo, descartados: { incompletos: cl.incompletos.length, outliers: cl.outliers.length } };
+  const comum = {
+    media: cl.mediaElegiveis, nDiasConsiderados: cl.elegiveis.length, nDiasComRegistro: hist.length,
+    descartados: { incompletos: cl.incompletos.length, outliers: cl.outliers.length },
+    menor: Math.min(...cl.elegiveis.map(d => d.kcal)), maior: Math.max(...cl.elegiveis.map(d => d.kcal)),
+  };
+  if (mantidos.length) {
+    const alvo = modo === 'normal' ? cl.mediaElegiveis : esc.dia.kcal;
+    const c = completarDia({ refeicoesOrigem: esc.dia.refeicoes, mantidos, alvo, dia, lote, dataOrigem: esc.dia.data, modo });
+    return { ok: true, modo, dataOrigem: esc.dia.data, kcalOrigem: esc.dia.kcal, ...comum, ...c, kcalResultado: c.totaisGerados.kcal, totais: c.totaisGerados, comExistentes: true };
+  }
   const lancamentos = gerarLancamentos({ refeicoesOrigem: esc.dia.refeicoes, dia, fator: esc.fator, lote, dataOrigem: esc.dia.data, modo });
   const totais = totaisDeRefeicoes(lancamentos);
+  const alvo0 = modo === 'normal' ? cl.mediaElegiveis : esc.dia.kcal;
   return {
+    alvo: alvo0, jaLancado: 0, restante: alvo0, semGeracao: false, estrategia: 'completa', pulados: [], totalDia: totais, totaisGerados: totais, comExistentes: false,
     ok: true, modo, dataOrigem: esc.dia.data, kcalOrigem: esc.dia.kcal, fator: esc.fator, kcalResultado: totais.kcal, totais,
     media: cl.mediaElegiveis, nDiasConsiderados: cl.elegiveis.length, nDiasComRegistro: hist.length,
     descartados: { incompletos: cl.incompletos.length, outliers: cl.outliers.length }, lancamentos,

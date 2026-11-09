@@ -1,5 +1,6 @@
 // Aba Relatórios: previsão p-ratio, "quanto de magra/gordura", gráficos, platô e guias.
 import { h, limpar, icone, campo, selecao, chips, n0, n1, n2, sinal, caixaAviso, vazio } from '../ui.js';
+import { diasComEstimado } from '../dia-estimado.js';
 import { store } from '../store.js';
 import { perfil as getPerfil, config, corpoOrdenado, metas, totaisPorDia, treinosConcluidos, pesoAtual } from '../dados.js';
 import { analisarComposicao, resumoTreinos, detectarPlato } from '../composition.js';
@@ -36,6 +37,8 @@ export function renderizar(raiz, ctx) {
   // ------------------------------------------------ 1. situação atual
   const bl = [];
   bl.push(h('p', { class: 'mudo' }, 'Tudo aqui é estimativa: modelo p-ratio + suas medidas. Quanto mais regular o registro, mais confiável.'));
+  const estim = diasComEstimado(store.listar('refeicoes')).filter(d => d >= somarDias(hoje, -30) && d <= hoje);
+  if (estim.length) bl.push(h('p', { class: 'mudo peq', 'data-estimados': String(estim.length) }, `${estim.length} dia(s) dos últimos 30 foram preenchidos por "Registrar um dia inteiro" (estimados a partir dos seus dias anteriores). Eles contam normalmente nos gráficos e na previsão, que fica um pouco menos precisa nesses dias.`));
   if (A.observado) {
     const o = A.observado;
     const cx = (rot, v) => h('div', { class: 'stat' }, h('span', { class: 'r' }, rot), h('span', { class: 'v', style: rot === 'Gordura' ? { color: v < 0 ? 'var(--ok)' : v > 0 ? 'var(--alerta)' : '' } : rot === 'Massa magra' ? { color: v > 0 ? 'var(--ok)' : v < 0 ? 'var(--alerta)' : '' } : {} }, `${sinal(v, 1)} kg`));

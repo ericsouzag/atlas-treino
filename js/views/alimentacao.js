@@ -12,6 +12,8 @@ import { totaisDoDia, alertasAlimentares, intervalos, avaliarIntervalo, tipoRefe
 import { salvarFoto, urlFoto } from '../images.js';
 import { cartaoNova } from './nova-card.js';
 import { abrirFavoritos } from './favoritos.js';
+import { abrirDiaEstimado } from './dia-estimado.js';
+import { ehEstimado } from '../dia-estimado.js';
 import { ordenarFavoritos, migrarFavorito } from '../favoritos.js';
 import { agruparRefeicoes, tipoEfetivo, faixaHorario } from '../grupos-refeicao.js';
 import { garantirBanco } from '../banco.js';
@@ -196,6 +198,12 @@ export function renderizar(raiz, ctx) {
       ? h('div', { class: 'favs', role: 'list' }, [...favoritos.map(f => ({ ...f, fav: true })), ...recentes].map(f => h('button', { class: 'chip', type: 'button', role: 'listitem', title: resumoItens(f.itens), onclick: () => repetir(f) }, f.fav ? iconeCheio('estrela', 16) : icone('repetir', 16), f.nome.length > 34 ? f.nome.slice(0, 33) + '…' : f.nome)))
       : h('p', { class: 'ajuda' }, 'Toque na estrela de uma refeição para guardá-la aqui e repetir com 1 toque.'));
 
+  // ---------- registrar um dia inteiro (para dias sem registro), logo abaixo dos favoritos
+  const blocoDiaInteiro = h('div', { class: 'cartao pilha o5', style: { gap: '8px' } },
+    h('div', { class: 'cab-lista', style: { margin: 0 } }, h('h2', { class: 'titulo-sec', style: { fontSize: '18px', marginBottom: 0 } }, 'Registrar um dia inteiro'),
+      h('button', { class: 'btn btn-peq', type: 'button', id: 'btn-dia-inteiro', onclick: () => abrirDiaEstimado({ dia: diaSel, aoMudar: redesenhar }) }, icone('relogio', 18), 'Escolher')),
+    h('p', { class: 'ajuda' }, 'Não deu para registrar este dia? Preencha com base nos seus dias anteriores: dia abaixo, normal ou acima da sua média.'));
+
   // ---------- comanda
   const kcalDe = r => r.itens.reduce((s, i) => s + (i.kcal || 0), 0);
   const nomeMin = t => t.charAt(0).toLowerCase() + t.slice(1);
@@ -205,7 +213,7 @@ export function renderizar(raiz, ctx) {
     const fotoBox = h('span');
     if (r.fotoId) urlFoto(r.fotoId).then(u => { if (u) fotoBox.appendChild(h('span', { class: 'foto-mini' }, h('img', { src: u, alt: 'Foto da refeição' }))); });
     return h('div', { class: 'lanc', role: 'group', 'aria-label': `Lançamento das ${horaDoTs(r.ts)}` },
-      h('span', { class: 'lanc-info' }, h('b', null, horaDoTs(r.ts)), h('span', { class: 'mudo peq' }, ` ${r.itens.length} ${r.itens.length === 1 ? 'item' : 'itens'}`), fotoBox),
+      h('span', { class: 'lanc-info' }, h('b', null, horaDoTs(r.ts)), ehEstimado(r) ? h('span', { class: 'selo-estimado', title: `Gerado por "Registrar um dia inteiro" (${r.estimadoModo || 'estimado'}), a partir de ${r.estimadoDe || 'dias anteriores'}` }, 'estimado') : null, h('span', { class: 'mudo peq' }, ` ${r.itens.length} ${r.itens.length === 1 ? 'item' : 'itens'}`), fotoBox),
       h('span', { class: 'lanc-acoes' },
         h('button', { class: `btn-icone ${ehFav ? 'ativo' : ''}`, type: 'button', 'aria-pressed': String(ehFav), 'aria-label': `${ehFav ? 'Remover dos favoritos' : 'Favoritar'} o lançamento das ${horaDoTs(r.ts)}`, onclick: () => { alternarFavorito(r, favoritos); redesenhar(); } }, ehFav ? iconeCheio('estrela') : icone('estrela')),
         h('button', { class: 'btn-icone', type: 'button', 'aria-label': `Repetir agora o lançamento das ${horaDoTs(r.ts)}`, onclick: () => repetir({ nome: resumoItens(r.itens), itens: r.itens }) }, icone('repetir')),
@@ -244,8 +252,8 @@ export function renderizar(raiz, ctx) {
   if (!bancoCompletoPronto()) garantirBanco(2500).then(() => { if (cartaoProc.isConnected) cartaoProc.replaceWith(cartaoNova({ refeicoes, quando: quandoNova })); });
   raiz.append(h('div', { class: 'layout-2' },
     h('section', { class: 'pilha', 'aria-label': 'Resumo do dia' }, bandeja, h('div', { class: 'sub-bandeja o2' }, miniF, miniA), botaoTreino, cartaoBalanco, alertas.length ? h('div', { class: 'pilha o3' }, alertas) : null, cartaoProc, blocoAgua),
-    h('section', { class: 'pilha' }, caixaEntrada, barraFavs,
-      h('div', { class: 'o7' }, h('div', { class: 'cab-lista' }, h('h2', { class: 'titulo-sec' }, ehHoje ? 'Refeições de hoje' : `Refeições · ${rotuloDia(diaSel, hoje)}`), h('span', { class: 'mudo peq' }, `${refeicoes.length} ${refeicoes.length === 1 ? 'registro' : 'registros'}`)), comanda), listaAtiv)));
+    h('section', { class: 'pilha' }, caixaEntrada, barraFavs, blocoDiaInteiro,
+      h('div', { class: 'o7' }, h('div', { class: 'cab-lista' }, h('h2', { class: 'titulo-sec' }, ehHoje ? 'Refeições de hoje' : `Refeições · ${rotuloDia(diaSel, hoje)}`), h('span', { class: 'mudo peq' }, refeicoes.some(ehEstimado) ? h('span', { class: 'selo-estimado', title: 'Este dia tem lançamentos gerados por "Registrar um dia inteiro"' }, refeicoes.every(ehEstimado) ? 'dia estimado' : 'inclui estimados') : null, ` ${refeicoes.length} ${refeicoes.length === 1 ? 'registro' : 'registros'}`)), comanda), listaAtiv)));
 }
 
 function alternarFavorito(r, favoritos) {

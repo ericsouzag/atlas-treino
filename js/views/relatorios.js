@@ -1,6 +1,7 @@
 // Aba Relatórios: previsão p-ratio, "quanto de magra/gordura", gráficos, platô e guias.
 import { h, limpar, icone, campo, selecao, chips, n0, n1, n2, sinal, caixaAviso, vazio } from '../ui.js';
 import { diasComEstimado } from '../dia-estimado.js';
+import { fracaoDiasEstimados } from '../preenchimento-automatico.js';
 import { store } from '../store.js';
 import { perfil as getPerfil, config, corpoOrdenado, metas, totaisPorDia, treinosConcluidos, pesoAtual } from '../dados.js';
 import { analisarComposicao, resumoTreinos, detectarPlato } from '../composition.js';
@@ -38,6 +39,8 @@ export function renderizar(raiz, ctx) {
   const bl = [];
   bl.push(h('p', { class: 'mudo' }, 'Tudo aqui é estimativa: modelo p-ratio + suas medidas. Quanto mais regular o registro, mais confiável.'));
   const estim = diasComEstimado(store.listar('refeicoes')).filter(d => d >= somarDias(hoje, -30) && d <= hoje);
+  const fe = fracaoDiasEstimados({ refeicoes: store.listar('refeicoes'), treinos: store.listar('treinos'), hoje });
+  if (fe.baixaConfianca) bl.push(caixaAviso('medio', 'Previsão menos confiável', `${fe.dias} dos últimos 30 dias foram preenchidos com estimativas (mais de 20%). A previsão continua usando esses dias, mas fica menos precisa; registre o que comeu e treinou para melhorar.`));
   if (estim.length) bl.push(h('p', { class: 'mudo peq', 'data-estimados': String(estim.length) }, `${estim.length} dia(s) dos últimos 30 foram preenchidos por "Registrar um dia inteiro" (estimados a partir dos seus dias anteriores). Eles contam normalmente nos gráficos e na previsão, que fica um pouco menos precisa nesses dias.`));
   if (A.observado) {
     const o = A.observado;

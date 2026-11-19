@@ -6,6 +6,7 @@ import { onboardingFeito, config, perfil } from './dados.js';
 import { iniciarNuvem, usuarioAtual, aguardarUsuario, definirDecisorEnvio } from './firebase.js';
 import { nuvemConfigurada } from '../firebase-config.js';
 import { deveMostrarEntrada, lerEscolha } from './entrada.js';
+import { iniciarPreenchimento } from './preenchimento-auto.js';
 
 const ROTAS = {
   alimentacao: { rotulo: 'Alimentação', icone: 'talher', carregar: () => import('./views/alimentacao.js') },
@@ -98,6 +99,9 @@ async function iniciar() {
     if (lerEscolha() !== 'local') { await aguardarUsuario(3500); }   // quem já está logado vai direto ao app
   }
   renderizar(false);
+  // Preenche dias sem registro (alimentação e treino previsto) com estimativas; com nuvem espera a sincronização inicial
+  const atualizar = () => document.dispatchEvent(new CustomEvent('atlas:atualizar'));
+  if (nuvemConfigurada() && lerEscolha() !== 'local') setTimeout(() => iniciarPreenchimento(atualizar), 4000); else iniciarPreenchimento(atualizar);
   // Em localhost o service worker só liga com ?sw (evita cache velho durante o desenvolvimento)
   const local = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
   if ('serviceWorker' in navigator && ((location.protocol === 'https:' && !local) || (local && location.search.includes('sw')))) {

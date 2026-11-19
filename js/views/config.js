@@ -11,6 +11,7 @@ import { dataISO } from '../datas.js';
 import { gravarEscolha } from '../entrada.js';
 import { cartaoMeusAlimentos } from './buscar-alimento.js';
 import { abrirFavoritos } from './favoritos.js';
+import { lerAutoAtual, gravarAuto, contarAutomaticos, desfazerAutomaticos, TEXTO_EXPLICA, TEXTO_IMPACTO } from '../preenchimento-auto.js';
 
 export function renderizar(raiz, ctx) {
   ctx.faixa('Ajustes');
@@ -109,6 +110,33 @@ export function renderizar(raiz, ctx) {
   secs.push(h('section', { class: 'cartao pilha' }, h('h2', { style: { marginBottom: 0 } }, 'Meus favoritos'),
     h('p', { class: 'mudo' }, `${store.listar('favoritos').length} favorito(s). Refeições ou alimentos marcados com a estrela: veja, edite itens e quantidades, registre ou remova.`),
     h('div', { class: 'linha-botoes' }, h('button', { class: 'btn', type: 'button', id: 'btn-favoritos-ajustes', onclick: () => abrirFavoritos({ aoMudar: redesenhar }) }, icone('estrela', 18), 'Ver e editar favoritos'))));
+  // ---------------- preenchimento automático de dias sem registro
+  {
+    const A = lerAutoAtual(), cont = contarAutomaticos();
+    const interruptor = (id, rotulo, desc, marcado, aoMudar, desabilitado = false) => h('label', { class: 'opcao', for: id },
+      h('input', { type: 'checkbox', id, checked: marcado, disabled: desabilitado, onchange: e => aoMudar(e.target.checked) }), h('span', null, h('strong', null, rotulo), h('span', { class: 'd' }, desc)));
+    secs.push(h('section', { class: 'cartao pilha', id: 'cartao-preenchimento' }, h('h2', { style: { marginBottom: 0 } }, 'Preenchimento automático'),
+      h('p', { class: 'mudo' }, TEXTO_EXPLICA),
+      interruptor('auto-ativo', 'Preencher dias sem registro automaticamente', 'Só dias anteriores a hoje, até 14 dias para trás, nunca antes do seu primeiro registro nem de quando você ligou.', A.ativo, async ligado => {
+        if (ligado) {
+          const ok = await confirmar('Ligar o preenchimento automático?', TEXTO_EXPLICA + ' ' + TEXTO_IMPACTO, { sim: 'Ligar' });
+          if (!ok) { redesenhar(); return; }
+          gravarAuto({ ...lerAutoAtual(), ativo: true, explicado: true, ativadoEm: dataISO() });   // volta a valer a partir de hoje (não preenche o passado desligado)
+        } else gravarAuto({ ...lerAutoAtual(), ativo: false });   // desligar não apaga o que já foi gerado
+        redesenhar();
+      }),
+      interruptor('auto-alim', 'Preencher alimentação', 'Dia sem NENHUM lançamento de comida recebe um "dia normal" (média dos seus dias reais; precisa de 5 dias de histórico). Qualquer lançamento real, mesmo pequeno, conta como registrado.', A.alimentacao, v => { gravarAuto({ ...lerAutoAtual(), alimentacao: v }); redesenhar(); }, !A.ativo),
+      interruptor('auto-treino', 'Preencher treino', 'Só se você tem ficha ativa e havia treino programado naquele dia da semana, sem treino nem atividade registrados: marca o treino programado como feito (estimado).', A.treino, v => { gravarAuto({ ...lerAutoAtual(), treino: v }); redesenhar(); }, !A.ativo),
+      h('ul', { class: 'ajuda', style: { paddingLeft: '20px', display: 'grid', gap: '4px', margin: 0 } },
+        h('li', null, 'Tudo que é gerado tem o selo "estimado", é editável e excluível, e se você apagar um dia estimado ele não volta.'),
+        h('li', null, 'Estimados nunca entram nas médias usadas para estimar outros dias e nunca contam para conquistas ou metas.'),
+        h('li', null, 'Na previsão eles contam normalmente, mas a confiança cai quando mais de 20% dos últimos 30 dias são estimados (veja em Relatórios).')),
+      h('p', { class: 'mudo peq' }, cont.total ? `Hoje há ${cont.refeicoes} lançamento(s) de comida e ${cont.treinos} treino(s) gerados automaticamente.` : 'Nenhum preenchimento automático até agora.'),
+      h('div', { class: 'linha-botoes' }, h('button', { class: 'btn btn-perigo', type: 'button', id: 'btn-desfazer-auto', disabled: !cont.total, onclick: async () => {
+        if (!(await confirmar('Desfazer todos os preenchimentos automáticos?', `Remove ${cont.refeicoes} lançamento(s) de comida e ${cont.treinos} treino(s) estimados. O que você registrou mesmo não é tocado, e os dias não serão preenchidos de novo.`, { sim: 'Desfazer tudo', perigo: true }))) return;
+        const n = desfazerAutomaticos(); aviso(`${n} registro(s) automático(s) removido(s).`); redesenhar();
+      } }, icone('lixo', 18), 'Desfazer todos os preenchimentos automáticos'))));
+  }
   secs.push(cartaoMeusAlimentos(redesenhar));
 
   // ---------------- aparência

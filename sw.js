@@ -1,5 +1,5 @@
 // Service worker do Atlas Fitness: funciona offline. Atualize VERSAO a cada publicação para renovar o cache.
-const VERSAO = 'atlas-v1.10.1';
+const VERSAO = 'atlas-v1.11.0';
 const ARQUIVOS = [
   './',
   './css/app.css',
@@ -45,6 +45,8 @@ const ARQUIVOS = [
   './js/off.js',
   './js/parser.js',
   './js/planner.js',
+  './js/preenchimento-auto.js',
+  './js/preenchimento-automatico.js',
   './js/store.js',
   './js/tabela-nutricional.js',
   './js/texto.js',

@@ -24,7 +24,7 @@ export function cartaoNova({ refeicoes, quando = 'hoje' }) {
 
   const resumoDe = () => resumoNova(refeicoes, { base: pref.soClassificados ? 'classificados' : 'total' });
   const corpo = h('div', { class: 'nova-corpo' });
-  const det = h('section', { class: 'cartao nova-card o3', 'aria-labelledby': 'nova-titulo' },
+  const det = h('section', { class: 'cartao nova-card o8', 'aria-labelledby': 'nova-titulo' },
     h('h2', { id: 'nova-titulo' }, 'Seu dia por grau de processamento'),
     corpo);
 
@@ -61,8 +61,7 @@ export function cartaoNova({ refeicoes, quando = 'hoje' }) {
         'aria-label': `${info.nome}: ${p[g]}% ${m === 'gramas' ? 'do peso' : 'das calorias'}, ${n0(r.grupos[g].kcal)} kcal, ${n0(r.grupos[g].gramas)} gramas. ${vazio ? '' : 'Toque para ver os alimentos.'}`,
         onclick: () => { grupoAberto = grupoAberto === g ? null : g; desenhar(); const novo = corpo.querySelector(`.nova-linha.n${g}`); if (novo) novo.focus(); } },
         h('span', { class: `nova-chave n${g}`, 'aria-hidden': 'true' }, g ? String(g) : '?'),
-        h('span', { class: 'nova-nome' }, h('strong', null, info.curto),
-          h('small', null, h('b', null, g === 0 && r.base === 'classificados' ? '–' : `${p[g]}%`), ` · ${n0(v)} ${un}`)));
+        h('span', { class: 'nova-nome' }, h('strong', null, info.curto), h('small', null, h('b', null, g === 0 && r.base === 'classificados' ? '–' : `${p[g]}%`))));
       return h('li', null, btn);
     };
 
@@ -79,14 +78,14 @@ export function cartaoNova({ refeicoes, quando = 'hoje' }) {
       h('div', { role: 'img', 'aria-label': `Barra do dia por grau de processamento, ${m === 'gramas' ? 'em gramas' : 'em calorias'}: ${resumoTxt}`, class: 'nova-fig' }, barra),
       h('ul', { class: 'nova-lista' }, [1, 2, 3, 4, ...(r.grupos[0].kcal > 0 || r.grupos[0].gramas > 0 ? [0] : [])].map(linha)),
       painel,
-      h('div', { class: 'chips nova-medir', role: 'group', 'aria-label': 'Medir por' }, chip('kcal', 'Calorias'), chip('gramas', 'Gramas')),
-      h('p', { class: `nova-leitura ${alto ? 'alto' : ''}`, 'aria-live': 'polite' }, leitura),
+      h('div', { class: 'nova-rodape' }, h('p', { class: 'nova-resumo', 'aria-live': 'polite', title: leitura }, `${p[4]}% ultraprocessado · ${p[1]}% in natura`), h('div', { class: 'chips nova-medir', role: 'group', 'aria-label': 'Medir por' }, chip('kcal', 'Calorias'), chip('gramas', 'Gramas'))),
+      alto ? h('p', { class: 'nova-leitura alto' }, leitura) : null,
       r.pctSemClasse.kcal > 0 || r.pctSemClasse.gramas > 0
         ? h('label', { class: 'opcao nova-opcao' }, h('input', { type: 'checkbox', checked: pref.soClassificados, onchange: e => { pref.soClassificados = e.target.checked; gravarPref(pref); desenhar(); } }),
           h('span', null, h('strong', null, 'Contar só o que foi classificado'), h('span', { class: 'd' }, `${Math.round(r.pctSemClasse[m === 'gramas' ? 'gramas' : 'kcal'])}% do dia está sem classificação.`)))
         : null,
       m === 'gramas' ? h('p', { class: 'ajuda' }, 'Em gramas, líquidos (água, café, suco) pesam bastante: 1 ml conta como 1 g.') : null,
-      h('p', { class: 'ajuda nova-aviso', title: AVISO_NOVA }, AVISO_CURTO)].filter(Boolean));
+      !painel.hidden ? h('p', { class: 'ajuda nova-aviso', title: AVISO_NOVA }, AVISO_CURTO) : null].filter(Boolean));
   }
   desenhar();
   return det;

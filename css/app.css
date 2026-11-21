@@ -91,7 +91,7 @@ a { color: var(--destaque-esc); text-underline-offset: 3px; }
 img, svg { max-width: 100%; }
 [hidden] { display: none !important; }
 .so-leitor { position: absolute !important; width: 1px !important; height: 1px !important; min-height: 0 !important; padding: 0 !important; border: 0 !important; margin: -1px !important; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.pular { position: absolute; left: 8px; top: -60px; background: var(--tinta); color: var(--papel); padding: 10px 14px; border-radius: 8px; z-index: 100; }
+.pular { font-family: 'Figtree', system-ui, sans-serif; position: absolute; left: 8px; top: -60px; background: var(--tinta); color: var(--papel); padding: 10px 14px; border-radius: 8px; z-index: 100; }
 .pular:focus { top: 8px; }
 .ic { flex: none; }
 
@@ -502,7 +502,7 @@ table.tab-proj { width: 100%; border-collapse: collapse; font-size: 14px; }
 .nova-linha { display: grid; grid-template-columns: 26px minmax(0, 1fr); grid-template-rows: auto auto; align-items: center; column-gap: 7px; row-gap: 1px; width: 100%; min-height: 48px; padding: 5px 8px; text-align: left; background: var(--folha2); color: var(--tinta); border: 2px solid var(--linha); border-radius: 12px 4px 12px 4px; }
 .nova-linha:not(:disabled):hover { border-color: var(--linha-forte); }
 .nova-linha[aria-expanded="true"] { border-color: var(--c); }
-.nova-linha:disabled { opacity: .62; cursor: default; }
+.nova-linha:disabled { opacity: .75; cursor: default; }
 .nova-chave { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 3px 12px 3px 12px; background-color: var(--c); color: var(--nova-tx); font: 800 17px/1 'Bricolage Grotesque', sans-serif; flex: none; }
 .nova-linha .nova-nome { display: contents; }   /* nome em cima (largura toda); número e kcal embaixo, ao lado da chave */
 .nova-linha .nova-nome strong { grid-column: 1 / -1; grid-row: 1; }
@@ -560,3 +560,76 @@ table.tab-proj { width: 100%; border-collapse: collapse; font-size: 14px; }
 
 .resumo-alvo { margin: 0; font: 700 15px/1.4 'Figtree', sans-serif; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .opcao-dia .d { display: block; }
+
+/* =====================================================================================================================
+   v1.11.1: refinamento "clean + contraste" (mesma identidade; menos caixas, uma ação primária por tela, cor só com função).
+   Regras: texto de leitura corrido em AAA (>= 7:1, tinta/tinta2); tinta3 só para texto >= 4,5:1 NÃO essencial; bordas de controle >= 3:1
+   (linha-forte); verde = ação, laranja = alerta (nunca decoração); um botão primário, um secundário (borda) e um terciário (texto).
+   ===================================================================================================================== */
+.mudo, .ajuda, .campo .ajuda { color: var(--tinta2); }
+.ajuda, .campo .ajuda, .peq { font-size: 14px; }
+.btn { border-color: var(--linha-forte); }
+.btn-escuro { background: var(--folha2); color: var(--tinta); border-color: var(--linha-forte); }   /* antes: gelo sólido; agora é o secundário */
+.btn-escuro:hover { background: var(--destaque-claro); }
+.btn[disabled] { opacity: .6; }
+.btn-texto { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 10px; border: 0; background: transparent; color: var(--destaque-esc); font-weight: 700; font-size: 15px; border-radius: var(--botao-forma); }
+.btn-texto:hover { background: var(--destaque-claro); }
+.btn-icone.ativo { color: var(--destaque-esc); }   /* estrela de favorito: verde (ação), não laranja decorativo */
+.cartao, .refeicao { box-shadow: none; }
+.layout-2, .pilha { row-gap: 18px; }
+.selo-estimado { color: var(--tinta2); font-size: 13px; border-color: var(--linha-forte); }
+.item-card .hr, .item-card .mc { color: var(--tinta2); font-size: 13px; }
+.balanco .r { font-size: 13px; }
+.item-card .mc { font-size: 13px; }
+
+/* Alimentação: faixa de atalhos, água e balanço sem cartão, rodapé do grupo enxuto */
+.atalhos { display: grid; gap: 4px; }
+.atalhos-linha { display: flex; flex-wrap: wrap; gap: 2px 4px; margin-inline: -10px; }
+.agua-linha { display: grid; gap: 6px; padding: 4px 0; border-top: 1px solid var(--linha); padding-top: 12px; }
+.agua-rot { display: flex; align-items: center; gap: 8px; }
+.agua-bts { display: flex; gap: 6px; }
+.agua-bts .btn { flex: 1 1 0; min-width: 0; padding: 0 4px; gap: 3px; }
+.balanco-linha { padding: 4px 2px; }
+.rodape-ref { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 44px; margin: 4px -8px 0; }
+.rodape-info { display: flex; align-items: center; gap: 8px; padding-left: 8px; }
+.rodape-multi { align-items: flex-start; }
+.lancs-det { flex: 1; min-width: 0; padding-left: 8px; }
+.lancs-det > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; color: var(--destaque-esc); font-size: 15px; list-style: none; }
+.lancs-det > summary::-webkit-details-marker { display: none; }
+.lancs-det > summary::after { content: '▾'; margin-left: 6px; }
+.lancs-det[open] > summary::after { content: '▴'; }
+.lancs-det .lancs { margin-top: 0; border-top: 0; }
+.grupo-refeicao .macros-grupo { margin-bottom: 4px; }
+/* itens da refeição: lista em 2 colunas, sem caixa dentro de caixa */
+.item-card { background: transparent; border: 0; border-bottom: 1px solid var(--linha); border-radius: 0; padding: 8px 2px; }
+.itens-grade { gap: 0 16px; }
+
+/* cartão NOVA enxuto: barra + legenda 2x2 + resumo de uma linha; detalhe ao toque */
+.nova-rodape { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.nova-resumo { font-weight: 700; font-size: 15px; }
+.nova-medir .chip { min-height: 44px; padding: 0 12px; font-size: 14px; }
+.nova-card > h2 { font-size: 18px; margin-bottom: 8px; }
+
+@media (max-width: 899px) {
+  .o8 { order: 8; } .o9 { order: 9; } .o10 { order: 10; }
+  .layout-2 { row-gap: 16px; }
+}
+
+/* piso do dia compacto: mesmas regras (ladrilhos acendem), menos altura */
+.bloco-kcal .ladrilhos { --col: 15 !important; }
+.bloco-kcal { padding: 12px 14px 12px; }
+.bloco-kcal .grande { font-size: 56px; }
+.bloco-kcal .sub { margin-bottom: 8px; }
+.sub-bandeja { gap: 8px; }
+@media (max-width: 899px) { .piso { gap: 6px; } .bloco-macro { padding: 10px 10px 12px; } }
+.nova-opcao, .nova-opcao:has(input:checked) { border: 0; background: transparent; padding: 0; min-height: 44px; align-items: center; }
+.nova-opcao .d { display: inline; margin-left: 6px; }
+.nova-opcao strong { display: inline; }
+.nova-lista { gap: 6px; }
+.nova-linha { border-width: 1px; }
+.destaque-ficha { border-color: var(--linha); }   /* sugestão pronta: neutra; o verde fica só nas ações */
+.sum-ficha .rotulo { font-size: 13px; letter-spacing: .02em; }
+/* sem caixa dentro de caixa: estados vazios e blocos de ajuda dentro de cartões ficam sem moldura */
+.cartao .vazio { border: 0; background: transparent; padding: 0; }
+.cartao .vazio h3 { font-size: 17px; }
+.cartao > h2, .titulo-sec { font-size: 19px; }

@@ -77,31 +77,23 @@ export function renderizar(raiz, ctx) {
   const miniF = h('div', { class: 'mini mini-fibra' }, h('div', { class: 'topo' }, h('span', null, 'Fibra'), h('span', null, `${n0(tot.f)} / ${n0(fibraMeta)} g`)), fileira('f', 10, tot.f, fibraMeta, true));
   const miniA = h('div', { class: 'mini mini-agua' }, h('div', { class: 'topo' }, h('span', null, 'Água'), h('span', null, `${n1(agua / 1000)} / ${n1(aguaMeta / 1000)} L`)), fileira('agua', 10, agua, aguaMeta, true));
 
-  const blocoAgua = h('div', { class: 'flex-entre cartao o6', style: { padding: '8px 8px 8px 14px', flexWrap: 'wrap' } },
-    h('div', { class: 'flex nowrap' }, icone('gota', 20), h('strong', null, 'Água'), h('span', { class: 'mudo nowrap' }, `${n0(agua)} ml`)),
-    h('div', { class: 'flex', style: { gap: '4px', width: '100%' } },
-      [-100, 100, 200, 500].map(v => h('button', { class: 'btn btn-peq', type: 'button', style: { flex: '1 1 0', minWidth: 0, paddingInline: '4px' }, 'aria-label': v < 0 ? 'Tirar 100 ml' : `Adicionar ${v} ml`, onclick: () => { setAgua(diaSel, agua + v); redesenhar(); } }, icone(v < 0 ? 'menos' : 'mais', 18), String(Math.abs(v))))));
-
-  // ---------- treino do dia: botão, balanço e lista
-  const abrirTreino = async (editar = null) => {
-    const r = await abrirRegistroTreino({ data: diaSel, editar });
-    if (r && r.detalhar) { const { abrirExecucao } = await import('./treino.js'); await abrirExecucao(r.detalhar.dow, r.detalhar.dia, redesenhar); return; }
-    if (r && r.salvo) { if (r.data && r.data !== diaSel) diaSel = r.data; redesenhar(); }
-  };
-  const botaoTreino = h('button', { class: 'btn btn-escuro btn-treino-dia o2', type: 'button', onclick: () => abrirTreino() }, icone('halter', 22), 'Registrar treino do dia');
+  const blocoAgua = h('div', { class: 'agua-linha o10', role: 'group', 'aria-label': 'Água' },
+    h('span', { class: 'agua-rot' }, icone('gota', 18), h('strong', null, 'Água'), h('span', { class: 'mudo' }, `${n0(agua)} ml`)),
+    h('span', { class: 'agua-bts' }, [-100, 100, 200, 500].map(v => h('button', { class: 'btn btn-peq', type: 'button', 'aria-label': v < 0 ? 'Tirar 100 ml' : `Adicionar ${v} ml`, onclick: () => { setAgua(diaSel, agua + v); redesenhar(); } }, icone(v < 0 ? 'menos' : 'mais', 16), String(Math.abs(v))))));
+  const botaoTreino = h('button', { class: 'btn-texto', type: 'button', id: 'btn-treino-dia', title: 'Registrar treino do dia', 'aria-label': 'Registrar treino do dia', onclick: () => abrirTreino() }, icone('halter', 18), 'Treino');
   const ativo = gastoAtivoDoDia(diaSel);
   const gastoBase = m.padrao ? 0 : (m.gastoBase || 0);
   const gastoTotal = gastoBase + ativo.total;
   const saldo = tot.kcal - gastoTotal;
-  const cartaoBalanco = (tot.kcal > 0 || ativo.total > 0) ? h('div', { class: 'cartao o2', style: { padding: '12px 14px' } },
+  const cartaoBalanco = (tot.kcal > 0 || ativo.total > 0) ? h('div', { class: 'balanco-linha o7' },
     h('div', { class: 'balanco' },
       h('div', null, h('div', { class: 'v' }, n0(tot.kcal)), h('div', { class: 'r' }, 'Comeu')),
       h('div', null, h('div', { class: 'v' }, n0(gastoTotal)), h('div', { class: 'r' }, 'Gasto estimado')),
       h('div', null, h('div', { class: 'v', style: { color: saldo > 0 ? 'var(--alerta)' : 'var(--ok)' } }, (saldo > 0 ? '+' : saldo < 0 ? '−' : '') + n0(Math.abs(saldo))), h('div', { class: 'r' }, 'Saldo'))),
-    h('p', { class: 'mudo peq', style: { marginTop: '6px', textAlign: 'center' } }, gastoBase ? `Gasto = ${n0(gastoBase)} do dia a dia + ${n0(ativo.total)} de treino e atividades. Meta do dia: ${n0(m.kcal)} kcal. Estimativa.` : `Treino e atividades de hoje: ${n0(ativo.total)} kcal (estimativa).`)) : null;
+    h('p', { class: 'mudo peq', style: { marginTop: '4px', textAlign: 'center' } }, gastoBase ? `Gasto = ${n0(gastoBase)} do dia a dia + ${n0(ativo.total)} de treino e atividades. Meta do dia: ${n0(m.kcal)} kcal. Estimativa.` : `Treino e atividades de hoje: ${n0(ativo.total)} kcal (estimativa).`)) : null;
   const treinosDia = treinosConcluidos().filter(x => x.data === diaSel);
   const atividadesDia = atividadesDoDia(diaSel);
-  const listaAtiv = (treinosDia.length || atividadesDia.length) ? h('div', { class: 'o7' }, h('div', { class: 'cab-lista' }, h('h2', { class: 'titulo-sec' }, 'Treino e atividades'), h('span', { class: 'mudo peq' }, `${n0(ativo.total)} kcal`)),
+  const listaAtiv = (treinosDia.length || atividadesDia.length) ? h('div', { class: 'o9' }, h('div', { class: 'cab-lista' }, h('h2', { class: 'titulo-sec' }, 'Treino e atividades'), h('span', { class: 'mudo peq' }, `${n0(ativo.total)} kcal`)),
     h('div', { class: 'comanda' }, [
       ...treinosDia.map(t => h('article', { class: 'refeicao' }, h('header', null, h('span', { class: 'tipo', style: { flex: 1 } }, `Musculação · ${t.titulo || 'Treino'}${t.parcial ? ' (parcial)' : ''}`, ehEstimado(t) ? h('span', { class: 'selo-estimado', style: { marginLeft: '8px' }, title: 'Treino programado preenchido automaticamente' }, 'estimado') : null), h('span', { class: 'total' }, `${n0(t.kcal)} kcal`)),
         h('div', { class: 'item-linha' }, h('span', { class: 'qt' }, `${n0(t.duracaoMin)} min · ${(t.exercicios || []).reduce((s, e) => s + e.series.filter(x => x.feito).length, 0)} séries`)),
@@ -167,16 +159,14 @@ export function renderizar(raiz, ctx) {
     }
   }
 
-  const caixaEntrada = h('div', { class: 'cartao entrada o4' },
+  const caixaEntrada = h('div', { class: 'cartao entrada o3' },
     h('label', { for: 'texto-refeicao', class: 'titulo-sec', style: { display: 'block', marginBottom: '8px' } }, 'O que você comeu?'),
-    ta, h('p', { class: 'ajuda', id: 'aj-texto' }, 'Escreva em português, com as quantidades. Pode misturar gramas, unidades e medidas caseiras.'),
+    ta, h('span', { class: 'so-leitor', id: 'aj-texto' }, 'Escreva em português, com as quantidades. Pode misturar gramas, unidades e medidas caseiras. Valores estimados pelo banco local.'),
     mini, quando,
     h('div', { class: 'acoes' },
       h('button', { class: 'btn', type: 'button', onclick: () => arquivo.click() }, icone('camera', 20), rascunho.foto ? 'Trocar foto' : 'Foto'),
       arquivo,
-      h('button', { class: 'btn btn-primario', type: 'button', onclick: estimar }, icone('busca', 20), 'Estimar calorias')),
-    h('div', { style: { marginTop: '8px' } }, h('span', { class: 'estimativa' }, 'Valores estimados pelo banco local')),
-    h('button', { class: 'btn btn-fantasma btn-peq', type: 'button', id: 'btn-cadastrar-tabela', style: { marginTop: '6px' }, onclick: async () => { await abrirCriarAlimento({ lerFoto: true }); } }, icone('camera', 18), 'Cadastrar produto pela tabela nutricional (foto)'));
+      h('button', { class: 'btn btn-primario', type: 'button', onclick: estimar }, icone('busca', 20), 'Estimar calorias')));
   ta.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) estimar(); });
 
   // ---------- favoritos / repetir
@@ -191,18 +181,14 @@ export function renderizar(raiz, ctx) {
     aviso(`Adicionado: ${n0(k)} kcal.`, { acao: 'Desfazer', aoAcao: () => { store.remover('refeicoes', r.id); redesenhar(); } });
     redesenhar();
   }
-  const botaoFavs = h('button', { class: 'btn btn-peq', type: 'button', id: 'btn-favoritos', 'aria-label': `Favoritos: ver, editar e registrar (${favoritos.length})`, onclick: () => abrirFavoritos({ dia: diaSel, aoMudar: redesenhar }) }, iconeCheio('estrela', 18), favoritos.length ? `Favoritos (${favoritos.length})` : 'Favoritos');
-  const barraFavs = h('div', { class: 'pilha o5', style: { gap: '6px' } },
-    h('div', { class: 'cab-lista', style: { margin: 0 } }, h('h2', { class: 'titulo-sec', style: { fontSize: '18px', marginBottom: 0 } }, 'Repetir com 1 toque'), botaoFavs),
+  const botaoFavs = h('button', { class: 'btn-texto', type: 'button', id: 'btn-favoritos', 'aria-label': `Favoritos: ver, editar e registrar (${favoritos.length})`, onclick: () => abrirFavoritos({ dia: diaSel, aoMudar: redesenhar }) }, iconeCheio('estrela', 18), favoritos.length ? `Favoritos (${favoritos.length})` : 'Favoritos');
+  const botaoDia = h('button', { class: 'btn-texto', type: 'button', id: 'btn-dia-inteiro', title: 'Preenche um dia sem registro com base nos seus dias anteriores', onclick: () => abrirDiaEstimado({ dia: diaSel, aoMudar: redesenhar }) }, icone('relogio', 18), 'Dia inteiro');
+  const botaoTabela = h('button', { class: 'btn-texto', type: 'button', id: 'btn-cadastrar-tabela', title: 'Cadastrar um produto lendo a tabela nutricional por foto', 'aria-label': 'Cadastrar produto pela tabela nutricional (foto)', onclick: async () => { await abrirCriarAlimento({ lerFoto: true }); } }, icone('camera', 18), 'Tabela');
+  const atalhos = h('div', { class: 'atalhos o4' },
+    h('div', { class: 'atalhos-linha', role: 'group', 'aria-label': 'Atalhos' }, botaoFavs, botaoDia, botaoTreino, botaoTabela),
     (favoritos.length || recentes.length)
-      ? h('div', { class: 'favs', role: 'list' }, [...favoritos.map(f => ({ ...f, fav: true })), ...recentes].map(f => h('button', { class: 'chip', type: 'button', role: 'listitem', title: resumoItens(f.itens), onclick: () => repetir(f) }, f.fav ? iconeCheio('estrela', 16) : icone('repetir', 16), f.nome.length > 34 ? f.nome.slice(0, 33) + '…' : f.nome)))
-      : h('p', { class: 'ajuda' }, 'Toque na estrela de uma refeição para guardá-la aqui e repetir com 1 toque.'));
-
-  // ---------- registrar um dia inteiro (para dias sem registro), logo abaixo dos favoritos
-  const blocoDiaInteiro = h('div', { class: 'cartao pilha o5', style: { gap: '8px' } },
-    h('div', { class: 'cab-lista', style: { margin: 0 } }, h('h2', { class: 'titulo-sec', style: { fontSize: '18px', marginBottom: 0 } }, 'Registrar um dia inteiro'),
-      h('button', { class: 'btn btn-peq', type: 'button', id: 'btn-dia-inteiro', onclick: () => abrirDiaEstimado({ dia: diaSel, aoMudar: redesenhar }) }, icone('relogio', 18), 'Escolher')),
-    h('p', { class: 'ajuda' }, 'Não deu para registrar este dia? Preencha com base nos seus dias anteriores: dia abaixo, normal ou acima da sua média.'));
+      ? h('div', { class: 'favs', role: 'list', 'aria-label': 'Repetir com 1 toque' }, [...favoritos.map(f => ({ ...f, fav: true })), ...recentes].map(f => h('button', { class: 'chip', type: 'button', role: 'listitem', title: resumoItens(f.itens), onclick: () => repetir(f) }, f.fav ? iconeCheio('estrela', 16) : icone('repetir', 16), f.nome.length > 34 ? f.nome.slice(0, 33) + '…' : f.nome)))
+      : null);
 
   // ---------- comanda
   const kcalDe = r => r.itens.reduce((s, i) => s + (i.kcal || 0), 0);
@@ -233,15 +219,23 @@ export function renderizar(raiz, ctx) {
         h('span', { class: 'topo-item' }, h('span', { class: 'nm' }, i.nome), h('span', { class: 'hr' }, i.hora)),
         h('span', { class: 'qk' }, h('span', { class: 'qt' }, `${n0(i.gramas)} ${i.liquido ? 'ml' : 'g'}`), h('span', { class: 'kc' }, `${n0(i.kcal)} kcal`)),
         h('span', { class: 'mc' }, `P ${n0(i.p)} · C ${n0(i.c)} · G ${n0(i.g)}`)))),
-      h('div', { class: 'lancs' }, g.refeicoes.map(r => linhaLancamento(r, g.refeicoes.length > 1))),
-      h('div', { class: 'acoes acoes-grupo' },
-        h('button', { class: `btn btn-peq ${ehFavG ? 'ativo' : ''}`, type: 'button', 'aria-pressed': String(ehFavG), onclick: () => {
+      rodapeGrupo(g, todosItens, favGrupoId, ehFavG));
+  };
+  function rodapeGrupo(g, todosItens, favGrupoId, ehFavG) {
+    if (g.refeicoes.length === 1) {
+      const l = linhaLancamento(g.refeicoes[0], false);
+      return h('div', { class: 'rodape-ref' }, h('span', { class: 'rodape-info' }, g.refeicoes[0].fotoId ? l.querySelector('.foto-mini') : null, ehEstimado(g.refeicoes[0]) ? l.querySelector('.selo-estimado') : null), l.querySelector('.lanc-acoes'));
+    }
+    return h('div', { class: 'rodape-ref rodape-multi' },
+      h('details', { class: 'lancs-det' }, h('summary', null, `${g.refeicoes.length} lançamentos`), h('div', { class: 'lancs' }, g.refeicoes.map(r => linhaLancamento(r, true)))),
+      h('span', { class: 'lanc-acoes' },
+        h('button', { class: `btn-icone ${ehFavG ? 'ativo' : ''}`, type: 'button', 'aria-pressed': String(ehFavG), 'aria-label': `${ehFavG ? 'Remover dos favoritos' : 'Favoritar'}: ${g.tipo} inteiro`, onclick: () => {
           const f = favoritos.find(x => x.origemId === favGrupoId);
           if (f) { store.remover('favoritos', f.id); aviso('Removido dos favoritos.'); }
           else { store.salvar('favoritos', { nome: `${g.tipo}: ${resumoItens(todosItens)}`.slice(0, 60), tipo: g.tipo, itens: todosItens.map(i => ({ ...i })), origemId: favGrupoId }); aviso('Favoritado. Aparece em "Repetir com 1 toque".'); }
-          redesenhar(); } }, ehFavG ? iconeCheio('estrela', 18) : icone('estrela', 18), 'Favoritar'),
-        h('button', { class: 'btn btn-peq', type: 'button', onclick: () => repetir({ nome: resumoItens(todosItens), itens: todosItens, tipo: g.tipo }) }, icone('repetir', 18), `Repetir este ${nomeMin(g.tipo)}`)));
-  };
+          redesenhar(); } }, ehFavG ? iconeCheio('estrela') : icone('estrela')),
+        h('button', { class: 'btn-icone', type: 'button', 'aria-label': `Repetir este ${nomeMin(g.tipo)}`, onclick: () => repetir({ nome: resumoItens(todosItens), itens: todosItens, tipo: g.tipo }) }, icone('repetir'))));
+  }
   const comanda = refeicoes.length
     ? h('div', { class: 'comanda' }, agruparRefeicoes(refeicoes).map(cartaoGrupo))
     : h('div', { class: 'vazio' }, h('h3', null, ehHoje ? 'Nada registrado hoje' : 'Nada registrado neste dia'), h('ul', null, h('li', null, 'Escreva acima o que comeu e toque em "Estimar calorias".'), h('li', null, 'Confira a tradução em kcal e macros antes de salvar.')));
@@ -251,9 +245,9 @@ export function renderizar(raiz, ctx) {
   // as camadas do banco (TACO/IBGE/USDA) carregam em segundo plano: refeições que as usam só ganham a classe depois disso
   if (!bancoCompletoPronto()) garantirBanco(2500).then(() => { if (cartaoProc.isConnected) cartaoProc.replaceWith(cartaoNova({ refeicoes, quando: quandoNova })); });
   raiz.append(h('div', { class: 'layout-2' },
-    h('section', { class: 'pilha', 'aria-label': 'Resumo do dia' }, bandeja, h('div', { class: 'sub-bandeja o2' }, miniF, miniA), botaoTreino, cartaoBalanco, alertas.length ? h('div', { class: 'pilha o3' }, alertas) : null, cartaoProc, blocoAgua),
-    h('section', { class: 'pilha' }, caixaEntrada, barraFavs, blocoDiaInteiro,
-      h('div', { class: 'o7' }, h('div', { class: 'cab-lista' }, h('h2', { class: 'titulo-sec' }, ehHoje ? 'Refeições de hoje' : `Refeições · ${rotuloDia(diaSel, hoje)}`), h('span', { class: 'mudo peq' }, refeicoes.some(ehEstimado) ? h('span', { class: 'selo-estimado', title: 'Este dia tem lançamentos gerados por "Registrar um dia inteiro"' }, refeicoes.every(ehEstimado) ? 'dia estimado' : 'inclui estimados') : null, ` ${refeicoes.length} ${refeicoes.length === 1 ? 'registro' : 'registros'}`)), comanda), listaAtiv)));
+    h('section', { class: 'pilha', 'aria-label': 'Resumo do dia' }, bandeja, h('div', { class: 'sub-bandeja o2' }, miniF, miniA), cartaoBalanco, alertas.length ? h('div', { class: 'pilha o6' }, alertas) : null, cartaoProc, blocoAgua),
+    h('section', { class: 'pilha' }, caixaEntrada, atalhos,
+      h('div', { class: 'o5' }, h('div', { class: 'cab-lista' }, h('h2', { class: 'titulo-sec' }, ehHoje ? 'Refeições de hoje' : `Refeições · ${rotuloDia(diaSel, hoje)}`), h('span', { class: 'mudo peq' }, refeicoes.some(ehEstimado) ? h('span', { class: 'selo-estimado', title: 'Este dia tem lançamentos gerados por "Registrar um dia inteiro"' }, refeicoes.every(ehEstimado) ? 'dia estimado' : 'inclui estimados') : null, ` ${refeicoes.length} ${refeicoes.length === 1 ? 'registro' : 'registros'}`)), comanda), listaAtiv)));
 }
 
 function alternarFavorito(r, favoritos) {

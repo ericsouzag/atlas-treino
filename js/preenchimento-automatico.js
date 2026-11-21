@@ -27,7 +27,7 @@ export const contaParaGamificacao = item => !ehEstimado(item);
 /** Foi gerado pelo preenchimento automático (e não pelo botão manual)? */
 export const ehAutomatico = item => ehEstimado(item) && item.estimadoModo === MODO_AUTOMATICO;
 
-export const AUTO_PADRAO = { ativo: true, alimentacao: true, treino: true, ativadoEm: null, processados: {}, explicado: false, ultimo: null };
+export const AUTO_PADRAO = { ativo: true, alimentacao: true, treino: true, ativadoEm: null, retroativoFeito: false, processados: {}, explicado: false, ultimo: null };
 /** Configuração com padrões (ligado por padrão, como o Eric pediu); `config` é o singleton 'config' do store */
 export function lerAuto(config) {
   const a = (config && config.auto) || {};

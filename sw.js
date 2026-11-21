@@ -1,5 +1,5 @@
 // Service worker do Atlas Fitness: funciona offline. Atualize VERSAO a cada publicação para renovar o cache.
-const VERSAO = 'atlas-v1.11.1';
+const VERSAO = 'atlas-v1.12.0';
 const ARQUIVOS = [
   './',
   './css/app.css',
@@ -33,10 +33,12 @@ const ARQUIVOS = [
   './js/fichas.js',
   './js/firebase.js',
   './js/foods.js',
+  './js/gamificacao.js',
   './js/grupos-refeicao.js',
   './js/ilustracao.js',
   './js/ilustracoes-dados.js',
   './js/images.js',
+  './js/jornada.js',
   './js/main.js',
   './js/nova-regras.js',
   './js/nova.js',
@@ -44,6 +46,8 @@ const ARQUIVOS = [
   './js/ocr-tabela.js',
   './js/off.js',
   './js/parser.js',
+  './js/personagem-svg.js',
+  './js/personagem.js',
   './js/planner.js',
   './js/preenchimento-auto.js',
   './js/preenchimento-automatico.js',
@@ -59,7 +63,9 @@ const ARQUIVOS = [
   './js/views/dia-estimado.js',
   './js/views/entrada.js',
   './js/views/favoritos.js',
+  './js/views/jornada.js',
   './js/views/ler-tabela.js',
+  './js/views/mais.js',
   './js/views/nova-card.js',
   './js/views/onboarding.js',
   './js/views/registro-treino.js',

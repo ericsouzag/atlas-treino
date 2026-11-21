@@ -1,11 +1,11 @@
 // Preenchimento automático de dias sem registro: roda ao abrir o app e ao voltar ao primeiro plano (parte impura; a lógica pura e as
 // decisões estão em js/preenchimento-automatico.js). Sincroniza como o resto: tudo vive no singleton 'config' e nos registros comuns.
 import { store, novoId } from './store.js';
-import { dataISO, rotuloDia, dataCurta } from './datas.js';
+import { dataISO, rotuloDia, dataCurta, somarDias } from './datas.js';
 import { pesoAtual } from './dados.js';
 import { h, aviso, folha, n0 } from './ui.js';
 import {
-  planejarPreenchimento, aplicarMarcas, podarMarcas, lerAuto, idsAutomaticos, diasDoLote, ehAutomatico,
+  planejarPreenchimento, aplicarMarcas, podarMarcas, lerAuto, idsAutomaticos, diasDoLote, ehAutomatico, JANELA_AUTO,
 } from './preenchimento-automatico.js';
 
 export const TEXTO_EXPLICA = 'Quando você não registra nada de comida (ou de treino previsto na sua ficha) em um dia, o app preenche o dia com uma estimativa baseada nos seus dias anteriores e marca com o selo "estimado".';
@@ -37,7 +37,10 @@ export function executarPreenchimento() {
   let auto = lerAutoAtual();
   if (!auto.ativo) return null;
   const hoje = dataISO();
-  if (!auto.ativadoEm) { auto = { ...auto, ativadoEm: hoje }; gravarAuto(auto); return null; }   // primeira vez: começa a valer de hoje em diante
+  // Uma vez só (primeira abertura ou migração de quem já tinha o recurso ligado): libera os últimos JANELA_AUTO dias,
+  // para a pessoa ver o preenchimento funcionando também sobre os dias anteriores sem registro. Religar depois, em Ajustes,
+  // continua valendo só de hoje em diante (config.js grava ativadoEm = hoje e não repete este passo).
+  if (!auto.retroativoFeito) { auto = { ...auto, ativadoEm: somarDias(hoje, -JANELA_AUTO), retroativoFeito: true }; gravarAuto(auto); }
   const lote = novoId('auto');
   const plano = store.obterUnico('plano');
   const r = planejarPreenchimento({

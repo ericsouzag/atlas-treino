@@ -7,11 +7,14 @@ import { iniciarNuvem, usuarioAtual, aguardarUsuario, definirDecisorEnvio } from
 import { nuvemConfigurada } from '../firebase-config.js';
 import { deveMostrarEntrada, lerEscolha } from './entrada.js';
 import { iniciarPreenchimento } from './preenchimento-auto.js';
+import { iniciarJornada } from './jornada.js';
 
 const ROTAS = {
   alimentacao: { rotulo: 'Alimentação', icone: 'talher', carregar: () => import('./views/alimentacao.js') },
   treino: { rotulo: 'Treino', icone: 'halter', carregar: () => import('./views/treino.js') },
   corpo: { rotulo: 'Corpo', icone: 'fita', carregar: () => import('./views/corpo.js') },
+  jornada: { rotulo: 'Jornada', icone: 'escudo', carregar: () => import('./views/jornada.js') },
+  mais: { rotulo: 'Mais', icone: 'mais', carregar: () => import('./views/mais.js'), oculta: true },
   relatorios: { rotulo: 'Relatórios', icone: 'grafico', carregar: () => import('./views/relatorios.js') },
   config: { rotulo: 'Ajustes', icone: 'engrenagem', carregar: () => import('./views/config.js') },
   entrada: { rotulo: 'Bem-vindo', icone: 'pessoa', carregar: () => import('./views/entrada.js'), oculta: true },
@@ -37,8 +40,9 @@ function aplicarTema() {
 
 function desenharAbas(rota) {
   limpar(el.abas);
-  Object.entries(ROTAS).filter(([, r]) => !r.oculta).forEach(([id, r]) => {
-    el.abas.appendChild(h('a', { class: 'aba', href: `#/${id}`, 'aria-current': id === rota ? 'page' : null }, icone(r.icone, 24), h('span', null, r.rotulo)));
+  const noMais = ['mais', 'relatorios', 'config'].includes(rota);
+  Object.entries(ROTAS).filter(([id, r]) => !r.oculta || id === 'mais').forEach(([id, r]) => {
+    el.abas.appendChild(h('a', { class: `aba aba-${id}`, href: `#/${id}`, 'aria-current': (id === rota || (id === 'mais' && noMais)) ? 'page' : null }, icone(r.icone, 24), h('span', null, r.rotulo)));
   });
 }
 
@@ -102,6 +106,9 @@ async function iniciar() {
   // Preenche dias sem registro (alimentação e treino previsto) com estimativas; com nuvem espera a sincronização inicial
   const atualizar = () => document.dispatchEvent(new CustomEvent('atlas:atualizar'));
   if (nuvemConfigurada() && lerEscolha() !== 'local') setTimeout(() => iniciarPreenchimento(atualizar), 4000); else iniciarPreenchimento(atualizar);
+  // Jornada (XP, conquistas, personagem): recalcula ao mudar os dados; só redesenha se não houver folha aberta nem campo em edição
+  const seguro = () => { const a = document.activeElement; if (!document.querySelector('dialog[open]') && !(a && /INPUT|TEXTAREA|SELECT/.test(a.tagName))) atualizar(); };
+  setTimeout(() => iniciarJornada(seguro), nuvemConfigurada() && lerEscolha() !== 'local' ? 4500 : 300);
   // Em localhost o service worker só liga com ?sw (evita cache velho durante o desenvolvimento)
   const local = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
   if ('serviceWorker' in navigator && ((location.protocol === 'https:' && !local) || (local && location.search.includes('sw')))) {

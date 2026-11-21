@@ -633,3 +633,49 @@ table.tab-proj { width: 100%; border-collapse: collapse; font-size: 14px; }
 .cartao .vazio { border: 0; background: transparent; padding: 0; }
 .cartao .vazio h3 { font-size: 17px; }
 .cartao > h2, .titulo-sec { font-size: 19px; }
+
+
+/* ---- v1.12: Jornada (personagem, XP, conquistas) e navegação com 5 abas no celular ---- */
+.aba-mais { display: none; }
+@media (max-width: 899px) { .aba-relatorios, .aba-config { display: none; } .aba-mais { display: flex; } .abas { grid-template-columns: repeat(5, 1fr); } }
+.jornada-pilha { display: grid; gap: 18px; max-width: 760px; }
+.jornada-heroi { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center; }
+@media (max-width: 520px) { .jornada-heroi { grid-template-columns: 1fr; justify-items: center; text-align: center; } .jornada-heroi .linha-botoes { justify-content: center !important; } }
+.personagem-grande, .previa-personagem { display: grid; place-items: center; }
+.personagem-svg { max-width: 100%; height: auto; }
+.nivel-titulo { font-size: 17px; }
+.xp-barra { height: 14px; border-radius: 4px 10px 4px 10px; background: var(--folha2); border: 1px solid var(--linha-forte); overflow: hidden; }
+.xp-barra > span { display: block; height: 100%; background: var(--destaque-vivo); }
+.xp-linha { display: flex; justify-content: space-between; gap: 12px; }
+.xp-linha strong { color: var(--destaque-esc); font-variant-numeric: tabular-nums; }
+.seqs { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 15px; }
+.seqs span { display: inline-flex; align-items: center; gap: 4px; }
+.missoes { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.missoes li { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 8px; min-height: 44px; border-bottom: 1px solid var(--linha); }
+.marca-missao { width: 22px; height: 22px; border: 2px solid var(--linha-forte); border-radius: 6px 2px 6px 2px; display: grid; place-items: center; color: var(--on-destaque); }
+.missoes li.feita .marca-missao { background: var(--destaque); border-color: var(--destaque-vivo); }
+.missoes li strong { color: var(--tinta2); font-size: 14px; }
+.desafio { display: grid; gap: 6px; margin-top: 6px; }
+.conquistas { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px 12px; }
+.conquistas li { display: grid; grid-template-columns: 30px 1fr; gap: 8px; align-items: center; min-height: 52px; padding: 4px 0; border-bottom: 1px solid var(--linha); }
+.conquistas small { display: block; font-size: 13px; color: var(--tinta2); }
+.conquistas li.bloqueada .conq-ic { color: var(--tinta3); }
+.conquistas li.liberada .conq-ic { color: var(--destaque-esc); }
+.conquistas li.bloqueada strong { color: var(--tinta2); }
+.evolucao { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; }
+.evo-item { margin: 0; display: grid; justify-items: center; gap: 2px; flex: none; }
+.previa-fixa { position: sticky; top: -1px; z-index: 5; isolation: isolate; background: var(--folha); padding: 4px 0 8px; border-bottom: 1px solid var(--linha); }
+.swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+.swatch { width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--linha-forte); background: var(--cor); padding: 0; }
+.swatch.ativo { border-color: var(--tinta); outline: 2px solid var(--destaque-vivo); outline-offset: 2px; }
+.param-corpo { display: grid; gap: 2px; }
+.param-cab { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.param-cab label { font-weight: 700; color: var(--tinta); }
+input[type=range] { width: 100%; min-height: 44px; accent-color: var(--destaque-vivo); background: transparent; border: 0; padding: 0; }
+.chip-jornada { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 4px 4px; text-decoration: none; color: var(--tinta); }
+.chip-jornada .nv { font: 800 15px/1 'Bricolage Grotesque', sans-serif; white-space: nowrap; }
+.chip-jornada .xp-barra { flex: 1; height: 8px; min-width: 40px; }
+.chip-jornada .seq { display: inline-flex; align-items: center; gap: 3px; font-size: 14px; white-space: nowrap; color: var(--tinta2); }
+
+.mais-item { display: grid; grid-template-columns: 30px 1fr 20px; align-items: center; gap: 12px; text-decoration: none; color: var(--tinta); min-height: 64px; }
+.mais-item small { display: block; font-size: 14px; color: var(--tinta2); }

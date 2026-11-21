@@ -12,6 +12,7 @@ import { totaisDoDia, alertasAlimentares, intervalos, avaliarIntervalo, tipoRefe
 import { salvarFoto, urlFoto } from '../images.js';
 import { cartaoNova } from './nova-card.js';
 import { abrirFavoritos } from './favoritos.js';
+import { resumoJornada } from '../jornada.js';
 import { abrirDiaEstimado } from './dia-estimado.js';
 import { ehEstimado } from '../dia-estimado.js';
 import { ordenarFavoritos, migrarFavorito } from '../favoritos.js';
@@ -244,8 +245,16 @@ export function renderizar(raiz, ctx) {
   const cartaoProc = cartaoNova({ refeicoes, quando: quandoNova });
   // as camadas do banco (TACO/IBGE/USDA) carregam em segundo plano: refeições que as usam só ganham a classe depois disso
   if (!bancoCompletoPronto()) garantirBanco(2500).then(() => { if (cartaoProc.isConnected) cartaoProc.replaceWith(cartaoNova({ refeicoes, quando: quandoNova })); });
+  // chip compacto da Jornada (nível, barra de XP e sequência); o personagem vive na aba Jornada
+  let chipJornada = null;
+  try {
+    const J = resumoJornada(hoje);
+    chipJornada = h('a', { class: 'chip-jornada', href: '#/jornada', 'aria-label': `Jornada: nível ${J.nivel}, ${J.titulo}, ${J.xpNoNivel} de ${J.xpDoNivel} XP, ${J.seqRegistro.dias} dias de registro seguidos` },
+      h('span', { class: 'nv' }, `Nv ${J.nivel}`), h('span', { class: 'xp-barra', 'aria-hidden': 'true' }, h('span', { style: { width: `${Math.round(J.fracao * 100)}%` } })),
+      h('span', { class: 'seq' }, iconeCheio('chama', 16), String(J.seqRegistro.dias)));
+  } catch (e) { console.warn(e); }
   raiz.append(h('div', { class: 'layout-2' },
-    h('section', { class: 'pilha', 'aria-label': 'Resumo do dia' }, bandeja, h('div', { class: 'sub-bandeja o2' }, miniF, miniA), cartaoBalanco, alertas.length ? h('div', { class: 'pilha o6' }, alertas) : null, cartaoProc, blocoAgua),
+    h('section', { class: 'pilha', 'aria-label': 'Resumo do dia' }, chipJornada, bandeja, h('div', { class: 'sub-bandeja o2' }, miniF, miniA), cartaoBalanco, alertas.length ? h('div', { class: 'pilha o6' }, alertas) : null, cartaoProc, blocoAgua),
     h('section', { class: 'pilha' }, caixaEntrada, atalhos,
       h('div', { class: 'o5' }, h('div', { class: 'cab-lista' }, h('h2', { class: 'titulo-sec' }, ehHoje ? 'Refeições de hoje' : `Refeições · ${rotuloDia(diaSel, hoje)}`), h('span', { class: 'mudo peq' }, refeicoes.some(ehEstimado) ? h('span', { class: 'selo-estimado', title: 'Este dia tem lançamentos gerados por "Registrar um dia inteiro"' }, refeicoes.every(ehEstimado) ? 'dia estimado' : 'inclui estimados') : null, ` ${refeicoes.length} ${refeicoes.length === 1 ? 'registro' : 'registros'}`)), comanda), listaAtiv)));
 }

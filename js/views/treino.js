@@ -5,7 +5,7 @@ import { perfil as getPerfil, pesoAtual, ultimoDesempenho, treinosConcluidos } f
 import { GRUPOS, PORCOES, EXERCICIOS, exPorId, nomePorcao, disponivel, temLesao, LESOES } from '../exercises.js';
 import { gerarPlano, coberturaDia, volumeSemanal, alternativas, trocarExercicio, textoDiferenca, descricaoDivisao, metaSeriesSemana, prescricao } from '../planner.js';
 import { nomeDia, dataISO, dataCurta, diaSemana, somarDias, segundaDaSemana } from '../datas.js';
-import { FICHAS, montarPlanoDaFicha, avisosDaFicha } from '../fichas.js';
+import { FICHAS, FICHA_PRINCIPAL, FICHA_SECUNDARIA, montarPlanoDaFicha, avisosDaFicha, textoPrescricao } from '../fichas.js';
 import { kcalTreino, duracaoEstimada } from '../nutrition.js';
 import { ilustracao } from '../ilustracao.js';
 
@@ -60,7 +60,8 @@ export function renderizar(raiz, ctx) {
   desenharCfg();
 
   const blocos = [];
-  blocos.push(cartaoFichaSugerida({ reg, P, redesenhar }));
+  const cartaoPrincipal = cartaoFichaSugerida({ F: FICHAS[FICHA_PRINCIPAL], variante: 'principal', reg, P, redesenhar });
+  blocos.push(avisoVersaoAjustada(reg, cartaoPrincipal), cartaoPrincipal, cartaoFichaSugerida({ F: FICHAS[FICHA_SECUNDARIA], variante: 'secundaria', reg, P, redesenhar }));
   const cfgEl = plano ? h('details', { class: 'cartao', style: { padding: '4px 16px' } }, h('summary', { style: { minHeight: '48px', display: 'flex', alignItems: 'center', cursor: 'pointer', fontWeight: 700, fontSize: '17px' } }, 'Alterar dias e divisão da semana'), cartaoCfg) : cartaoCfg;
   if (plano) cartaoCfg.style.cssText = 'border:0;box-shadow:none;padding:0 0 12px;background:transparent';
   if (!plano) blocos.push(cfgEl);
@@ -103,7 +104,7 @@ export function renderizar(raiz, ctx) {
       return h('article', { class: 'ex' },
         h('div', { class: 'ex-cab' },
           h('button', { class: 'feito-ex', type: 'button', 'aria-pressed': String(!!marcas[it.exId]), 'aria-label': `Marcar ${ex.nome} como feito`, onclick: () => { const novo = { ...marcas }; if (novo[it.exId]) delete novo[it.exId]; else novo[it.exId] = true; store.salvar('marcas', { id: dataMarca, data: dataMarca, feitos: novo }); redesenhar(); } }, marcas[it.exId] ? icone('ok', 22) : String(idx + 1)),
-          h('div', null, h('h3', { class: 'ex-nome' }, ex.nome), h('p', { class: 'ex-pres' }, `${it.series} séries × ${it.reps}${/s$/.test(it.reps) ? '' : ' repetições'} · descanso ${it.descanso} s`), h('p', { class: 'mudo peq' }, `${ex.equipamento} · ${GRUPOS[ex.grupoPrincipal].nome}`)),
+          h('div', null, h('h3', { class: 'ex-nome' }, ex.nome), h('p', { class: 'ex-pres' }, textoPrescricao(it)), h('p', { class: 'mudo peq' }, `${ex.equipamento} · ${GRUPOS[ex.grupoPrincipal].nome}`)),
           h('button', { class: 'btn btn-peq btn-trocar', type: 'button', 'aria-label': `Trocar ${ex.nome}`, onclick: () => trocar(it, idx) }, icone('trocar', 18), h('span', { class: 'lbl' }, 'Trocar'))),
         ilustracao(ex.id, 'g'),
         h('div', { class: 'porcoes' }, [...ex.primarias.map(p => h('span', { class: 'porc', title: 'Estímulo principal' }, nomePorcao(p))), ...ex.secundarias.map(p => h('span', { class: 'porc sec', title: 'Ajuda de quebra' }, nomePorcao(p)))]),
@@ -277,12 +278,28 @@ function partesJustificativa(txt) {
 }
 
 // ---------------------------------------------------------------------------
-// Ficha sugerida pronta ("Semanal Seg–Sáb"): pré-visualização por dia, o porquê e adoção
-function cartaoFichaSugerida({ reg, P, redesenhar }) {
-  const F = FICHAS['semanal-seg-sab'];
+// Fichas sugeridas prontas: a ajustada (principal, recomendada) e a original (secundária).
+// Pré-visualização por dia, o porquê e adoção. Quem já adotou a original continua com ela.
+const CHAVE_AVISO_V2 = 'atlas.avisoFichaV2';
+const lerAvisoV2 = () => { try { return localStorage.getItem(CHAVE_AVISO_V2) === '1'; } catch { return false; } };
+
+/** Aviso discreto e dispensável para quem adotou a ficha original: existe uma versão ajustada. */
+function avisoVersaoAjustada(reg, cartaoPrincipal) {
+  if (reg?.config?.ficha !== FICHA_SECUNDARIA || lerAvisoV2()) return null;
+  const el = h('div', { class: 'flex-entre quebra', role: 'note', style: { padding: '4px 2px', fontSize: '14px' } },
+    h('span', { class: 'mudo' }, 'Há uma versão ajustada desta ficha.'),
+    h('span', { class: 'flex' },
+      h('button', { class: 'btn btn-peq', type: 'button', onclick: () => { cartaoPrincipal.open = true; cartaoPrincipal.scrollIntoView?.({ block: 'start' }); } }, 'Ver'),
+      h('button', { class: 'btn btn-peq btn-fantasma', type: 'button', 'aria-label': 'Dispensar aviso', onclick: () => { try { localStorage.setItem(CHAVE_AVISO_V2, '1'); } catch { /* ignora */ } el.remove(); } }, 'Dispensar')));
+  return el;
+}
+
+function cartaoFichaSugerida({ F, variante, reg, P, redesenhar }) {
+  const principal = variante === 'principal';
   const adotada = reg?.config?.ficha === F.id;
   let diaPrev = F.dias[0].dow;
   const corpo = h('div', { class: 'pilha' });
+  const sumario = { style: { minHeight: '44px', display: 'flex', alignItems: 'center', cursor: 'pointer', fontWeight: 600, color: 'var(--destaque-esc)' } };
   const desenhar = () => {
     limpar(corpo);
     const d = F.dias.find(x => x.dow === diaPrev);
@@ -290,25 +307,34 @@ function cartaoFichaSugerida({ reg, P, redesenhar }) {
     juntar(corpo,
       h('p', { class: 'mudo' }, F.resumo),
       adotada ? caixaAviso('ok', 'Ficha adotada', 'Os dias, os grupos e os exercícios abaixo estão na sua aba. Você pode trocar exercícios por porção normalmente.') : null,
-      h('div', { class: 'tabs', role: 'tablist', 'aria-label': 'Dias da ficha sugerida' }, F.dias.map(x => h('button', { class: 'tab', role: 'tab', type: 'button', 'aria-selected': String(x.dow === diaPrev), onclick: () => { diaPrev = x.dow; desenhar(); } }, nomeDia(x.dow, true)))),
+      h('div', { class: 'tabs', role: 'tablist', 'aria-label': 'Dias da ' + F.nome }, F.dias.map(x => h('button', { class: 'tab', role: 'tab', type: 'button', 'aria-selected': String(x.dow === diaPrev), onclick: () => { diaPrev = x.dow; desenhar(); } }, nomeDia(x.dow, true)))),
       h('h3', null, d.titulo),
-      h('ol', { class: 'ficha-prev' }, d.itens.map(it => { const ex = exPorId(it.ex); return h('li', null, h('strong', null, ex.nome), h('span', { class: 'mudo peq' }, it.porcao)); })),
+      h('ol', { class: 'ficha-prev' }, d.itens.map(it => {
+        const ex = exPorId(it.ex);
+        return h('li', null, h('strong', null, ex.nome + (it.opcional ? ' (opcional)' : '')),
+          F.prescricaoFixa ? h('span', { class: 'peq' }, textoPrescricao(it)) : null,
+          h('span', { class: 'mudo peq' }, it.porcao + (it.mudou ? ' · ' + it.mudou : '')));
+      })),
       h('p', { class: 'peq' }, d.nota),
-      h('details', null, h('summary', { style: { minHeight: '44px', display: 'flex', alignItems: 'center', cursor: 'pointer', fontWeight: 600, color: 'var(--destaque-esc)' } }, 'Por que esta ficha? (princípios)'),
+      F.mudancas ? h('details', null, h('summary', sumario, 'O que mudou vs. a ficha original'),
+        h('ul', { style: { paddingLeft: '20px', display: 'grid', gap: '6px' } }, F.mudancas.map(t => h('li', null, t)))) : null,
+      h('details', null, h('summary', sumario, 'Por que esta ficha? (princípios)'),
         h('ul', { style: { paddingLeft: '20px', display: 'grid', gap: '6px' } }, F.principios.map(t => h('li', null, t)))),
-      caixaAviso('info', 'Séries, repetições e descanso', 'A ficha original traz só os exercícios e as porções. Séries, repetições e descanso são padrões do planner para o seu nível e objetivo, e dá para ajustar durante o treino.'),
+      F.prescricaoFixa
+        ? caixaAviso('info', 'Séries, repetições e descanso', F.aviso)
+        : caixaAviso('info', 'Séries, repetições e descanso', 'A ficha original traz só os exercícios e as porções. Séries, repetições e descanso são padrões do planner para o seu nível e objetivo, e dá para ajustar durante o treino.'),
       av.map(t => caixaAviso('medio', null, t)),
       adotada
         ? h('div', { class: 'linha-botoes' },
           reg.anterior ? h('button', { class: 'btn', type: 'button', onclick: desfazer }, 'Desfazer (voltar à ficha anterior)') : null,
           h('button', { class: 'btn', type: 'button', onclick: voltarAutomatico }, 'Voltar ao gerador automático'))
-        : h('button', { class: 'btn btn-primario', type: 'button', onclick: adotar }, icone('ok', 20), 'Adotar esta ficha'));
+        : h('button', { class: principal ? 'btn btn-primario' : 'btn', type: 'button', onclick: adotar }, icone('ok', 20), 'Adotar esta ficha'));
   };
   async function adotar() {
     if (reg?.plano && !(await confirmar('Adotar a ficha sugerida?', 'Os dias e as fichas atuais serão substituídos (você poderá desfazer). O histórico de treinos continua salvo.', { sim: 'Adotar' }))) return;
     const { plano, config } = montarPlanoDaFicha(F, P);
     store.salvarUnico('plano', { config, plano, anterior: reg?.plano ? { config: reg.config, plano: reg.plano } : null });
-    diaSel = null; aviso('Ficha Semanal Seg–Sáb adotada.'); redesenhar();
+    diaSel = null; aviso(`Ficha ${F.nome} adotada.`); redesenhar();
   }
   function desfazer() {
     const a = reg.anterior;
@@ -321,7 +347,9 @@ function cartaoFichaSugerida({ reg, P, redesenhar }) {
     diaSel = null; aviso('Fichas geradas automaticamente.'); redesenhar();
   }
   desenhar();
-  return h('details', { class: 'cartao destaque-ficha', open: !reg?.plano || adotada && false },
-    h('summary', { class: 'sum-ficha' }, h('span', null, h('span', { class: 'rotulo' }, adotada ? 'Ficha adotada' : 'Sugestão pronta'), h('strong', null, 'Ficha sugerida: Semanal Seg–Sáb')), icone('baixo', 20)),
+  const rotulo = principal ? (adotada ? 'Ficha adotada · Recomendada' : 'Recomendada') : (adotada ? 'Ficha adotada · Outra opção' : 'Outra opção');
+  const titulo = principal ? 'Ficha sugerida: Semanal Seg–Sáb (ajustada)' : 'Outra opção: ficha original';
+  return h('details', { class: 'cartao destaque-ficha' + (principal ? '' : ' ficha-sec'), style: principal ? null : { padding: '0 14px 12px' }, open: principal && !reg?.plano },
+    h('summary', { class: 'sum-ficha', style: principal ? null : { minHeight: '52px' } }, h('span', null, h('span', { class: 'rotulo' }, rotulo), h('strong', { style: principal ? null : { fontSize: '17px' } }, titulo)), icone('baixo', 20)),
     corpo);
 }

@@ -43,7 +43,7 @@ const sha = x => crypto.createHash('sha256').update(JSON.stringify(x)).digest('h
 // Seção 7 do relatório (docs/analise-ficha-semanal.md): [exercício, séries, reps, descanso, descansoMax, opcional]
 const R = {
   1: [['mergulho-paralelas-triceps', 3, '6-10', 120, 150], ['triceps-testa-barra', 3, '8-12', 90], ['triceps-frances-polia', 3, '10-15', 75], ['triceps-unilateral-polia', 3, '10-15', 60, 75], ['abdominal-polia', 3, '10-15', 60], ['encolhimento-halteres', 3, '10-15', 75, 0, true], ['triceps-coice', 2, '12-15', 45, 0, true]],
-  2: [['agachamento-livre', 4, '6-10', 150], ['leg-press-45', 3, '8-12', 120], ['cadeira-extensora-reclinada', 3, '10-15', 75], ['mesa-flexora', 3, '10-15', 75], ['cadeira-adutora', 3, '10-15', 75], ['panturrilha-leg-press', 4, '10-15', 60, 75]],
+  2: [['agachamento-livre', 4, '6-10', 150], ['leg-press-45', 3, '8-12', 120], ['stiff-unilateral-halter', 3, '8-12', 90, 120], ['cadeira-extensora-reclinada', 3, '10-15', 75], ['cadeira-adutora', 3, '10-15', 75], ['panturrilha-leg-press', 4, '10-15', 60, 75]],
   3: [['barra-fixa-pronada', 4, '5-10', 120, 150], ['remada-serrote-halter', 3, '8-12', 90, 120], ['remada-baixa-triangulo', 3, '8-12', 90], ['pullover-halter', 3, '10-15', 75], ['elevacao-lateral-polia', 3, '12-20', 60], ['face-pull', 3, '12-20', 60], ['crucifixo-inverso-polia', 3, '12-20', 60]],
   4: [['elevacao-pelvica-barra', 3, '8-12', 120], ['stiff-barra', 3, '8-12', 120], ['hack-squat', 3, '8-12', 120], ['cadeira-flexora', 4, '10-15', 75], ['cadeira-abdutora', 3, '12-15', 60], ['panturrilha-sentado-maquina', 4, '10-15', 60, 75]],
   5: [['barra-fixa-neutra', 4, '6-10', 120], ['arnold-press', 3, '8-12', 120], ['elevacao-lateral-halteres', 4, '12-20', 60, 75], ['rosca-martelo', 3, '10-12', 75], ['rosca-inclinada-halteres', 3, '10-15', 75], ['rosca-scott', 3, '10-15', 75]],
@@ -76,6 +76,16 @@ teste('exercícios novos cadastrados (porções, instrução, erro comum) e merg
   for (const x of [m, e]) ok(x.instrucao.length > 20 && x.erro.length > 10, x.id);
 });
 teste('cada exercício cobre a porção listada como primária', () => igual(auditarFicha(V2).join('; '), ''));
+teste('terça: stiff unilateral no lugar da mesa flexora; isquiotibiais: quadril 3 + 3 em dois dias, joelho 4 séries na quinta', () => {
+  const ids = d => V2.dias.find(x => x.dow === d).itens.map(i => i.ex);
+  ok(!ids(2).includes('mesa-flexora') && !V2.dias.some(d => d.itens.some(i => i.ex === 'mesa-flexora')));
+  igual(ids(2).join(), 'agachamento-livre,leg-press-45,stiff-unilateral-halter,cadeira-extensora-reclinada,cadeira-adutora,panturrilha-leg-press');
+  ok(ids(4).includes('stiff-barra') && ids(4).includes('cadeira-flexora'));
+  const u = exPorId('stiff-unilateral-halter'); ok(u.primarias.includes('isq_quadril') && u.primarias.includes('glut_max') && ['adutores', 'lombar', 'glut_med'].every(p => u.secundarias.includes(p)) && u.classe === 'H');
+  const ser = (dow, ex) => V2.dias.find(x => x.dow === dow).itens.find(i => i.ex === ex).series;
+  igual(ser(2, 'stiff-unilateral-halter') + ser(4, 'stiff-barra'), 6); igual(ser(4, 'cadeira-flexora'), 4);
+  ok(V2.mudancas.join(' ').includes('mesa flexora'));
+});
 teste('prescrição fixa bate com a seção 7 do relatório (ordem, séries, reps, descanso, opcionais)', () => {
   for (const d of V2.dias) {
     const esp = R[d.dow]; igual(d.itens.length, esp.length, d.titulo);
